@@ -1,0 +1,2181 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Calm Writing</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* 花園明朝字型 — 支援客語 CJK Extension A/B 特殊字 */
+@font-face {
+  font-family: 'HanaMinA';
+  src: url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff') format('woff');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HanaMinB';
+  src: url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff') format('woff');
+  font-display: swap;
+}
+</style>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream:   #f8f3eb;
+  --warm:    #ede4d3;
+  --ink:     #2a1f14;
+  --ink2:    #3d2e1e;
+  --gold:    #9b7a3a;
+  --gold2:   #c4a35a;
+  --sage:    #6b7c5e;
+  --mist:    #8a9ba8;
+  --red:     #8b2c2c;
+  --grid:    rgba(155,122,58,0.18);
+  --shadow:  rgba(42,31,20,0.12);
+  --r: 16px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--cream);
+  font-family: 'Noto Sans TC', sans-serif;
+  color: var(--ink);
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* ══════════════════════════════
+   SCREENS
+══════════════════════════════ */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px;
+  transition: opacity 0.5s, transform 0.5s;
+  background: var(--cream);
+}
+.screen.hidden {
+  opacity: 0; pointer-events: none; transform: translateY(20px);
+}
+
+/* ══════════════════════════════
+   WELCOME SCREEN
+══════════════════════════════ */
+#screen-welcome {
+  background: radial-gradient(ellipse at 30% 40%, rgba(155,122,58,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 70%, rgba(107,124,94,0.06) 0%, transparent 50%),
+              var(--cream);
+}
+
+.welcome-deco {
+  position: absolute;
+  top: -30px; right: -20px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 180px;
+  font-weight: 900;
+  color: rgba(155,122,58,0.06);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.welcome-inner {
+  text-align: center;
+  max-width: 480px;
+  position: relative;
+  z-index: 1;
+}
+
+.logo-mark {
+  width: 72px; height: 72px;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(42,31,20,0.2);
+}
+.logo-mark svg { width: 38px; height: 38px; }
+
+.welcome-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.welcome-sub {
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 0.3em;
+  margin-bottom: 32px;
+}
+.welcome-desc {
+  font-size: 14px;
+  line-height: 2;
+  color: rgba(42,31,20,0.6);
+  margin-bottom: 40px;
+}
+
+/* 在線夥伴指示 */
+.companions-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(155,122,58,0.08);
+  border: 1px solid rgba(155,122,58,0.2);
+  border-radius: 50px;
+  padding: 10px 20px;
+  margin-bottom: 32px;
+  font-size: 13px;
+  color: var(--gold);
+}
+.companions-dots {
+  display: flex; gap: 4px;
+}
+.cdot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gold2);
+  animation: pulse-dot 2s infinite;
+}
+.cdot:nth-child(2) { animation-delay: 0.3s; }
+.cdot:nth-child(3) { animation-delay: 0.6s; }
+.cdot:nth-child(4) { animation-delay: 0.9s; }
+.cdot:nth-child(5) { animation-delay: 1.2s; }
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: 50px;
+  padding: 14px 36px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 16px;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(42,31,20,0.25);
+}
+.btn-primary:hover {
+  background: var(--ink2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(42,31,20,0.3);
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(42,31,20,0.2);
+  color: var(--ink);
+  border-radius: 50px;
+  padding: 10px 24px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 12px;
+}
+.btn-ghost:hover { background: rgba(42,31,20,0.06); }
+
+/* ══════════════════════════════
+   TASK SELECTION SCREEN
+══════════════════════════════ */
+#screen-task {
+  background: var(--cream);
+  justify-content: flex-start;
+  padding-top: 0;
+  overflow-y: auto;
+}
+
+.task-header {
+  width: 100%;
+  background: var(--ink);
+  color: var(--cream);
+  padding: 20px 28px;
+  display: flex; align-items: center; gap: 16px;
+}
+.task-header-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 18px;
+  letter-spacing: 0.12em;
+}
+.task-header-sub {
+  font-size: 12px;
+  color: rgba(248,243,235,0.5);
+  margin-top: 2px;
+}
+
+.task-body {
+  width: 100%; max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 20px 40px;
+}
+
+.mood-check {
+  background: white;
+  border-radius: var(--r);
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.mood-check h3 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 15px;
+  margin-bottom: 14px;
+  color: var(--ink2);
+}
+.mood-options {
+  display: flex; gap: 10px;
+}
+.mood-btn {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 8px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background: var(--cream);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 11px;
+  color: rgba(42,31,20,0.6);
+}
+.mood-btn .emoji { font-size: 24px; }
+.mood-btn:hover { background: rgba(155,122,58,0.08); border-color: rgba(155,122,58,0.3); }
+.mood-btn.selected { background: rgba(155,122,58,0.12); border-color: var(--gold); color: var(--gold); }
+
+.section-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 14px;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::after {
+  content: '';
+  flex: 1; height: 1px;
+  background: rgba(155,122,58,0.2);
+}
+
+.task-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.task-card {
+  background: white;
+  border-radius: var(--r);
+  padding: 16px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 10px var(--shadow);
+}
+.task-card:hover { border-color: rgba(155,122,58,0.3); transform: translateY(-2px); }
+.task-card.selected { border-color: var(--gold); background: rgba(155,122,58,0.06); }
+.task-card .tc-label {
+  font-size: 10px; color: var(--gold); letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.task-card .tc-text {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.task-card .tc-diff {
+  margin-top: 8px;
+  display: flex; gap: 4px;
+}
+.diff-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--gold2);
+}
+.diff-dot.empty { background: rgba(155,122,58,0.2); }
+
+.custom-input-wrap {
+  background: white;
+  border-radius: var(--r);
+  padding: 16px;
+  box-shadow: 0 2px 10px var(--shadow);
+  margin-bottom: 24px;
+}
+.custom-input-wrap textarea {
+  width: 100%;
+  min-height: 80px;
+  border: 1px solid rgba(155,122,58,0.25);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--cream);
+  resize: none;
+  outline: none;
+  line-height: 1.8;
+}
+.custom-input-wrap textarea:focus { border-color: var(--gold); }
+
+.start-row {
+  display: flex; gap: 12px;
+}
+.btn-start {
+  flex: 1;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: 50px;
+  padding: 16px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 4px 20px rgba(42,31,20,0.2);
+}
+.btn-start:hover { background: var(--ink2); transform: translateY(-1px); }
+
+/* ══════════════════════════════
+   WRITING SCREEN
+══════════════════════════════ */
+#screen-write {
+  padding: 0;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+#write-top {
+  background: var(--ink);
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.write-prompt {
+  flex: 1;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 15px;
+  color: rgba(248,243,235,0.9);
+  letter-spacing: 0.08em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.write-tools {
+  display: flex; gap: 8px;
+}
+.tool-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.7);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.tool-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+.tool-btn.active { background: rgba(155,122,58,0.4); border-color: var(--gold2); color: var(--gold2); }
+
+.grid-picker {
+  display: none; position: absolute; top: 58px; right: 20px;
+  background: var(--ink2);
+  border-radius: 10px;
+  padding: 8px;
+  gap: 6px;
+  flex-direction: column;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.grid-picker.open { display: flex; }
+.grid-opt {
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: rgba(248,243,235,0.8);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.grid-opt:hover { background: rgba(255,255,255,0.1); }
+.grid-opt.active { background: rgba(155,122,58,0.3); color: var(--gold2); }
+
+#canvas-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+#grid-canvas, #guide-canvas, #draw-canvas {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+#guide-canvas { z-index: 1; pointer-events: none; }
+#draw-canvas  { z-index: 2; touch-action: none; cursor: crosshair; }
+
+/* 底部狀態列 */
+#write-bottom {
+  background: var(--ink);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 16px;
+  flex-shrink: 0;
+}
+
+/* 筆壓條 */
+.pressure-wrap {
+  display: flex; align-items: center; gap: 8px;
+  flex: 1;
+}
+.pressure-label { font-size: 10px; color: rgba(248,243,235,0.4); letter-spacing: 0.1em; }
+.pressure-track {
+  flex: 1; height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px; overflow: hidden;
+}
+#pressure-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--sage), var(--gold2));
+  border-radius: 2px;
+  transition: width 0.06s;
+}
+
+/* 計時器 */
+#timer-wrap {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 13px;
+  color: rgba(248,243,235,0.5);
+  letter-spacing: 0.05em;
+}
+
+/* 完成按鈕 */
+.btn-done {
+  background: rgba(155,122,58,0.2);
+  border: 1px solid rgba(155,122,58,0.4);
+  color: var(--gold2);
+  border-radius: 50px;
+  padding: 7px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.btn-done:hover { background: rgba(155,122,58,0.35); }
+
+/* 呼吸引導 */
+#breath-guide {
+  position: absolute;
+  bottom: 70px; left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column; align-items: center; gap: 10px;
+  z-index: 20;
+}
+#breath-guide.show { display: flex; }
+.breath-circle {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(155,122,58,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--gold2);
+  animation: breathe 4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+.breath-text { font-size: 11px; color: var(--gold); letter-spacing: 0.1em; }
+
+/* ══════════════════════════════
+   FEEDBACK SCREEN
+══════════════════════════════ */
+#screen-feedback {
+  background: radial-gradient(ellipse at 50% 30%, rgba(107,124,94,0.1) 0%, transparent 60%),
+              var(--cream);
+  overflow-y: auto;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.feedback-body {
+  width: 100%; max-width: 520px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+.feedback-icon {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: white;
+  margin: 0 auto 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 4px 24px var(--shadow);
+}
+
+.feedback-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 24px;
+  text-align: center;
+  color: var(--ink);
+  margin-bottom: 8px;
+  letter-spacing: 0.1em;
+}
+.feedback-subtitle {
+  text-align: center;
+  font-size: 13px;
+  color: rgba(42,31,20,0.5);
+  margin-bottom: 32px;
+  line-height: 1.8;
+}
+
+/* 情緒狀態卡（非數字化） */
+.emotion-card {
+  background: white;
+  border-radius: var(--r);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.emotion-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 4px;
+}
+.emotion-card.calm::before { background: var(--sage); }
+.emotion-card.tense::before { background: var(--red); }
+.emotion-card.focused::before { background: var(--gold); }
+
+.ec-label {
+  font-size: 10px; letter-spacing: 0.15em;
+  color: rgba(42,31,20,0.4);
+  margin-bottom: 10px;
+}
+.ec-visual {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 10px;
+}
+.ec-icon { font-size: 32px; }
+.ec-bars {
+  flex: 1;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.ec-bar-wrap {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; color: rgba(42,31,20,0.4);
+}
+.ec-bar-track {
+  flex: 1; height: 5px;
+  background: rgba(42,31,20,0.06);
+  border-radius: 3px; overflow: hidden;
+}
+.ec-bar-fill {
+  height: 100%; border-radius: 3px;
+  transition: width 1s ease;
+}
+.calm .ec-bar-fill { background: var(--sage); }
+.tense .ec-bar-fill { background: var(--red); }
+.focused .ec-bar-fill { background: var(--gold2); }
+
+.ec-desc {
+  font-size: 13px; color: rgba(42,31,20,0.65); line-height: 1.8;
+}
+
+/* 建議卡 */
+.suggestion-card {
+  background: rgba(107,124,94,0.08);
+  border: 1px solid rgba(107,124,94,0.25);
+  border-radius: var(--r);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.suggestion-card h4 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 14px; color: var(--sage);
+  margin-bottom: 8px; letter-spacing: 0.08em;
+}
+.suggestion-card p {
+  font-size: 13px; color: rgba(42,31,20,0.6);
+  line-height: 1.9;
+}
+
+/* 社群區塊 */
+.community-card {
+  background: white;
+  border-radius: var(--r);
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.community-card h4 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 14px; color: var(--ink2);
+  margin-bottom: 14px; letter-spacing: 0.08em;
+}
+.co-write-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(42,31,20,0.06);
+}
+.co-write-row:last-child { border-bottom: none; }
+.co-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  background: var(--warm);
+  flex-shrink: 0;
+}
+.co-info { flex: 1; }
+.co-name { font-size: 12px; color: rgba(42,31,20,0.5); }
+.co-text {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 14px; color: var(--ink);
+  margin-top: 2px;
+}
+.co-mood {
+  font-size: 20px;
+}
+.share-toggle {
+  width: 100%; margin-top: 14px;
+  background: var(--cream);
+  border: 1px dashed rgba(155,122,58,0.3);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12px; color: rgba(155,122,58,0.8);
+  cursor: pointer; text-align: center;
+  transition: background 0.2s;
+}
+.share-toggle:hover { background: rgba(155,122,58,0.06); }
+
+.feedback-actions {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 24px;
+}
+
+/* ══════════════════════════════
+   COLOR PICKER (floating)
+══════════════════════════════ */
+#color-picker-panel {
+  position: absolute; top: 58px; left: 20px;
+  background: var(--ink2);
+  border-radius: 12px;
+  padding: 12px;
+  display: none; flex-direction: column; gap: 8px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+#color-picker-panel.open { display: flex; }
+.cp-row { display: flex; gap: 8px; }
+.cp-swatch {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.cp-swatch:hover { transform: scale(1.15); }
+.cp-swatch.active { border-color: white; transform: scale(1.15); }
+.cp-size-wrap {
+  padding: 4px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.cp-size-label { font-size: 10px; color: rgba(248,243,235,0.4); white-space: nowrap; }
+.cp-slider {
+  flex: 1; -webkit-appearance: none;
+  height: 3px; background: rgba(255,255,255,0.2);
+  border-radius: 2px; outline: none;
+}
+.cp-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: white; border-radius: 50%; cursor: pointer;
+}
+.guide-opacity-wrap {
+  padding: 4px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+/* 客語字型狀態提示 */
+#font-status {
+  position: fixed; top: 68px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(107,124,94,0.92);
+  color: white; font-size: 12px;
+  padding: 7px 16px; border-radius: 50px;
+  z-index: 200; display: none;
+  letter-spacing: 0.06em; pointer-events: none;
+}
+/* 底字提示標籤 */
+#guide-badge {
+  position: absolute; top: 10px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(155,122,58,0.15);
+  border: 1px solid rgba(155,122,58,0.3);
+  color: var(--gold); font-size: 11px;
+  padding: 4px 14px; border-radius: 50px;
+  letter-spacing: 0.08em; pointer-events: none;
+  z-index: 5; white-space: nowrap;
+  transition: opacity 0.6s;
+}
+/* 客語特殊字分頁樣式 */
+.filter-tab[data-cat='hakka-special'] { border-color: rgba(139,44,44,0.4); color: rgba(139,44,44,0.8); }
+.filter-tab[data-cat='hakka-special'].active { background: #8b2c2c; border-color: #8b2c2c; color: white; }
+.cc-romaji {
+  font-size: 9px; color: var(--mist);
+  margin-top: 4px; letter-spacing: 0.05em;
+  font-family: monospace;
+}
+
+/* ══════════════════════════════
+   MISC
+══════════════════════════════ */
+.back-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(248,243,235,0.2);
+  background: transparent;
+  color: rgba(248,243,235,0.7);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.back-btn:hover { background: rgba(255,255,255,0.1); }
+
+/* toast */
+#toast {
+  position: fixed; bottom: 100px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(42,31,20,0.9);
+  color: var(--cream);
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 200;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(42,31,20,0.15); border-radius: 2px; }
+
+/* ══════════════════════════════
+   CORPUS FILTER TABS
+══════════════════════════════ */
+.filter-tabs {
+  display: flex; gap: 6px;
+  overflow-x: auto; padding-bottom: 4px;
+  margin-bottom: 14px;
+  scrollbar-width: none;
+}
+.filter-tabs::-webkit-scrollbar { display: none; }
+.filter-tab {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 50px;
+  border: 1px solid rgba(155,122,58,0.25);
+  background: transparent;
+  color: rgba(42,31,20,0.5);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+}
+.filter-tab:hover { background: rgba(155,122,58,0.08); color: var(--gold); }
+.filter-tab.active {
+  background: var(--ink); color: var(--cream);
+  border-color: var(--ink);
+}
+
+/* corpus cards grid */
+.corpus-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.corpus-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+.corpus-card:hover { border-color: rgba(155,122,58,0.3); transform: translateY(-1px); }
+.corpus-card.selected { border-color: var(--gold); background: rgba(155,122,58,0.05); }
+.corpus-card .cc-cat {
+  font-size: 9px; letter-spacing: 0.12em;
+  color: var(--gold); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 4px;
+}
+.corpus-card .cc-text {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 15px; line-height: 1.7;
+  color: var(--ink);
+}
+.corpus-card .cc-diff {
+  margin-top: 8px; display: flex; gap: 3px;
+}
+.corpus-card .cc-diff .d { width: 5px; height: 5px; border-radius: 50%; background: var(--gold2); }
+.corpus-card .cc-diff .d.e { background: rgba(155,122,58,0.18); }
+
+/* today pick banner */
+.today-pick {
+  background: linear-gradient(135deg, rgba(155,122,58,0.12), rgba(107,124,94,0.1));
+  border: 1px solid rgba(155,122,58,0.25);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.today-pick:hover { background: linear-gradient(135deg, rgba(155,122,58,0.18), rgba(107,124,94,0.14)); }
+.tp-badge {
+  background: var(--gold);
+  color: white;
+  font-size: 9px; letter-spacing: 0.1em;
+  padding: 3px 8px; border-radius: 50px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.tp-text {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 15px; color: var(--ink);
+  flex: 1;
+}
+.tp-arrow { color: var(--gold); font-size: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════
+     WELCOME SCREEN
+════════════════════════════ -->
+<div class="screen" id="screen-welcome">
+  <div class="welcome-deco">靜</div>
+  <div class="welcome-inner">
+    <div class="logo-mark">
+      <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 4 C19 4 8 12 8 22 C8 28.627 13.373 34 20 34 C26.627 34 32 28.627 32 22 C32 12 19 4 19 4Z" stroke="#f8f3eb" stroke-width="1.5" fill="none"/>
+        <line x1="19" y1="10" x2="19" y2="30" stroke="#f8f3eb" stroke-width="1" stroke-dasharray="2 2"/>
+        <line x1="11" y1="20" x2="29" y2="20" stroke="#f8f3eb" stroke-width="1" stroke-dasharray="2 2"/>
+      </svg>
+    </div>
+
+    <div class="welcome-title">寫字靜心</div>
+    <div class="welcome-sub">AI 情緒感知書寫系統</div>
+
+    <div class="companions-bar">
+      <div class="companions-dots">
+        <div class="cdot"></div>
+        <div class="cdot"></div>
+        <div class="cdot"></div>
+        <div class="cdot"></div>
+        <div class="cdot"></div>
+      </div>
+      現在有 <strong id="companion-count">5</strong> 位夥伴正在一起書寫
+    </div>
+
+    <p class="welcome-desc">
+      書寫不只是練字，<br>
+      是讓心回到此刻的方式。<br>
+      每一筆，都是與自己的相遇。
+    </p>
+
+    <button class="btn-primary" onclick="goTo('screen-task')">
+      開始今日練習
+    </button>
+    <br>
+    <button class="btn-ghost" onclick="goTo('screen-task')">瀏覽社群書寫</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     TASK SELECTION SCREEN
+════════════════════════════ -->
+<div class="screen hidden" id="screen-task">
+  <div class="task-header">
+    <button class="back-btn" onclick="goTo('screen-welcome')">←</button>
+    <div>
+      <div class="task-header-title">選擇今日書寫內容</div>
+      <div class="task-header-sub">依照你現在的狀態，選擇合適的文字</div>
+    </div>
+  </div>
+
+  <div class="task-body" id="task-body-scroll">
+    <!-- 心情確認 -->
+    <div class="mood-check">
+      <h3>現在的你，感覺如何？</h3>
+      <div class="mood-options">
+        <div class="mood-btn" data-mood="calm" onclick="selectMood(this)">
+          <span class="emoji">😌</span>平靜
+        </div>
+        <div class="mood-btn" data-mood="tired" onclick="selectMood(this)">
+          <span class="emoji">😔</span>疲憊
+        </div>
+        <div class="mood-btn" data-mood="anxious" onclick="selectMood(this)">
+          <span class="emoji">😟</span>焦慮
+        </div>
+        <div class="mood-btn" data-mood="happy" onclick="selectMood(this)">
+          <span class="emoji">🙂</span>愉快
+        </div>
+      </div>
+    </div>
+
+    <!-- 今日推薦 -->
+    <div class="section-title">今日推薦</div>
+    <div class="today-pick" id="today-pick-banner" onclick="pickToday()">
+      <div class="tp-badge">✦ 今日精選</div>
+      <div class="tp-text" id="today-pick-text">載入中…</div>
+      <div class="tp-arrow">›</div>
+    </div>
+
+    <!-- 語料庫瀏覽 -->
+    <div class="section-title">語料庫</div>
+    <div class="filter-tabs" id="filter-tabs">
+      <button class="filter-tab active" data-cat="all" onclick="filterCorpus('all',this)">全部</button>
+      <button class="filter-tab" data-cat="single" onclick="filterCorpus('single',this)">單字</button>
+      <button class="filter-tab" data-cat="hakka" onclick="filterCorpus('hakka',this)">客家諺語</button>
+      <button class="filter-tab" data-cat="hakka-special" onclick="filterCorpus('hakka-special',this)">客語特殊字 ✦</button>
+      <button class="filter-tab" data-cat="miaoli" onclick="filterCorpus('miaoli',this)">苗栗地景</button>
+      <button class="filter-tab" data-cat="wisdom" onclick="filterCorpus('wisdom',this)">處世智慧</button>
+      <button class="filter-tab" data-cat="nature" onclick="filterCorpus('nature',this)">自然意象</button>
+      <button class="filter-tab" data-cat="sutra" onclick="filterCorpus('sutra',this)">靜心經句</button>
+    </div>
+    <div class="corpus-grid" id="corpus-grid">
+      <!-- 動態生成 -->
+    </div>
+
+    <!-- 自定義輸入 -->
+    <div class="section-title">自由書寫</div>
+    <div class="custom-input-wrap">
+      <div class="ec-label" style="margin-bottom:8px;">輸入任何你想寫的文字（名字、歌詞、經文…）</div>
+      <textarea id="custom-text" placeholder="例如：我愛台灣、阿彌陀佛、自己的名字…"></textarea>
+    </div>
+
+    <div class="start-row">
+      <button class="btn-start" onclick="startWriting()">開始書寫 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     WRITING SCREEN
+════════════════════════════ -->
+<div class="screen hidden" id="screen-write">
+  <!-- 頂部工具列 -->
+  <div id="write-top">
+    <button class="back-btn" onclick="goTo('screen-task')">←</button>
+    <div class="write-prompt" id="write-prompt-text">靜</div>
+    <div class="write-tools">
+      <div class="tool-btn" title="顏色/筆刷" onclick="toggleColorPanel()">🖌</div>
+      <div class="tool-btn" title="格線" onclick="toggleGridPicker()">⊞</div>
+      <div class="tool-btn" title="上一步" onclick="undo()">↩</div>
+      <div class="tool-btn" title="清除" onclick="clearCanvas()">✕</div>
+    </div>
+  </div>
+
+  <!-- 格線選擇器 -->
+  <div class="grid-picker" id="grid-picker">
+    <div class="grid-opt active" data-grid="rice" onclick="setGrid('rice',this)">米字格</div>
+    <div class="grid-opt" data-grid="field" onclick="setGrid('field',this)">田字格</div>
+    <div class="grid-opt" data-grid="line" onclick="setGrid('line',this)">橫線格</div>
+    <div class="grid-opt" data-grid="none" onclick="setGrid('none',this)">無格</div>
+  </div>
+
+  <!-- 顏色面板 -->
+  <div id="color-picker-panel">
+    <div class="cp-row">
+      <div class="cp-swatch active" style="background:#2a1f14" data-color="#2a1f14" onclick="setColor(this)"></div>
+      <div class="cp-swatch" style="background:#8b2c2c" data-color="#8b2c2c" onclick="setColor(this)"></div>
+      <div class="cp-swatch" style="background:#2c5f7a" data-color="#2c5f7a" onclick="setColor(this)"></div>
+      <div class="cp-swatch" style="background:#6b7c5e" data-color="#6b7c5e" onclick="setColor(this)"></div>
+      <div class="cp-swatch" style="background:#9b7a3a" data-color="#9b7a3a" onclick="setColor(this)"></div>
+    </div>
+    <div class="cp-size-wrap">
+      <span class="cp-size-label">筆刷</span>
+      <input type="range" class="cp-slider" id="brush-size" min="1" max="40" value="6" oninput="maxWidth=parseInt(this.value)">
+    </div>
+    <div class="guide-opacity-wrap">
+      <span class="cp-size-label">底字</span>
+      <input type="range" class="cp-slider" id="guide-opacity-slider" min="0" max="100" value="18"
+             oninput="setGuideOpacity(parseInt(this.value))">
+    </div>
+    <div class="guide-opacity-wrap">
+      <span class="cp-size-label">字大小</span>
+      <input type="range" class="cp-slider" id="cell-size-slider" min="100" max="500" value="220"
+             oninput="setCellSize(parseInt(this.value))">
+    </div>
+  </div>
+
+  <!-- 畫布區 -->
+  <div id="canvas-area">
+    <canvas id="grid-canvas"></canvas>
+    <canvas id="guide-canvas"></canvas>
+    <canvas id="draw-canvas"></canvas>
+    <div id="guide-badge">淡色底字模式 · 照著描寫</div>
+
+    <!-- 呼吸引導（當偵測到焦慮時顯示） -->
+    <div id="breath-guide">
+      <div class="breath-circle">吸⋯</div>
+      <div class="breath-text">先跟著呼吸，再開始書寫</div>
+    </div>
+  </div>
+
+  <!-- 底部狀態列 -->
+  <div id="write-bottom">
+    <div class="pressure-wrap">
+      <span class="pressure-label">筆壓</span>
+      <div class="pressure-track">
+        <div id="pressure-fill"></div>
+      </div>
+    </div>
+    <div id="timer-wrap">00:00</div>
+    <button class="btn-done" onclick="finishWriting()">完成書寫</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════
+     FEEDBACK SCREEN
+════════════════════════════ -->
+<div class="screen hidden" id="screen-feedback">
+  <div class="feedback-body">
+    <div class="feedback-icon" id="fb-icon">🍃</div>
+    <div class="feedback-title" id="fb-title">你今天寫得很好</div>
+    <div class="feedback-subtitle" id="fb-subtitle">書寫過程穩定而專注<br>這一刻，你給了自己一份禮物</div>
+
+    <!-- 情緒狀態（非數字化視覺回饋） -->
+    <div class="emotion-card" id="emotion-card">
+      <div class="ec-label">書寫狀態感知</div>
+      <div class="ec-visual">
+        <div class="ec-icon" id="ec-icon">🌊</div>
+        <div class="ec-bars" id="ec-bars">
+          <!-- 動態生成 -->
+        </div>
+      </div>
+      <div class="ec-desc" id="ec-desc"></div>
+    </div>
+
+    <!-- 建議卡 -->
+    <div class="suggestion-card" id="suggestion-card">
+      <h4>✦ 給你的小提醒</h4>
+      <p id="suggestion-text"></p>
+    </div>
+
+    <!-- 社群共鳴 -->
+    <div class="community-card">
+      <h4>夥伴們今天也在書寫</h4>
+      <div class="co-write-row">
+        <div class="co-avatar">🌸</div>
+        <div class="co-info">
+          <div class="co-name">苗栗的夥伴</div>
+          <div class="co-text">知足者常樂，能忍者自安</div>
+        </div>
+        <div class="co-mood">😌</div>
+      </div>
+      <div class="co-write-row">
+        <div class="co-avatar">🍃</div>
+        <div class="co-info">
+          <div class="co-name">南庄的夥伴</div>
+          <div class="co-text">油桐花開，白雪滿山</div>
+        </div>
+        <div class="co-mood">🙂</div>
+      </div>
+      <div class="co-write-row">
+        <div class="co-avatar">🌿</div>
+        <div class="co-info">
+          <div class="co-name">頭份的夥伴</div>
+          <div class="co-text">靜</div>
+        </div>
+        <div class="co-mood">😌</div>
+      </div>
+      <button class="share-toggle" onclick="showToast('已匿名分享你今天的書寫 🌸')">
+        匿名分享我今天的書寫給夥伴們
+      </button>
+    </div>
+
+    <div class="feedback-actions">
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="goTo('screen-task')">
+        再練習一次
+      </button>
+      <button class="btn-ghost" onclick="goTo('screen-welcome')">回首頁</button>
+    </div>
+  </div>
+</div>
+
+<!-- 字型狀態 -->
+<div id="font-status"></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════
+// 語料庫 CORPUS
+// ══════════════════════════════
+const CORPUS = [
+  // ── 單字 (single) ──
+  { id:'s01', text:'靜', cat:'single', label:'單字', diff:1, mood:['all','anxious','tired'] },
+  { id:'s02', text:'心', cat:'single', label:'單字', diff:1, mood:['all','anxious','tired'] },
+  { id:'s03', text:'忍', cat:'single', label:'單字', diff:1, mood:['all','anxious'] },
+  { id:'s04', text:'安', cat:'single', label:'單字', diff:1, mood:['all','tired'] },
+  { id:'s05', text:'和', cat:'single', label:'單字', diff:1, mood:['all'] },
+  { id:'s06', text:'善', cat:'single', label:'單字', diff:1, mood:['all','happy'] },
+  { id:'s07', text:'慢', cat:'single', label:'單字', diff:1, mood:['all','anxious'] },
+  { id:'s08', text:'緣', cat:'single', label:'單字', diff:1, mood:['all'] },
+
+  // ── 客家諺語 (hakka) ──
+  { id:'h01', text:'吾心安處是吾鄉', cat:'hakka', label:'客家諺語', diff:2, mood:['all','calm','happy'] },
+  { id:'h02', text:'細水長流，細食長久', cat:'hakka', label:'客家諺語', diff:2, mood:['all','calm'] },
+  { id:'h03', text:'寧賣祖宗田，不忘祖宗言', cat:'hakka', label:'客家諺語', diff:3, mood:['all'] },
+  { id:'h04', text:'有山就有水，有客就有家', cat:'hakka', label:'客家諺語', diff:2, mood:['all','happy'] },
+  { id:'h05', text:'勤儉持家，忠厚傳世', cat:'hakka', label:'客家諺語', diff:2, mood:['all','calm'] },
+  { id:'h06', text:'山高水遠，心寬路廣', cat:'hakka', label:'客家諺語', diff:2, mood:['all','tired'] },
+  { id:'h07', text:'食得苦中苦，方為人上人', cat:'hakka', label:'客家諺語', diff:3, mood:['all'] },
+  { id:'h08', text:'做人著忠厚，做事著勤力', cat:'hakka', label:'客家諺語', diff:2, mood:['all'] },
+
+  // ── 苗栗地景 (miaoli) ──
+  { id:'m01', text:'油桐花開，白雪滿山', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','happy','calm'] },
+  { id:'m02', text:'南庄山色，四時如畫', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','calm'] },
+  { id:'m03', text:'大湖草莓紅，農家笑顏開', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','happy'] },
+  { id:'m04', text:'獅潭仙山雲霧繞', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all'] },
+  { id:'m05', text:'通霄海浪聲，伴我夜讀書', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','calm'] },
+  { id:'m06', text:'三義木雕情，刻盡山河秀', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all'] },
+  { id:'m07', text:'苑裡藺草香，編織歲月情', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','calm'] },
+  { id:'m08', text:'泰安溫泉暖，洗去一身疲', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','tired'] },
+
+  // ── 處世智慧 (wisdom) ──
+  { id:'w01', text:'知足者常樂，能忍者自安', cat:'wisdom', label:'處世智慧', diff:3, mood:['all','anxious'] },
+  { id:'w02', text:'靜以修身，儉以養德', cat:'wisdom', label:'處世智慧', diff:2, mood:['all','calm'] },
+  { id:'w03', text:'寵辱不驚，閒看庭前花開花落', cat:'wisdom', label:'處世智慧', diff:3, mood:['all'] },
+  { id:'w04', text:'上善若水，水善利萬物而不爭', cat:'wisdom', label:'處世智慧', diff:3, mood:['all','calm'] },
+  { id:'w05', text:'路遙知馬力，日久見人心', cat:'wisdom', label:'處世智慧', diff:2, mood:['all'] },
+  { id:'w06', text:'千里之行，始於足下', cat:'wisdom', label:'處世智慧', diff:2, mood:['all','tired'] },
+  { id:'w07', text:'學而不思則罔，思而不學則殆', cat:'wisdom', label:'處世智慧', diff:3, mood:['all'] },
+
+  // ── 自然意象 (nature) ──
+  { id:'n01', text:'春風又綠江南岸', cat:'nature', label:'自然意象', diff:2, mood:['all','happy'] },
+  { id:'n02', text:'明月松間照，清泉石上流', cat:'nature', label:'自然意象', diff:2, mood:['all','calm'] },
+  { id:'n03', text:'竹外桃花三兩枝', cat:'nature', label:'自然意象', diff:2, mood:['all','happy'] },
+  { id:'n04', text:'山光悅鳥性，潭影空人心', cat:'nature', label:'自然意象', diff:2, mood:['all','anxious'] },
+  { id:'n05', text:'採菊東籬下，悠然見南山', cat:'nature', label:'自然意象', diff:2, mood:['all','tired'] },
+  { id:'n06', text:'天街小雨潤如酥', cat:'nature', label:'自然意象', diff:2, mood:['all','calm'] },
+  { id:'n07', text:'荷風送香氣，竹露滴清響', cat:'nature', label:'自然意象', diff:2, mood:['all','calm'] },
+
+  // ── 靜心經句 (sutra) ──
+  { id:'q01', text:'阿彌陀佛', cat:'sutra', label:'靜心經句', diff:1, mood:['all','anxious','tired'] },
+  { id:'q02', text:'南無觀世音菩薩', cat:'sutra', label:'靜心經句', diff:2, mood:['all','anxious'] },
+  { id:'q03', text:'心無掛礙，無掛礙故', cat:'sutra', label:'靜心經句', diff:2, mood:['all','anxious'] },
+  { id:'q04', text:'色即是空，空即是色', cat:'sutra', label:'靜心經句', diff:2, mood:['all'] },
+  { id:'q05', text:'放下屠刀，立地成佛', cat:'sutra', label:'靜心經句', diff:2, mood:['all'] },
+  { id:'q06', text:'萬法歸一，一歸何處', cat:'sutra', label:'靜心經句', diff:2, mood:['all','calm'] },
+  { id:'q07', text:'平常心是道', cat:'sutra', label:'靜心經句', diff:1, mood:['all','anxious'] },
+];
+
+// 今日精選（依日期固定，每天不同）
+function getTodayPick() {
+  const day = new Date().getDate();
+  return CORPUS[day % CORPUS.length];
+}
+
+// ══════════════════════════════
+// 客語特殊字語料庫（從 hkim_phrase.tab + hkim_word_*.tab 提取）
+// col1 = 客語字, col2 = 搭配詞語, romaji = 客語拼音
+// ══════════════════════════════
+const HAKKA_SPECIAL = [
+  { text:'㐁舌',    romaji:'le5',   meaning:'舌頭' },
+  { text:'㓾人',    romaji:'cii5',  meaning:'那個人' },
+  { text:'㓾頭',    romaji:'cii5',  meaning:'那頭' },
+  { text:'㓾雞鴨',  romaji:'cii5',  meaning:'那雞鴨' },
+  { text:'㓾豬个',  romaji:'cii5',  meaning:'那頭豬' },
+  { text:'㔇草',    romaji:'pad4',  meaning:'割草' },
+  { text:'㜮斗',    romaji:'lam1',  meaning:'一斗' },
+  { text:'㜮狗屎',  romaji:'lam1',  meaning:'一坨狗屎' },
+  { text:'㝗㝩',    romaji:'long1', meaning:'空洞' },
+  { text:'㧡擔',    romaji:'kai1',  meaning:'挑擔' },
+  { text:'㧡米',    romaji:'kai1',  meaning:'挑米' },
+  { text:'㧡水',    romaji:'kai1',  meaning:'挑水' },
+  { text:'㧡點心',  romaji:'kai1',  meaning:'帶點心' },
+  { text:'㧡東西',  romaji:'kai1',  meaning:'帶東西' },
+  { text:'㧡石頭',  romaji:'kai1',  meaning:'搬石頭' },
+  { text:'㪐毛',    romaji:'lud4',  meaning:'脫毛' },
+  { text:'㪐皮',    romaji:'lud4',  meaning:'剝皮' },
+  { text:'㸐人',    romaji:'nad4',  meaning:'那個人' },
+  { text:'䀯等',    romaji:'pu3',   meaning:'等待' },
+  { text:'䌈頸',    romaji:'tag4',  meaning:'脖子' },
+  { text:'䟘床',    romaji:'hong3', meaning:'床鋪' },
+  { text:'䟘起來',  romaji:'hong3', meaning:'起床' },
+  { text:'𠊎',      romaji:'ngai5', meaning:'我（客語第一人稱）' },
+  { text:'𠊎个',    romaji:'ngai5', meaning:'我的' },
+  { text:'𠊎愛你',  romaji:'ngai5', meaning:'我愛你（客語）' },
+  { text:'𠊎係客家人', romaji:'ngai5', meaning:'我是客家人' },
+  { text:'𪖐',      romaji:'ngiu3', meaning:'牛（客語）' },
+  { text:'𢫦',      romaji:'mag8',  meaning:'抹（客語）' },
+  { text:'𢯭',      romaji:'ten3',  meaning:'伸展' },
+  { text:'𤊶',      romaji:'lad4',  meaning:'辣' },
+];
+
+
+let currentScreen  = 'screen-welcome';
+let selectedTask   = '靜';
+let selectedMood   = null;
+let currentColor   = '#2a1f14';
+let maxWidth       = 6;       // 筆刷預設細一點
+let currentGrid    = 'rice';
+let currentFilter  = 'all';
+let selectedCorpusId = null;
+let guideOpacity   = 0.18;
+let hakkaFontLoaded = false;
+let cellSize       = 220;     // 底字格子大小（px），預設較大
+
+// Writing session analytics
+let sessionData = {
+  // 現有
+  strokes: [],
+  pauseDurations: [],
+  pressureValues: [],
+  totalTime: 0,
+  strokeCount: 0,
+  // 新增：逐點原始資料（對應 handwriting-features-test8.py）
+  rawPoints: [],       // { x, y, pressure, tiltX, tiltY, ts, charId, strokeId }
+  charBounds: {},      // { charId: { minX, maxX, minY, maxY, firstX, firstY } }
+  tiltXValues: [],     // 所有 tiltX 讀數
+  tiltYValues: [],     // 所有 tiltY 讀數
+  baselineAngles: [],  // 每個點相對於該字起點的角度
+};
+
+let isDrawing     = false;
+let lastX = 0, lastY = 0, lastWidth = 2;
+let undoStack     = [];
+let timerInterval = null;
+let timerSeconds  = 0;
+let lastStrokeEnd = null;
+let sessionStart  = null;
+let currentCharId = 0;    // 目前書寫的字元編號（筆離開 > 500ms 視為新字）
+let lastDownTime  = 0;    // 上次 pointerdown 的時間（用來判斷新字）
+
+// ══════════════════════════════
+// CORPUS RENDERING
+// ══════════════════════════════
+function diffDots(n) {
+  let html = '';
+  for (let i = 1; i <= 3; i++) {
+    html += `<div class="d${i > n ? ' e' : ''}"></div>`;
+  }
+  return html;
+}
+
+function renderCorpus(cat) {
+  const mood = selectedMood || 'all';
+  const grid = document.getElementById('corpus-grid');
+
+  // 客語特殊字分頁：直接從 HAKKA_SPECIAL 渲染
+  if (cat === 'hakka-special') {
+    grid.innerHTML = HAKKA_SPECIAL.map((item, i) => `
+      <div class="corpus-card${selectedTask === item.text ? ' selected' : ''}"
+           data-id="hk-${i}" data-text="${item.text}" onclick="selectCorpusCard(this)">
+        <div class="cc-cat">
+          <span>✦</span>客語特殊字
+          ${!hakkaFontLoaded ? '<span style="color:rgba(139,44,44,0.6);font-size:9px">需載入字型</span>' : ''}
+        </div>
+        <div class="cc-text" style="font-family:'HanaMinB','HanaMinA','Noto Serif TC',serif">${item.text}</div>
+        <div class="cc-romaji">${item.romaji}　${item.meaning}</div>
+        <div class="cc-diff">${diffDots(1)}</div>
+      </div>
+    `).join('');
+
+    // 預先觸發字型載入
+    if (!hakkaFontLoaded) loadHanaFonts();
+    return;
+  }
+
+  let items = CORPUS.filter(c => {
+    const catOk  = cat === 'all' || c.cat === cat;
+    const moodOk = mood === 'all' || c.mood.includes('all') || c.mood.includes(mood);
+    return catOk && moodOk;
+  });
+  if (items.length === 0) items = CORPUS.filter(c => cat === 'all' || c.cat === cat);
+
+  grid.innerHTML = items.map(item => `
+    <div class="corpus-card${selectedCorpusId === item.id ? ' selected' : ''}"
+         data-id="${item.id}" data-text="${item.text}" onclick="selectCorpusCard(this)">
+      <div class="cc-cat">
+        <span>${catEmoji(item.cat)}</span>${item.label}
+      </div>
+      <div class="cc-text">${item.text}</div>
+      <div class="cc-diff">${diffDots(item.diff)}</div>
+    </div>
+  `).join('');
+}
+
+function catEmoji(cat) {
+  return { single:'✦', hakka:'🌿', miaoli:'⛰', wisdom:'📜', nature:'🍃', sutra:'🪷' }[cat] || '✦';
+}
+
+function filterCorpus(cat, el) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  selectedCorpusId = null;
+  renderCorpus(cat);
+}
+
+function selectCorpusCard(el) {
+  selectedCorpusId = el.dataset.id;
+  selectedTask = el.dataset.text;
+  document.querySelectorAll('.corpus-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('custom-text').value = '';
+}
+
+function pickToday() {
+  const item = getTodayPick();
+  selectedTask = item.text;
+  selectedCorpusId = item.id;
+  // Switch to that category
+  currentFilter = item.cat;
+  document.querySelectorAll('.filter-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.cat === item.cat);
+  });
+  renderCorpus(item.cat);
+  showToast(`已選擇：${item.text} ✦`);
+}
+
+function initTodayPick() {
+  const item = getTodayPick();
+  document.getElementById('today-pick-text').textContent = item.text;
+}
+
+// ══════════════════════════════
+// NAVIGATION
+// ══════════════════════════════
+function goTo(id) {
+  document.getElementById(currentScreen).classList.add('hidden');
+  document.getElementById(id).classList.remove('hidden');
+  currentScreen = id;
+
+  if (id === 'screen-task') {
+    initTodayPick();
+    renderCorpus(currentFilter);
+  }
+  if (id === 'screen-write') initWriting();
+  if (id === 'screen-feedback') showFeedback();
+  if (id !== 'screen-write') stopTimer();
+
+  document.getElementById('grid-picker').classList.remove('open');
+  document.getElementById('color-picker-panel').classList.remove('open');
+}
+
+// ══════════════════════════════
+// TASK SELECTION
+// ══════════════════════════════
+function selectMood(el) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedMood = el.dataset.mood;
+
+  // Re-render corpus with mood filter
+  renderCorpus(currentFilter);
+
+  if (selectedMood === 'anxious' || selectedMood === 'tired') {
+    showToast('建議從簡單的單字開始，慢慢來 🍃');
+  }
+}
+
+function selectTask(el) {
+  document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTask = el.dataset.text;
+  document.getElementById('custom-text').value = '';
+}
+
+function startWriting() {
+  const custom = document.getElementById('custom-text').value.trim();
+  if (custom) { selectedTask = custom; selectedCorpusId = null; }
+  if (!selectedTask) { showToast('請先選擇或輸入書寫內容 ✦'); return; }
+  goTo('screen-write');
+}
+
+// ══════════════════════════════
+// CANVAS SETUP
+// ══════════════════════════════
+const gCanvas  = () => document.getElementById('grid-canvas');
+const guCanvas = () => document.getElementById('guide-canvas');
+const dCanvas  = () => document.getElementById('draw-canvas');
+const gCtx     = () => gCanvas().getContext('2d');
+const guCtx    = () => guCanvas().getContext('2d');
+const dCtx     = () => dCanvas().getContext('2d');
+
+// 字型載入狀態
+let fontALoaded = false;
+let fontBLoaded = false;
+
+async function loadHanaFonts() {
+  const statusEl = document.getElementById('font-status');
+  try {
+    statusEl.textContent = '客語字型載入中…';
+    statusEl.style.display = 'block';
+
+    const fontA = new FontFace('HanaMinA',
+      "url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff2') format('woff2')," +
+      "url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff') format('woff')"
+    );
+    const fontB = new FontFace('HanaMinB',
+      "url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff2') format('woff2')," +
+      "url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff') format('woff')"
+    );
+
+    await fontA.load();
+    document.fonts.add(fontA);
+    fontALoaded = true;
+
+    statusEl.textContent = '載入 B 區字型…';
+    await fontB.load();
+    document.fonts.add(fontB);
+    fontBLoaded = true;
+
+    hakkaFontLoaded = true;
+    statusEl.textContent = '✓ 客語字型已就緒';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+
+    // 重繪底字
+    if (currentScreen === 'screen-write') drawGuideChars();
+
+  } catch (err) {
+    statusEl.textContent = '字型載入失敗，請確認網路連線';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+  }
+}
+
+// 決定每個字使用哪個字型
+function fontForChar(ch) {
+  const cp = ch.codePointAt(0);
+  if (cp >= 0x20000) return "'HanaMinB', 'Noto Serif TC', serif";  // Ext B
+  if (cp >= 0x3400)  return "'HanaMinA', 'Noto Serif TC', serif";  // Ext A
+  return "'Noto Serif TC', serif";
+}
+
+// 底字包含特殊字時的混合字型
+function guideFont(text, sizePx) {
+  const hasSpecial = [...text].some(c => c.codePointAt(0) < 0x4E00 || c.codePointAt(0) > 0x9FFF);
+  if (hasSpecial) {
+    return `${sizePx}px 'HanaMinB', 'HanaMinA', 'Noto Serif TC', serif`;
+  }
+  return `${sizePx}px 'Noto Serif TC', serif`;
+}
+
+function initWriting() {
+  document.getElementById('write-prompt-text').textContent = selectedTask;
+
+  sessionData = {
+    strokes: [], pauseDurations: [], pressureValues: [],
+    totalTime: 0, strokeCount: 0,
+    rawPoints: [], charBounds: {},
+    tiltXValues: [], tiltYValues: [], baselineAngles: [],
+  };
+  undoStack = [];
+  timerSeconds = 0;
+  currentCharId = 0;
+  lastDownTime  = 0;
+  lastStrokeEnd = null;
+  updateTimer();
+  sessionStart = Date.now();
+
+  resizeCanvases();
+  startTimer();
+
+  const guide = document.getElementById('breath-guide');
+  if (selectedMood === 'anxious') {
+    guide.classList.add('show');
+    setTimeout(() => guide.classList.remove('show'), 8000);
+  } else {
+    guide.classList.remove('show');
+  }
+
+  // 若含特殊字且字型未載入，觸發載入
+  const hasSpecial = [...selectedTask].some(c => c.codePointAt(0) < 0x4E00 || c.codePointAt(0) > 0x9FFF);
+  if (hasSpecial && !hakkaFontLoaded) {
+    loadHanaFonts();
+  }
+}
+
+function resizeCanvases() {
+  const area = document.getElementById('canvas-area');
+  const W = area.clientWidth;
+  const H = area.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+
+  [gCanvas(), guCanvas(), dCanvas()].forEach(c => {
+    c.width  = W * dpr;
+    c.height = H * dpr;
+    c.style.width  = W + 'px';
+    c.style.height = H + 'px';
+  });
+  gCtx().scale(dpr, dpr);
+  guCtx().scale(dpr, dpr);
+  dCtx().scale(dpr, dpr);
+
+  drawGrid(W, H);
+  drawGuideChars();
+}
+
+// ══════════════════════════════
+// 底字描摹層
+// ══════════════════════════════
+function setGuideOpacity(val) {
+  guideOpacity = val / 100;
+  drawGuideChars();
+}
+
+function setCellSize(val) {
+  cellSize = val;
+  const area = document.getElementById('canvas-area');
+  drawGrid(area.clientWidth, area.clientHeight);
+  // drawGuideChars 會在 drawGrid 結尾自動呼叫
+}
+
+function drawGuideChars() {
+  const area = document.getElementById('canvas-area');
+  const W = area.clientWidth;
+  const H = area.clientHeight;
+  const ctx = guCtx();
+  ctx.clearRect(0, 0, W, H);
+
+  if (guideOpacity <= 0 || !selectedTask) return;
+
+  const chars = [...selectedTask];
+  const n = chars.length;
+  const cell = cellSize;   // 使用可調節的格子大小
+
+  // 計算整個字串置中的起始位置
+  const totalW = n * cell;
+  // 若超出寬度，自動縮小
+  const scale  = totalW > W * 0.95 ? (W * 0.95) / totalW : 1;
+  const drawCell = cell * scale;
+  const drawW    = n * drawCell;
+
+  const startX = (W - drawW) / 2;
+  const startY = (H - drawCell) / 2;
+
+  ctx.globalAlpha = guideOpacity;
+  ctx.fillStyle = '#2a1f14';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  chars.forEach((ch, i) => {
+    const cx = startX + i * drawCell + drawCell / 2;
+    const cy = startY + drawCell / 2;
+    ctx.font = guideFont(ch, drawCell * 0.82);
+    ctx.fillText(ch, cx, cy);
+  });
+
+  ctx.globalAlpha = 1;
+
+  const badge = document.getElementById('guide-badge');
+  if (badge) badge.style.opacity = guideOpacity > 0 ? '1' : '0';
+
+  const hasSpecial = chars.some(c => c.codePointAt(0) < 0x4E00 || c.codePointAt(0) > 0x9FFF);
+  if (hasSpecial && !hakkaFontLoaded) loadHanaFonts();
+}
+
+function drawGrid(W, H) {
+  const ctx = gCtx();
+  ctx.clearRect(0, 0, W, H);
+
+  // Warm paper background
+  ctx.fillStyle = '#f8f3eb';
+  ctx.fillRect(0, 0, W, H);
+
+  // Paper texture
+  for (let i = 0; i < 4000; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    ctx.fillStyle = `rgba(155,122,58,${Math.random() * 0.025})`;
+    ctx.fillRect(x, y, 1, 1);
+  }
+
+  if (currentGrid === 'none') {
+    drawGuideChars();
+    return;
+  }
+
+  const cell = cellSize;  // 與底字格子同步
+
+  ctx.strokeStyle = 'rgba(155,122,58,0.22)';
+  ctx.lineWidth = 0.8;
+
+  if (currentGrid === 'rice' || currentGrid === 'field') {
+    for (let x = 0; x <= W; x += cell) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y <= H; y += cell) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+
+    ctx.strokeStyle = 'rgba(155,122,58,0.12)';
+    ctx.setLineDash([3, 4]);
+    for (let x = 0; x <= W; x += cell) {
+      for (let y = 0; y <= H; y += cell) {
+        const cx = x + cell / 2, cy = y + cell / 2;
+        ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(x + cell, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx, y + cell); ctx.stroke();
+        if (currentGrid === 'rice') {
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + cell, y + cell); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x + cell, y); ctx.lineTo(x, y + cell); ctx.stroke();
+        }
+      }
+    }
+    ctx.setLineDash([]);
+
+  } else if (currentGrid === 'line') {
+    const lh = 60;
+    ctx.strokeStyle = 'rgba(155,122,58,0.2)';
+    for (let y = lh; y <= H; y += lh) {
+      ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(W - 30, y); ctx.stroke();
+    }
+  }
+
+  // 底字層在格線重繪後也要同步刷新
+  drawGuideChars();
+}
+
+// ══════════════════════════════
+// DRAWING
+// ══════════════════════════════
+function getPos(e) {
+  const rect = dCanvas().getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function getPressureWidth(e) {
+  let p = 0.5;
+  if (e.pointerType === 'pen' && e.pressure > 0) p = e.pressure;
+  else if (e.pointerType === 'touch' && e.pressure > 0) p = e.pressure;
+  sessionData.pressureValues.push(p);
+  return Math.max(1, p * maxWidth);
+}
+
+// 記錄一個原始採樣點（對應 py 版本的 rawData.push）
+function recordPoint(e, pos) {
+  const now   = Date.now();
+  const p     = (e.pointerType === 'pen' && e.pressure > 0) ? e.pressure
+              : (e.pointerType === 'touch' && e.pressure > 0) ? e.pressure : 0.5;
+  const tiltX = e.tiltX || 0;
+  const tiltY = e.tiltY || 0;
+
+  // 更新 charBounds（計算 bounding box + 第一個點座標，用於基線角度）
+  if (!sessionData.charBounds[currentCharId]) {
+    sessionData.charBounds[currentCharId] = {
+      minX: pos.x, maxX: pos.x, minY: pos.y, maxY: pos.y,
+      firstX: pos.x, firstY: pos.y,
+    };
+  }
+  const b = sessionData.charBounds[currentCharId];
+  b.minX = Math.min(b.minX, pos.x); b.maxX = Math.max(b.maxX, pos.x);
+  b.minY = Math.min(b.minY, pos.y); b.maxY = Math.max(b.maxY, pos.y);
+
+  // 基線角度（相對於該字第一個點）
+  const dx = pos.x - b.firstX;
+  const dy = pos.y - b.firstY;
+  const angle = Math.round(Math.atan2(dy, dx + 0.1) * (180 / Math.PI) * 100) / 100;
+
+  sessionData.rawPoints.push({
+    x:        Math.round(pos.x),
+    y:        Math.round(pos.y),
+    pressure: Math.round(p * 1023),   // 對應 py 版本的 0-1023
+    pressureNorm: p,                   // 0-1 浮點保留用於穩定度計算
+    tiltX,
+    tiltY,
+    tiltMag:  Math.round(Math.sqrt(tiltX * tiltX + tiltY * tiltY) * 100) / 100,
+    baselineAngle: angle,
+    charId:   currentCharId,
+    strokeId: sessionData.strokeCount,
+    ts:       now,
+  });
+
+  sessionData.tiltXValues.push(tiltX);
+  sessionData.tiltYValues.push(tiltY);
+  sessionData.baselineAngles.push(angle);
+}
+
+function onPointerDown(e) {
+  e.preventDefault();
+  saveUndo();
+  isDrawing = true;
+
+  const now = Date.now();
+
+  // 判斷是否為新字（筆離開超過 500ms，與 py 版本邏輯一致）
+  if (currentCharId === 0) {
+    currentCharId = 1;
+  } else if (lastStrokeEnd !== null && (now - lastStrokeEnd) > 500) {
+    currentCharId++;
+  }
+  lastDownTime = now;
+
+  // 停頓記錄
+  if (lastStrokeEnd !== null) {
+    const pause = (now - lastStrokeEnd) / 1000;
+    sessionData.pauseDurations.push(Math.round(pause * 100) / 100);
+  }
+  sessionData.strokeCount++;
+
+  const pos = getPos(e);
+  lastX = pos.x; lastY = pos.y;
+  lastWidth = getPressureWidth(e);
+  recordPoint(e, pos);
+
+  const ctx = dCtx();
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, lastWidth / 2, 0, Math.PI * 2);
+  ctx.fillStyle = currentColor;
+  ctx.fill();
+
+  updatePressureHUD(e);
+}
+
+function onPointerMove(e) {
+  e.preventDefault();
+  updatePressureHUD(e);
+  if (!isDrawing) return;
+
+  const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+  const ctx = dCtx();
+
+  for (const ev of events) {
+    const pos = getPos(ev);
+    const w   = getPressureWidth(ev);
+    const avg = (lastWidth + w) / 2;
+
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.lineWidth = avg;
+    ctx.lineCap   = 'round';
+    ctx.lineJoin  = 'round';
+    ctx.strokeStyle = currentColor;
+    ctx.stroke();
+
+    recordPoint(ev, pos);   // ← 每個移動點都記錄
+    lastX = pos.x; lastY = pos.y; lastWidth = w;
+  }
+}
+
+function onPointerUp(e) {
+  isDrawing = false;
+  lastStrokeEnd = Date.now();
+  updatePressureHUD(e, true);
+}
+
+// Register
+['pointerdown','pointermove','pointerup','pointerout','pointercancel'].forEach(evt => {
+  document.addEventListener(evt, (e) => {
+    const dc = dCanvas();
+    if (!dc || currentScreen !== 'screen-write') return;
+    if (evt === 'pointerdown') onPointerDown(e);
+    else if (evt === 'pointermove') onPointerMove(e);
+    else onPointerUp(e);
+  });
+});
+
+function updatePressureHUD(e, released) {
+  let p = 0;
+  if (!released) {
+    if (e.pointerType === 'pen') p = e.pressure;
+    else if (e.pointerType === 'touch') p = e.pressure > 0 ? e.pressure : (isDrawing ? 0.4 : 0);
+    else p = isDrawing ? 0.5 : 0;
+  }
+  const fill = document.getElementById('pressure-fill');
+  if (fill) fill.style.width = (p * 100) + '%';
+}
+
+// ══════════════════════════════
+// UNDO / CLEAR
+// ══════════════════════════════
+function saveUndo() {
+  const dc = dCanvas();
+  if (!dc) return;
+  undoStack.push(dCtx().getImageData(0, 0, dc.width, dc.height));
+  if (undoStack.length > 25) undoStack.shift();
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  dCtx().putImageData(undoStack.pop(), 0, 0);
+}
+
+function clearCanvas() {
+  saveUndo();
+  const dc = dCanvas();
+  dCtx().clearRect(0, 0, dc.width, dc.height);
+}
+
+// ══════════════════════════════
+// TIMER
+// ══════════════════════════════
+function startTimer() {
+  stopTimer();
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    updateTimer();
+    sessionData.totalTime = timerSeconds;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimer() {
+  const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+  const s = String(timerSeconds % 60).padStart(2, '0');
+  const tw = document.getElementById('timer-wrap');
+  if (tw) tw.textContent = `${m}:${s}`;
+}
+
+// ══════════════════════════════
+// GRID / COLOR TOGGLES
+// ══════════════════════════════
+function toggleGridPicker() {
+  document.getElementById('color-picker-panel').classList.remove('open');
+  document.getElementById('grid-picker').classList.toggle('open');
+}
+
+function toggleColorPanel() {
+  document.getElementById('grid-picker').classList.remove('open');
+  document.getElementById('color-picker-panel').classList.toggle('open');
+}
+
+function setGrid(name, el) {
+  currentGrid = name;
+  document.querySelectorAll('.grid-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('grid-picker').classList.remove('open');
+  const area = document.getElementById('canvas-area');
+  drawGrid(area.clientWidth, area.clientHeight);
+}
+
+function setColor(el) {
+  document.querySelectorAll('.cp-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  currentColor = el.dataset.color;
+}
+
+// ══════════════════════════════
+// AI EMOTION ANALYSIS (筆跡特徵)
+// ══════════════════════════════
+function analyzeWriting() {
+  const pv = sessionData.pressureValues;
+  const pd = sessionData.pauseDurations;
+  const rp = sessionData.rawPoints;
+
+  const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0.5;
+  const avgPause    = pd.length ? pd.reduce((a,b)=>a+b,0)/pd.length : 0;
+
+  const pressureVariance = pv.length > 1
+    ? Math.sqrt(pv.reduce((acc,v) => acc + Math.pow(v-avgPressure,2), 0) / pv.length)
+    : 0;
+
+  // ── 新特徵：傾斜角 ──
+  const avgTiltX = sessionData.tiltXValues.length
+    ? sessionData.tiltXValues.reduce((a,b)=>a+b,0) / sessionData.tiltXValues.length : 0;
+  const avgTiltY = sessionData.tiltYValues.length
+    ? sessionData.tiltYValues.reduce((a,b)=>a+b,0) / sessionData.tiltYValues.length : 0;
+  const avgTiltMag = rp.length
+    ? rp.reduce((a,b)=>a+b.tiltMag,0) / rp.length : 0;
+
+  // ── 新特徵：基線角度穩定性（變異數越小越穩） ──
+  const ba = sessionData.baselineAngles;
+  const avgBaseline = ba.length ? ba.reduce((a,b)=>a+b,0)/ba.length : 0;
+  const baselineVariance = ba.length > 1
+    ? Math.sqrt(ba.reduce((acc,v) => acc + Math.pow(v-avgBaseline,2), 0) / ba.length)
+    : 0;
+
+  // ── 新特徵：字體大小（各字元 bounding box 面積平均） ──
+  const charSizes = Object.values(sessionData.charBounds).map(b =>
+    (b.maxX - b.minX) * (b.maxY - b.minY)
+  );
+  const avgCharSize = charSizes.length ? charSizes.reduce((a,b)=>a+b,0)/charSizes.length : 0;
+  const charCount   = Object.keys(sessionData.charBounds).length;
+
+  // ── 情緒判定邏輯（加入新特徵） ──
+  let calmScore = 0, focusScore = 0, tenseScore = 0;
+
+  if (avgPause > 3)      tenseScore   += 0.3;
+  else if (avgPause < 1) focusScore   += 0.3;
+
+  if (pressureVariance > 0.25)   tenseScore += 0.4;
+  else if (pressureVariance < 0.1) calmScore += 0.4;
+
+  if (avgPressure > 0.3 && avgPressure < 0.65) calmScore += 0.2;
+
+  // 傾斜角大 → 可能緊繃或用力
+  if (avgTiltMag > 45) tenseScore += 0.2;
+  else if (avgTiltMag < 20) calmScore += 0.15;
+
+  // 基線角度不穩 → 緊繃
+  if (baselineVariance > 30) tenseScore += 0.2;
+  else if (baselineVariance < 10) focusScore += 0.2;
+
+  if (sessionData.totalTime < 30 && sessionData.strokeCount < 5) tenseScore += 0.2;
+  if (selectedMood === 'calm')    calmScore  += 0.3;
+  if (selectedMood === 'anxious') tenseScore += 0.3;
+
+  const total = calmScore + focusScore + tenseScore || 1;
+  return {
+    calm:    Math.min(1, calmScore/total),
+    focused: Math.min(1, focusScore/total),
+    tense:   Math.min(1, tenseScore/total),
+    dominant: tenseScore > calmScore && tenseScore > focusScore ? 'tense'
+            : focusScore > calmScore ? 'focused' : 'calm',
+    // 傳回所有特徵供 finishWriting 儲存
+    avgPressure, pressureVariance, avgPause,
+    avgTiltX:   Math.round(avgTiltX*100)/100,
+    avgTiltY:   Math.round(avgTiltY*100)/100,
+    avgTiltMag: Math.round(avgTiltMag*100)/100,
+    baselineVariance: Math.round(baselineVariance*100)/100,
+    avgCharSize: Math.round(avgCharSize),
+    charCount,
+  };
+}
+
+// ══════════════════════════════
+// GOOGLE SHEETS 數據上傳
+// ══════════════════════════════
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyqde7EtjJJLoBxiGQstbqQWdZFEAGHQU2KFFkpf0nzfMbKaroI08LB8hdMPjZTvXpy/exec'; // ← 貼上你的 Apps Script Web App URL
+const APP_VERSION = 'V1';
+
+function getParticipantId() {
+  let pid = localStorage.getItem('wm-participant-id');
+  if (!pid) {
+    pid = 'P' + Math.random().toString(36).substr(2, 6).toUpperCase();
+    localStorage.setItem('wm-participant-id', pid);
+  }
+  return pid;
+}
+
+async function submitToSheets(record, result) {
+  if (!SHEETS_URL) return; // URL 未設定時靜默略過
+  const pv = record.pressureValues || [];
+  const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0;
+
+  const payload = {
+    timestamp:             new Date().toISOString(),
+    participant_id:        getParticipantId(),
+    session_duration_sec:  Math.round((record.totalTime || 0)),
+    stroke_count:          record.strokeCount || 0,
+    avg_pressure:          avgPressure.toFixed(3),
+    pressure_cv:           avgPressure > 0
+                             ? (record.pressureVariance / avgPressure).toFixed(3)
+                             : '0',
+    pause_count:           (record.pauseDurations || []).length,
+    avg_pause_duration_ms: record.avgPause != null
+                             ? Math.round(record.avgPause * 1000)
+                             : 0,
+    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2000).length,
+    emotion_result:        null,
+    emotion_score:         null,
+    app_version:           APP_VERSION,
+  };
+
+  try {
+    // 用 GET 方式傳送，把資料放在 URL 參數上，完全避開 CORS 問題
+    const url = SHEETS_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+    await fetch(url, { method: 'GET', mode: 'no-cors' });
+  } catch (err) {
+    console.warn('數據上傳失敗（不影響使用）:', err);
+  }
+}
+
+// ══════════════════════════════
+// FINISH & FEEDBACK
+// ══════════════════════════════
+function finishWriting() {
+  stopTimer();
+
+  const result = analyzeWriting();
+
+  const record = {
+    id:               Date.now(),
+    date:             new Date().toISOString().slice(0, 10),
+    text:             selectedTask,
+    mood:             selectedMood || 'unknown',
+    emotion:          result.dominant,
+    // 停頓節奏
+    avgPause:         Math.round(result.avgPause * 100) / 100,
+    pauseDurations:   sessionData.pauseDurations,
+    // 筆壓
+    pressureVariance: Math.round(result.pressureVariance * 1000) / 1000,
+    pressureValues:   sessionData.pressureValues.map(p => Math.round(p * 100) / 100),
+    // 新增：傾斜角度
+    avgTiltX:         result.avgTiltX,
+    avgTiltY:         result.avgTiltY,
+    avgTiltMag:       result.avgTiltMag,
+    // 新增：基線角度穩定性
+    baselineVariance: result.baselineVariance,
+    // 新增：字元資訊
+    charCount:        result.charCount,
+    avgCharSize:      result.avgCharSize,
+    charBounds:       sessionData.charBounds,
+    // 書寫基本統計
+    strokeCount:      sessionData.strokeCount,
+    totalTime:        sessionData.totalTime,
+    pointCount:       sessionData.rawPoints.length,
+    // 原始逐點資料（最多保留 500 點，避免 localStorage 過大）
+    rawPoints:        sessionData.rawPoints.length > 500
+                        ? sessionData.rawPoints.filter((_,i) => i % Math.ceil(sessionData.rawPoints.length/500) === 0)
+                        : sessionData.rawPoints,
+  };
+
+  try {
+    const key = 'writing-mindfulness-sessions';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.push(record);
+    if (existing.length > 200) existing.splice(0, existing.length - 200);
+    localStorage.setItem(key, JSON.stringify(existing));
+  } catch(e) {}
+
+  // 上傳摘要數據到 Google Sheets（非同步、不阻塞流程）
+  submitToSheets(record, result);
+
+  goTo('screen-feedback');
+}
+
+function showFeedback() {
+  const result = analyzeWriting();
+
+  const configs = {
+    calm: {
+      icon: '🍃',
+      title: '你寫得很從容',
+      subtitle: '筆跡穩定，節奏舒緩\n這一刻的你，與自己同在',
+      ecIcon: '🌊',
+      cardClass: 'calm',
+      desc: '書寫過程中，你的筆觸穩定而有節奏感。這種狀態正是身心進入放鬆的訊號，繼續保持這份平靜。',
+      suggestion: '試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',
+      bars: [
+        { label: '穩定度', value: 0.8 + Math.random() * 0.15 },
+        { label: '節奏感', value: 0.7 + Math.random() * 0.2 },
+        { label: '放鬆感', value: 0.75 + Math.random() * 0.2 },
+      ]
+    },
+    focused: {
+      icon: '✨',
+      title: '你很專注',
+      subtitle: '筆畫有力，心念集中\n這份專注是給自己最好的禮物',
+      ecIcon: '🌟',
+      cardClass: 'focused',
+      desc: '書寫時你保持了高度的專注，停頓少而規律。這種「心手合一」的狀態，正是書寫靜心的核心體驗。',
+      suggestion: '下次可以嘗試閉上眼睛深呼吸三次再開始，感受靜心前後的差異。',
+      bars: [
+        { label: '專注度', value: 0.82 + Math.random() * 0.15 },
+        { label: '節奏感', value: 0.65 + Math.random() * 0.2 },
+        { label: '穩定度', value: 0.7 + Math.random() * 0.2 },
+      ]
+    },
+    tense: {
+      icon: '🌱',
+      title: '謝謝你今天的嘗試',
+      subtitle: '偵測到一些緊繃的節奏\n沒關係，書寫本身就已是放鬆的開始',
+      ecIcon: '🌬',
+      cardClass: 'tense',
+      desc: '今天的書寫節奏稍微不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',
+      suggestion: '下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',
+      bars: [
+        { label: '穩定度', value: 0.35 + Math.random() * 0.25 },
+        { label: '節奏感', value: 0.4 + Math.random() * 0.2 },
+        { label: '放鬆感', value: 0.45 + Math.random() * 0.2 },
+      ]
+    }
+  };
+
+  const cfg = configs[result.dominant];
+
+  document.getElementById('fb-icon').textContent     = cfg.icon;
+  document.getElementById('fb-title').textContent    = cfg.title;
+  document.getElementById('fb-subtitle').textContent = cfg.subtitle.replace('\\n', '\n');
+  document.getElementById('ec-icon').textContent     = cfg.ecIcon;
+  document.getElementById('suggestion-text').textContent = cfg.suggestion;
+  document.getElementById('ec-desc').textContent     = cfg.desc;
+
+  // Set card colour class
+  const ec = document.getElementById('emotion-card');
+  ec.className = 'emotion-card ' + cfg.cardClass;
+
+  // Build bars
+  const barsEl = document.getElementById('ec-bars');
+  barsEl.innerHTML = '';
+  cfg.bars.forEach(bar => {
+    const row = document.createElement('div');
+    row.className = 'ec-bar-wrap';
+    row.innerHTML = `
+      <span style="width:44px;text-align:right">${bar.label}</span>
+      <div class="ec-bar-track">
+        <div class="ec-bar-fill" style="width:0%"></div>
+      </div>`;
+    barsEl.appendChild(row);
+    setTimeout(() => {
+      row.querySelector('.ec-bar-fill').style.width = (bar.value * 100) + '%';
+    }, 300);
+  });
+}
+
+// ══════════════════════════════
+// TOAST
+// ══════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════
+// COMPANION COUNT (simulated)
+// ══════════════════════════════
+function updateCompanionCount() {
+  const base = 4;
+  const count = base + Math.floor(Math.random() * 4);
+  const el = document.getElementById('companion-count');
+  if (el) el.textContent = count;
+}
+setInterval(updateCompanionCount, 15000);
+
+// ══════════════════════════════
+// RESIZE
+// ══════════════════════════════
+window.addEventListener('resize', () => {
+  if (currentScreen === 'screen-write') resizeCanvases();
+});
+
+// Close panels on outside click
+document.addEventListener('pointerdown', (e) => {
+  const gp  = document.getElementById('grid-picker');
+  const cp  = document.getElementById('color-picker-panel');
+  if (!e.target.closest('#grid-picker') && !e.target.closest('.tool-btn')) gp.classList.remove('open');
+  if (!e.target.closest('#color-picker-panel') && !e.target.closest('.tool-btn')) cp.classList.remove('open');
+}, true);
+
+// ══════════════════════════════
+// INIT
+// ══════════════════════════════
+initTodayPick();
+renderCorpus('all');
+</script>
+</body>
+</html>
