@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'v*.html'
+      - 'Calm_Writing_V*.html'
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
 
       - name: Find latest version file
         run: |
-          LATEST=$(ls v*.html | sort -V | tail -1)
+          LATEST=$(ls Calm_Writing_V*.html | sort -V | tail -1)
           echo "LATEST=$LATEST" >> $GITHUB_ENV
           echo "Latest file: $LATEST"
 
