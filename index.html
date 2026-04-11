@@ -45,6 +45,20 @@ html, body {
   color: var(--ink);
   overflow: hidden;
   touch-action: none;
+  /* 防止長壓出現選取選單 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  /* 防止 iOS Safari 長壓呼出 callout */
+  -webkit-touch-callout: none;
+}
+
+/* 畫布區特別強化：同時封鎖 touch 預設行為 */
+#canvas-area, #draw-canvas, #grid-canvas, #guide-canvas {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* ══════════════════════════════
@@ -1266,6 +1280,7 @@ let lastStrokeEnd = null;
 let sessionStart  = null;
 let currentCharId = 0;    // 目前書寫的字元編號（筆離開 > 500ms 視為新字）
 let lastDownTime  = 0;    // 上次 pointerdown 的時間（用來判斷新字）
+let activePenId   = null; // 目前追蹤中的 pen pointer ID（palm rejection 用）
 
 // ══════════════════════════════
 // CORPUS RENDERING
@@ -1491,6 +1506,7 @@ function initWriting() {
   currentCharId = 0;
   lastDownTime  = 0;
   lastStrokeEnd = null;
+  activePenId   = null;  // 重置手掌過濾狀態
   updateTimer();
   sessionStart = Date.now();
 
@@ -1713,6 +1729,20 @@ function recordPoint(e, pos) {
 
 function onPointerDown(e) {
   e.preventDefault();
+
+  // ── 手掌誤觸過濾（Palm Rejection）──
+  // 1. 觸控點過大（手掌接觸面積遠大於筆尖）
+  if (e.pointerType === 'touch') {
+    const w = e.width  || 0;
+    const h = e.height || 0;
+    // 接觸面積 > 30px 視為手掌，忽略
+    if (w > 30 || h > 30) return;
+  }
+  // 2. 同時有筆（pen）在畫布上時，忽略所有 touch 輸入
+  if (e.pointerType === 'touch' && activePenId !== null) return;
+  // 3. 記錄 pen pointer ID，讓後續 move/up 只追蹤同一支筆
+  if (e.pointerType === 'pen') activePenId = e.pointerId;
+
   saveUndo();
   isDrawing = true;
 
@@ -1752,6 +1782,10 @@ function onPointerMove(e) {
   updatePressureHUD(e);
   if (!isDrawing) return;
 
+  // Palm rejection：只處理當前記錄的 pen，或非 touch 輸入
+  if (e.pointerType === 'touch' && activePenId !== null) return;
+  if (e.pointerType === 'pen'   && e.pointerId !== activePenId) return;
+
   const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
   const ctx = dCtx();
 
@@ -1775,6 +1809,12 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
+  // 只有當前追蹤的指標才能結束筆劃
+  if (e.pointerType === 'pen' && e.pointerId === activePenId) {
+    activePenId = null;
+  }
+  if (e.pointerType === 'touch' && activePenId !== null) return;
+
   isDrawing = false;
   lastStrokeEnd = Date.now();
   updatePressureHUD(e, true);
@@ -1956,7 +1996,7 @@ function analyzeWriting() {
 // GOOGLE SHEETS 數據上傳
 // ══════════════════════════════
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyqde7EtjJJLoBxiGQstbqQWdZFEAGHQU2KFFkpf0nzfMbKaroI08LB8hdMPjZTvXpy/exec'; // ← 貼上你的 Apps Script Web App URL
-const APP_VERSION = 'V1';
+const APP_VERSION = 'V4';
 
 function getParticipantId() {
   let pid = localStorage.getItem('wm-participant-id');
@@ -2170,6 +2210,13 @@ document.addEventListener('pointerdown', (e) => {
   if (!e.target.closest('#grid-picker') && !e.target.closest('.tool-btn')) gp.classList.remove('open');
   if (!e.target.closest('#color-picker-panel') && !e.target.closest('.tool-btn')) cp.classList.remove('open');
 }, true);
+
+// ══════════════════════════════
+// 防誤觸保護：封鎖長壓選取、右鍵選單、iOS callout
+// ══════════════════════════════
+document.addEventListener('contextmenu',  e => e.preventDefault(), { passive: false });
+document.addEventListener('selectstart',  e => e.preventDefault(), { passive: false });
+document.addEventListener('dragstart',    e => e.preventDefault(), { passive: false });
 
 // ══════════════════════════════
 // INIT
