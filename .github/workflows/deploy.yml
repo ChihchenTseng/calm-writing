@@ -1,0 +1,32 @@
+name: Auto Deploy Latest Version
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'v*.html'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Find latest version file
+        run: |
+          LATEST=$(ls v*.html | sort -V | tail -1)
+          echo "LATEST=$LATEST" >> $GITHUB_ENV
+          echo "Latest file: $LATEST"
+
+      - name: Copy to index.html
+        run: cp "$LATEST" index.html
+
+      - name: Commit index.html
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add index.html
+          git commit -m "Auto update index.html from $LATEST"
+          git push
