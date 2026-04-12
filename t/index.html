@@ -389,150 +389,70 @@ html, body {
 .breath-text { font-size: 11px; color: var(--gold); letter-spacing: 0.1em; }
 
 /* ══════════════════════════════
-   FEEDBACK SCREEN
+   THANK YOU SCREEN
 ══════════════════════════════ */
-#screen-feedback {
-  background: radial-gradient(ellipse at 50% 30%, rgba(107,124,94,0.1) 0%, transparent 60%),
+#screen-thankyou {
+  background: radial-gradient(ellipse at 50% 40%, rgba(107,124,94,0.1) 0%, transparent 60%),
               var(--cream);
-  overflow-y: auto;
-  justify-content: flex-start;
-  padding: 0;
 }
 
-.feedback-body {
-  width: 100%; max-width: 520px;
-  margin: 0 auto;
-  padding: 40px 24px 60px;
+.thankyou-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  max-width: 360px;
 }
 
-.feedback-icon {
+.thankyou-icon {
   width: 80px; height: 80px;
   border-radius: 50%;
   background: white;
-  margin: 0 auto 20px;
   display: flex; align-items: center; justify-content: center;
   font-size: 36px;
   box-shadow: 0 4px 24px var(--shadow);
 }
 
-.feedback-title {
+.thankyou-title {
   font-family: 'Noto Serif TC', serif;
-  font-size: 24px;
-  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
   color: var(--ink);
-  margin-bottom: 8px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
 }
-.feedback-subtitle {
-  text-align: center;
-  font-size: 13px;
+
+.thankyou-subtitle {
+  font-size: 14px;
   color: rgba(42,31,20,0.5);
-  margin-bottom: 32px;
-  line-height: 1.8;
+  line-height: 2;
+  letter-spacing: 0.05em;
 }
 
-.emotion-card {
-  background: white;
-  border-radius: var(--r);
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 12px var(--shadow);
-  position: relative;
-  overflow: hidden;
-}
-.emotion-card::before {
-  content: '';
-  position: absolute; left: 0; top: 0; bottom: 0;
-  width: 4px;
-}
-.emotion-card.calm::before { background: var(--sage); }
-.emotion-card.tense::before { background: var(--red); }
-.emotion-card.focused::before { background: var(--gold); }
-
-.ec-label {
-  font-size: 10px; letter-spacing: 0.15em;
-  color: rgba(42,31,20,0.4);
-  margin-bottom: 10px;
-}
-.ec-visual {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 10px;
-}
-.ec-icon { font-size: 32px; }
-.ec-bars {
-  flex: 1;
-  display: flex; flex-direction: column; gap: 4px;
-}
-.ec-bar-wrap {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 10px; color: rgba(42,31,20,0.4);
-}
-.ec-bar-track {
-  flex: 1; height: 5px;
-  background: rgba(42,31,20,0.06);
-  border-radius: 3px; overflow: hidden;
-}
-.ec-bar-fill {
-  height: 100%; border-radius: 3px;
-  transition: width 1s ease;
-}
-.calm .ec-bar-fill { background: var(--sage); }
-.tense .ec-bar-fill { background: var(--red); }
-.focused .ec-bar-fill { background: var(--gold2); }
-
-.ec-desc {
-  font-size: 13px; color: rgba(42,31,20,0.65); line-height: 1.8;
+.thankyou-divider {
+  width: 40px; height: 1px;
+  background: rgba(155,122,58,0.3);
 }
 
-.suggestion-card {
-  background: rgba(107,124,94,0.08);
-  border: 1px solid rgba(107,124,94,0.25);
-  border-radius: var(--r);
-  padding: 18px;
-  margin-bottom: 16px;
-}
-.suggestion-card h4 {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 14px; color: var(--sage);
-  margin-bottom: 8px; letter-spacing: 0.08em;
-}
-.suggestion-card p {
-  font-size: 13px; color: rgba(42,31,20,0.6);
-  line-height: 1.9;
-}
-
-.feedback-actions {
-  display: flex; flex-direction: column; gap: 10px;
-  margin-top: 24px;
-}
-.btn-primary {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+.btn-restart {
+  margin-top: 8px;
   background: var(--ink);
   color: var(--cream);
   border: none;
   border-radius: 50px;
-  padding: 14px 36px;
+  padding: 13px 36px;
   font-family: 'Noto Serif TC', serif;
-  font-size: 16px;
-  letter-spacing: 0.15em;
+  font-size: 15px;
+  letter-spacing: 0.12em;
   cursor: pointer;
   transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
   box-shadow: 0 4px 20px rgba(42,31,20,0.25);
-  width: 100%;
 }
-.btn-primary:hover { background: var(--ink2); transform: translateY(-2px); }
-.btn-ghost {
-  background: transparent;
-  border: 1px solid rgba(42,31,20,0.2);
-  color: var(--ink);
-  border-radius: 50px;
-  padding: 10px 24px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
-  width: 100%; text-align: center;
+.btn-restart:hover {
+  background: var(--ink2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(42,31,20,0.3);
 }
-.btn-ghost:hover { background: rgba(42,31,20,0.06); }
 
 /* ══════════════════════════════
    COLOR PICKER (floating)
@@ -683,7 +603,7 @@ html, body {
       </div>
 
       <button class="btn-vas-confirm" onclick="confirmVasAndStart()">
-        完成測量，開始書寫
+        完成測量，開始書寫➔
       </button>
     </div>
 
@@ -766,32 +686,19 @@ html, body {
 </div>
 
 <!-- ════════════════════════════
-     FEEDBACK SCREEN
+     THANK YOU SCREEN
 ════════════════════════════ -->
-<div class="screen hidden" id="screen-feedback">
-  <div class="feedback-body">
-    <div class="feedback-icon" id="fb-icon">🍃</div>
-    <div class="feedback-title" id="fb-title">你今天寫得很好</div>
-    <div class="feedback-subtitle" id="fb-subtitle">書寫過程穩定而專注<br>這一刻，你給了自己一份禮物</div>
-
-    <div class="emotion-card" id="emotion-card">
-      <div class="ec-label">書寫狀態感知</div>
-      <div class="ec-visual">
-        <div class="ec-icon" id="ec-icon">🌊</div>
-        <div class="ec-bars" id="ec-bars"></div>
-      </div>
-      <div class="ec-desc" id="ec-desc"></div>
+<div class="screen hidden" id="screen-thankyou">
+  <div class="thankyou-body">
+    <div class="thankyou-icon">🙏</div>
+    <div class="thankyou-title">感謝您的參與</div>
+    <div class="thankyou-divider"></div>
+    <div class="thankyou-subtitle">
+      您的書寫資料已成功記錄<br>
+      感謝您協助本次研究測試<br>
+      您的貢獻對研究非常重要
     </div>
-
-    <div class="suggestion-card">
-      <h4>✦ 給你的小提醒</h4>
-      <p id="suggestion-text"></p>
-    </div>
-
-    <div class="feedback-actions">
-      <button class="btn-primary" onclick="goTo('screen-welcome')">再練習一次</button>
-      <button class="btn-ghost" onclick="goTo('screen-welcome')">回首頁</button>
-    </div>
+    <button class="btn-restart" onclick="goTo('screen-welcome')">再次書寫</button>
   </div>
 </div>
 
@@ -830,7 +737,6 @@ function updateVas(v) {
   const val = parseInt(v);
   document.getElementById('vas-num').textContent = val;
   document.getElementById('vas-label').textContent = getVasLabel(val);
-  // 更新滑桿漸層
   const pct = val + '%';
   document.getElementById('vas-slider').style.background =
     `linear-gradient(to right, var(--gold2) 0%, var(--gold2) ${pct}, rgba(155,122,58,0.18) ${pct}, rgba(155,122,58,0.18) 100%)`;
@@ -838,7 +744,7 @@ function updateVas(v) {
 
 function confirmVasAndStart() {
   const score = parseInt(document.getElementById('vas-slider').value);
-  localStorage.setItem('wm-vas-score', score);
+  localStorage.setItem('wm-vas-score', String(score));
   localStorage.setItem('wm-vas-label', getVasLabel(score));
   goTo('screen-write');
 }
@@ -891,7 +797,6 @@ function goTo(id) {
   currentScreen = id;
 
   if (id === 'screen-write') initWriting();
-  if (id === 'screen-feedback') showFeedback();
   if (id !== 'screen-write') stopTimer();
 
   document.getElementById('grid-picker').classList.remove('open');
@@ -944,13 +849,6 @@ async function loadHanaFonts() {
     statusEl.textContent = '字型載入失敗，請確認網路連線';
     setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
   }
-}
-
-function fontForChar(ch) {
-  const cp = ch.codePointAt(0);
-  if (cp >= 0x20000) return "'HanaMinB', 'Noto Serif TC', serif";
-  if (cp >= 0x3400)  return "'HanaMinA', 'Noto Serif TC', serif";
-  return "'Noto Serif TC', serif";
 }
 
 function guideFont(text, sizePx) {
@@ -1326,79 +1224,10 @@ function setColor(el) {
 }
 
 // ══════════════════════════════
-// AI EMOTION ANALYSIS
-// ══════════════════════════════
-function analyzeWriting() {
-  const pv = sessionData.pressureValues;
-  const pd = sessionData.pauseDurations;
-  const rp = sessionData.rawPoints;
-
-  const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0.5;
-  const avgPause    = pd.length ? pd.reduce((a,b)=>a+b,0)/pd.length : 0;
-
-  const pressureVariance = pv.length > 1
-    ? Math.sqrt(pv.reduce((acc,v) => acc + Math.pow(v-avgPressure,2), 0) / pv.length)
-    : 0;
-
-  const avgTiltX = sessionData.tiltXValues.length
-    ? sessionData.tiltXValues.reduce((a,b)=>a+b,0) / sessionData.tiltXValues.length : 0;
-  const avgTiltY = sessionData.tiltYValues.length
-    ? sessionData.tiltYValues.reduce((a,b)=>a+b,0) / sessionData.tiltYValues.length : 0;
-  const avgTiltMag = rp.length
-    ? rp.reduce((a,b)=>a+b.tiltMag,0) / rp.length : 0;
-
-  const ba = sessionData.baselineAngles;
-  const avgBaseline = ba.length ? ba.reduce((a,b)=>a+b,0)/ba.length : 0;
-  const baselineVariance = ba.length > 1
-    ? Math.sqrt(ba.reduce((acc,v) => acc + Math.pow(v-avgBaseline,2), 0) / ba.length)
-    : 0;
-
-  const charSizes = Object.values(sessionData.charBounds).map(b =>
-    (b.maxX - b.minX) * (b.maxY - b.minY)
-  );
-  const avgCharSize = charSizes.length ? charSizes.reduce((a,b)=>a+b,0)/charSizes.length : 0;
-  const charCount   = Object.keys(sessionData.charBounds).length;
-
-  let calmScore = 0, focusScore = 0, tenseScore = 0;
-
-  if (avgPause > 3)      tenseScore   += 0.3;
-  else if (avgPause < 1) focusScore   += 0.3;
-
-  if (pressureVariance > 0.25)   tenseScore += 0.4;
-  else if (pressureVariance < 0.1) calmScore += 0.4;
-
-  if (avgPressure > 0.3 && avgPressure < 0.65) calmScore += 0.2;
-
-  if (avgTiltMag > 45) tenseScore += 0.2;
-  else if (avgTiltMag < 20) calmScore += 0.15;
-
-  if (baselineVariance > 30) tenseScore += 0.2;
-  else if (baselineVariance < 10) focusScore += 0.2;
-
-  if (sessionData.totalTime < 30 && sessionData.strokeCount < 5) tenseScore += 0.2;
-
-  const total = calmScore + focusScore + tenseScore || 1;
-  return {
-    calm:    Math.min(1, calmScore/total),
-    focused: Math.min(1, focusScore/total),
-    tense:   Math.min(1, tenseScore/total),
-    dominant: tenseScore > calmScore && tenseScore > focusScore ? 'tense'
-            : focusScore > calmScore ? 'focused' : 'calm',
-    avgPressure, pressureVariance, avgPause,
-    avgTiltX:   Math.round(avgTiltX*100)/100,
-    avgTiltY:   Math.round(avgTiltY*100)/100,
-    avgTiltMag: Math.round(avgTiltMag*100)/100,
-    baselineVariance: Math.round(baselineVariance*100)/100,
-    avgCharSize: Math.round(avgCharSize),
-    charCount,
-  };
-}
-
-// ══════════════════════════════
 // GOOGLE SHEETS 數據上傳
 // ══════════════════════════════
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyqde7EtjJJLoBxiGQstbqQWdZFEAGHQU2KFFkpf0nzfMbKaroI08LB8hdMPjZTvXpy/exec';
-const APP_VERSION = 'T1';
+const APP_VERSION = 'T2';
 
 function getParticipantId() {
   let pid = localStorage.getItem('wm-participant-id');
@@ -1409,13 +1238,14 @@ function getParticipantId() {
   return pid;
 }
 
-async function submitToSheets(record, result) {
+async function submitToSheets(record) {
   if (!SHEETS_URL) return;
   const pv = record.pressureValues || [];
   const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0;
 
-  // 讀取 VAS 值（書寫前於首頁測量，存於 localStorage）
-  const vasScore = parseInt(localStorage.getItem('wm-vas-score') ?? '-1');
+  // ── 修正：安全讀取 VAS，避免 NaN ──
+  const rawVas = localStorage.getItem('wm-vas-score');
+  const vasScore = (rawVas !== null && rawVas !== '') ? parseInt(rawVas, 10) : -1;
   const vasLabel = localStorage.getItem('wm-vas-label') ?? '';
 
   const payload = {
@@ -1432,10 +1262,10 @@ async function submitToSheets(record, result) {
                              ? Math.round(record.avgPause * 1000)
                              : 0,
     long_pause_count:      (record.pauseDurations || []).filter(d => d > 2000).length,
-    emotion_result:        result.dominant || null,
+    emotion_result:        null,   // 尚無判別邏輯，保留欄位但固定送 null
     emotion_score:         null,
     vas_score:             vasScore,   // 書寫前 VAS（0–100），-1 表示未測量
-    vas_label:             vasLabel,   // 對應文字描述
+    vas_label:             vasLabel,
     app_version:           APP_VERSION,
   };
 
@@ -1451,29 +1281,28 @@ async function submitToSheets(record, result) {
 }
 
 // ══════════════════════════════
-// FINISH & FEEDBACK
+// FINISH
 // ══════════════════════════════
 function finishWriting() {
   stopTimer();
 
-  const result = analyzeWriting();
+  // 計算書寫特徵（用於本地儲存紀錄，不送情緒判斷）
+  const pv = sessionData.pressureValues;
+  const pd = sessionData.pauseDurations;
+  const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0.5;
+  const avgPause    = pd.length ? pd.reduce((a,b)=>a+b,0)/pd.length : 0;
+  const pressureVariance = pv.length > 1
+    ? Math.sqrt(pv.reduce((acc,v) => acc + Math.pow(v-avgPressure,2), 0) / pv.length)
+    : 0;
 
   const record = {
     id:               Date.now(),
     date:             new Date().toISOString().slice(0, 10),
     text:             selectedTask,
-    emotion:          result.dominant,
-    avgPause:         Math.round(result.avgPause * 100) / 100,
+    avgPause:         Math.round(avgPause * 100) / 100,
     pauseDurations:   sessionData.pauseDurations,
-    pressureVariance: Math.round(result.pressureVariance * 1000) / 1000,
+    pressureVariance: Math.round(pressureVariance * 1000) / 1000,
     pressureValues:   sessionData.pressureValues.map(p => Math.round(p * 100) / 100),
-    avgTiltX:         result.avgTiltX,
-    avgTiltY:         result.avgTiltY,
-    avgTiltMag:       result.avgTiltMag,
-    baselineVariance: result.baselineVariance,
-    charCount:        result.charCount,
-    avgCharSize:      result.avgCharSize,
-    charBounds:       sessionData.charBounds,
     strokeCount:      sessionData.strokeCount,
     totalTime:        sessionData.totalTime,
     pointCount:       sessionData.rawPoints.length,
@@ -1490,85 +1319,8 @@ function finishWriting() {
     localStorage.setItem(key, JSON.stringify(existing));
   } catch(e) {}
 
-  submitToSheets(record, result);
-  goTo('screen-feedback');
-}
-
-function showFeedback() {
-  const result = analyzeWriting();
-
-  const configs = {
-    calm: {
-      icon: '🍃',
-      title: '你寫得很從容',
-      subtitle: '筆跡穩定，節奏舒緩\n這一刻的你，與自己同在',
-      ecIcon: '🌊',
-      cardClass: 'calm',
-      desc: '書寫過程中，你的筆觸穩定而有節奏感。這種狀態正是身心進入放鬆的訊號，繼續保持這份平靜。',
-      suggestion: '試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',
-      bars: [
-        { label: '穩定度', value: 0.8 + Math.random() * 0.15 },
-        { label: '節奏感', value: 0.7 + Math.random() * 0.2 },
-        { label: '放鬆感', value: 0.75 + Math.random() * 0.2 },
-      ]
-    },
-    focused: {
-      icon: '✨',
-      title: '你很專注',
-      subtitle: '筆畫有力，心念集中\n這份專注是給自己最好的禮物',
-      ecIcon: '🌟',
-      cardClass: 'focused',
-      desc: '書寫時你保持了高度的專注，停頓少而規律。這種「心手合一」的狀態，正是書寫靜心的核心體驗。',
-      suggestion: '下次可以嘗試閉上眼睛深呼吸三次再開始，感受靜心前後的差異。',
-      bars: [
-        { label: '專注度', value: 0.82 + Math.random() * 0.15 },
-        { label: '節奏感', value: 0.65 + Math.random() * 0.2 },
-        { label: '穩定度', value: 0.7 + Math.random() * 0.2 },
-      ]
-    },
-    tense: {
-      icon: '🌱',
-      title: '謝謝你今天的嘗試',
-      subtitle: '偵測到一些緊繃的節奏\n沒關係，書寫本身就已是放鬆的開始',
-      ecIcon: '🌬',
-      cardClass: 'tense',
-      desc: '今天的書寫節奏稍微不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',
-      suggestion: '下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',
-      bars: [
-        { label: '穩定度', value: 0.35 + Math.random() * 0.25 },
-        { label: '節奏感', value: 0.4 + Math.random() * 0.2 },
-        { label: '放鬆感', value: 0.45 + Math.random() * 0.2 },
-      ]
-    }
-  };
-
-  const cfg = configs[result.dominant];
-
-  document.getElementById('fb-icon').textContent     = cfg.icon;
-  document.getElementById('fb-title').textContent    = cfg.title;
-  document.getElementById('fb-subtitle').textContent = cfg.subtitle.replace('\\n', '\n');
-  document.getElementById('ec-icon').textContent     = cfg.ecIcon;
-  document.getElementById('suggestion-text').textContent = cfg.suggestion;
-  document.getElementById('ec-desc').textContent     = cfg.desc;
-
-  const ec = document.getElementById('emotion-card');
-  ec.className = 'emotion-card ' + cfg.cardClass;
-
-  const barsEl = document.getElementById('ec-bars');
-  barsEl.innerHTML = '';
-  cfg.bars.forEach(bar => {
-    const row = document.createElement('div');
-    row.className = 'ec-bar-wrap';
-    row.innerHTML = `
-      <span style="width:44px;text-align:right">${bar.label}</span>
-      <div class="ec-bar-track">
-        <div class="ec-bar-fill" style="width:0%"></div>
-      </div>`;
-    barsEl.appendChild(row);
-    setTimeout(() => {
-      row.querySelector('.ec-bar-fill').style.width = (bar.value * 100) + '%';
-    }, 300);
-  });
+  submitToSheets(record);
+  goTo('screen-thankyou');
 }
 
 // ══════════════════════════════
