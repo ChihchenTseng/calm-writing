@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'Calm_Writing_T*.html'
+      - 't/Calm_Writing_T*.html'
 
 jobs:
   deploy:
@@ -20,9 +20,7 @@ jobs:
           echo "LATEST=$LATEST" >> $GITHUB_ENV
 
       - name: Copy to t/index.html
-        run: |
-          mkdir -p t
-          cp "$LATEST" t/index.html
+        run: cp "$LATEST" t/index.html
 
       - name: Commit
         run: |
