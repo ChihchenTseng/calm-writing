@@ -603,7 +603,7 @@ html, body {
       </div>
 
       <button class="btn-vas-confirm" onclick="confirmVasAndStart()">
-        完成測量，開始書寫➔
+        完成測量，開始書寫
       </button>
     </div>
 
@@ -742,10 +742,17 @@ function updateVas(v) {
     `linear-gradient(to right, var(--gold2) 0%, var(--gold2) ${pct}, rgba(155,122,58,0.18) ${pct}, rgba(155,122,58,0.18) 100%)`;
 }
 
+// VAS 全域暫存（單頁應用不跨頁，直接用變數比 localStorage 更可靠）
+let pendingVasScore = -1;
+let pendingVasLabel = '';
+
 function confirmVasAndStart() {
   const score = parseInt(document.getElementById('vas-slider').value);
+  pendingVasScore = score;
+  pendingVasLabel = getVasLabel(score);
+  // 同時寫入 localStorage 作為備份
   localStorage.setItem('wm-vas-score', String(score));
-  localStorage.setItem('wm-vas-label', getVasLabel(score));
+  localStorage.setItem('wm-vas-label', pendingVasLabel);
   goTo('screen-write');
 }
 
@@ -1227,7 +1234,7 @@ function setColor(el) {
 // GOOGLE SHEETS 數據上傳
 // ══════════════════════════════
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyqde7EtjJJLoBxiGQstbqQWdZFEAGHQU2KFFkpf0nzfMbKaroI08LB8hdMPjZTvXpy/exec';
-const APP_VERSION = 'T2';
+const APP_VERSION = 'T3';
 
 function getParticipantId() {
   let pid = localStorage.getItem('wm-participant-id');
@@ -1243,28 +1250,35 @@ async function submitToSheets(record) {
   const pv = record.pressureValues || [];
   const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0;
 
-  // ── 修正：安全讀取 VAS，避免 NaN ──
-  const rawVas = localStorage.getItem('wm-vas-score');
-  const vasScore = (rawVas !== null && rawVas !== '') ? parseInt(rawVas, 10) : -1;
-  const vasLabel = localStorage.getItem('wm-vas-label') ?? '';
+  // ── VAS 讀取：優先用全域變數（同頁不跨頁，最可靠），localStorage 作備援 ──
+  const vasScore = pendingVasScore !== -1
+    ? pendingVasScore
+    : (() => {
+        const raw = localStorage.getItem('wm-vas-score');
+        return (raw !== null && raw !== '') ? parseInt(raw, 10) : -1;
+      })();
+  const vasLabel = pendingVasLabel || (localStorage.getItem('wm-vas-label') ?? '');
 
   const payload = {
     timestamp:             new Date().toISOString(),
     participant_id:        getParticipantId(),
     session_duration_sec:  Math.round((record.totalTime || 0)),
-    stroke_count:          record.strokeCount || 0,
     avg_pressure:          avgPressure.toFixed(3),
     pressure_cv:           avgPressure > 0
                              ? (record.pressureVariance / avgPressure).toFixed(3)
                              : '0',
+    stroke_count:          record.strokeCount || 0,
     pause_count:           (record.pauseDurations || []).length,
+    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2000).length,
+    char_count:            record.charCount ?? 0,
     avg_pause_duration_ms: record.avgPause != null
                              ? Math.round(record.avgPause * 1000)
                              : 0,
-    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2000).length,
-    emotion_result:        null,   // 尚無判別邏輯，保留欄位但固定送 null
+    avg_char_spacing:      record.avgCharSpacing ?? 0,
+    writing_speed:         record.writingSpeed   ?? 0,
+    emotion_result:        null,
     emotion_score:         null,
-    vas_score:             vasScore,   // 書寫前 VAS（0–100），-1 表示未測量
+    vas_score:             vasScore,
     vas_label:             vasLabel,
     app_version:           APP_VERSION,
   };
@@ -1275,6 +1289,8 @@ async function submitToSheets(record) {
     // 送出後清除，避免下次書寫殘留舊值
     localStorage.removeItem('wm-vas-score');
     localStorage.removeItem('wm-vas-label');
+    pendingVasScore = -1;
+    pendingVasLabel = '';
   } catch (err) {
     console.warn('數據上傳失敗（不影響使用）:', err);
   }
@@ -1295,6 +1311,27 @@ function finishWriting() {
     ? Math.sqrt(pv.reduce((acc,v) => acc + Math.pow(v-avgPressure,2), 0) / pv.length)
     : 0;
 
+  // ── 新特徵：平均字間距（相鄰字元 bounding box 之間的水平距離） ──
+  const charIds = Object.keys(sessionData.charBounds).map(Number).sort((a, b) => a - b);
+  const spacings = [];
+  for (let i = 1; i < charIds.length; i++) {
+    const prev = sessionData.charBounds[charIds[i - 1]];
+    const curr = sessionData.charBounds[charIds[i]];
+    const gap  = curr.minX - prev.maxX;
+    if (gap > -50) spacings.push(gap); // 排除明顯重疊（同一字內多筆被誤判）
+  }
+  const avgCharSpacing = spacings.length
+    ? Math.round(spacings.reduce((a, b) => a + b, 0) / spacings.length)
+    : 0;
+
+  // ── 新特徵：書寫速度（採樣點數 / 書寫秒數） ──
+  const writingSpeed = sessionData.totalTime > 0
+    ? Math.round(sessionData.rawPoints.length / sessionData.totalTime)
+    : 0;
+
+  // ── 新特徵：字元數 ──
+  const charCount = Object.keys(sessionData.charBounds).length;
+
   const record = {
     id:               Date.now(),
     date:             new Date().toISOString().slice(0, 10),
@@ -1306,6 +1343,9 @@ function finishWriting() {
     strokeCount:      sessionData.strokeCount,
     totalTime:        sessionData.totalTime,
     pointCount:       sessionData.rawPoints.length,
+    charCount,
+    avgCharSpacing,
+    writingSpeed,
     rawPoints:        sessionData.rawPoints.length > 500
                         ? sessionData.rawPoints.filter((_,i) => i % Math.ceil(sessionData.rawPoints.length/500) === 0)
                         : sessionData.rawPoints,
