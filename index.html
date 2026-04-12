@@ -1951,6 +1951,24 @@ function analyzeWriting() {
   const avgCharSize = charSizes.length ? charSizes.reduce((a,b)=>a+b,0)/charSizes.length : 0;
   const charCount   = Object.keys(sessionData.charBounds).length;
 
+  // ── 新特徵：平均字間距（相鄰字元 bounding box 之間的水平距離） ──
+  const charIds = Object.keys(sessionData.charBounds).map(Number).sort((a, b) => a - b);
+  const spacings = [];
+  for (let i = 1; i < charIds.length; i++) {
+    const prev = sessionData.charBounds[charIds[i - 1]];
+    const curr = sessionData.charBounds[charIds[i]];
+    const gap  = curr.minX - prev.maxX;
+    if (gap > -50) spacings.push(gap); // 排除明顯重疊（同一字內的多筆）
+  }
+  const avgCharSpacing = spacings.length
+    ? Math.round(spacings.reduce((a, b) => a + b, 0) / spacings.length)
+    : 0;
+
+  // ── 新特徵：書寫速度（採樣點數 / 書寫秒數） ──
+  const writingSpeed = sessionData.totalTime > 0
+    ? Math.round(rp.length / sessionData.totalTime)
+    : 0;
+
   // ── 情緒判定邏輯（加入新特徵） ──
   let calmScore = 0, focusScore = 0, tenseScore = 0;
 
@@ -1989,6 +2007,8 @@ function analyzeWriting() {
     baselineVariance: Math.round(baselineVariance*100)/100,
     avgCharSize: Math.round(avgCharSize),
     charCount,
+    avgCharSpacing,
+    writingSpeed,
   };
 }
 
@@ -1996,7 +2016,7 @@ function analyzeWriting() {
 // GOOGLE SHEETS 數據上傳
 // ══════════════════════════════
 const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyqde7EtjJJLoBxiGQstbqQWdZFEAGHQU2KFFkpf0nzfMbKaroI08LB8hdMPjZTvXpy/exec'; // ← 貼上你的 Apps Script Web App URL
-const APP_VERSION = 'V4';
+const APP_VERSION = 'V5';
 
 function getParticipantId() {
   let pid = localStorage.getItem('wm-participant-id');
@@ -2016,16 +2036,19 @@ async function submitToSheets(record, result) {
     timestamp:             new Date().toISOString(),
     participant_id:        getParticipantId(),
     session_duration_sec:  Math.round((record.totalTime || 0)),
-    stroke_count:          record.strokeCount || 0,
     avg_pressure:          avgPressure.toFixed(3),
     pressure_cv:           avgPressure > 0
                              ? (record.pressureVariance / avgPressure).toFixed(3)
                              : '0',
+    stroke_count:          record.strokeCount || 0,
     pause_count:           (record.pauseDurations || []).length,
+    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2000).length,
+    char_count:            result.charCount ?? 0,
     avg_pause_duration_ms: record.avgPause != null
                              ? Math.round(record.avgPause * 1000)
                              : 0,
-    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2000).length,
+    avg_char_spacing:      result.avgCharSpacing ?? 0,
+    writing_speed:         result.writingSpeed   ?? 0,
     emotion_result:        null,
     emotion_score:         null,
     app_version:           APP_VERSION,
