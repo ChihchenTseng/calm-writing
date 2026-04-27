@@ -21,7 +21,19 @@
 }
 </style>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
 
 :root {
   --cream:   #f8f3eb;
@@ -90,7 +102,6 @@ html, body {
   color: rgba(155,122,58,0.06);
   line-height: 1;
   pointer-events: none;
-  user-select: none;
   z-index: 0;
 }
 
@@ -313,6 +324,7 @@ html, body {
   flex: 1;
   position: relative;
   overflow: hidden;
+  touch-action: none;
 }
 #grid-canvas, #guide-canvas, #draw-canvas {
   position: absolute; top: 0; left: 0;
@@ -559,14 +571,10 @@ html, body {
 </head>
 <body>
 
-<!-- ════════════════════════════
-     WELCOME + VAS SCREEN
-════════════════════════════ -->
 <div class="screen" id="screen-welcome">
   <div class="welcome-deco">靜</div>
   <div class="welcome-scroll">
 
-    <!-- Logo & 標題 -->
     <div class="logo-mark">
       <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M19 4 C19 4 8 12 8 22 C8 28.627 13.373 34 20 34 C26.627 34 32 28.627 32 22 C32 12 19 4 19 4Z" stroke="#f8f3eb" stroke-width="1.5" fill="none"/>
@@ -577,13 +585,11 @@ html, body {
     <div class="welcome-title">寫字靜心</div>
     <div class="welcome-sub">書寫壓力感知研究</div>
 
-    <!-- 今日書寫句子預覽 -->
     <div class="task-preview">
       <div class="task-preview-label">✦ 今日書寫內容</div>
       <div class="task-preview-text" id="task-preview-text">山高水遠，心寬路廣</div>
     </div>
 
-    <!-- VAS 元件 -->
     <div class="vas-card">
       <div class="vas-question">您現在感受到的壓力程度如何？</div>
       <div class="vas-hint">請拖曳滑桿至符合您此刻感受的位置，再開始書寫</div>
@@ -610,11 +616,7 @@ html, body {
   </div>
 </div>
 
-<!-- ════════════════════════════
-     WRITING SCREEN
-════════════════════════════ -->
 <div class="screen hidden" id="screen-write">
-  <!-- 頂部工具列 -->
   <div id="write-top">
     <button class="back-btn" onclick="goTo('screen-welcome')">←</button>
     <div class="write-prompt" id="write-prompt-text">山高水遠，心寬路廣</div>
@@ -626,7 +628,6 @@ html, body {
     </div>
   </div>
 
-  <!-- 格線選擇器 -->
   <div class="grid-picker" id="grid-picker">
     <div class="grid-opt active" data-grid="rice" onclick="setGrid('rice',this)">米字格</div>
     <div class="grid-opt" data-grid="field" onclick="setGrid('field',this)">田字格</div>
@@ -634,7 +635,6 @@ html, body {
     <div class="grid-opt" data-grid="none" onclick="setGrid('none',this)">無格</div>
   </div>
 
-  <!-- 顏色面板 -->
   <div id="color-picker-panel">
     <div class="cp-row">
       <div class="cp-swatch active" style="background:#2a1f14" data-color="#2a1f14" onclick="setColor(this)"></div>
@@ -659,7 +659,6 @@ html, body {
     </div>
   </div>
 
-  <!-- 畫布區 -->
   <div id="canvas-area">
     <canvas id="grid-canvas"></canvas>
     <canvas id="guide-canvas"></canvas>
@@ -672,7 +671,6 @@ html, body {
     </div>
   </div>
 
-  <!-- 底部狀態列 -->
   <div id="write-bottom">
     <div class="pressure-wrap">
       <span class="pressure-label">筆壓</span>
@@ -685,9 +683,6 @@ html, body {
   </div>
 </div>
 
-<!-- ════════════════════════════
-     THANK YOU SCREEN
-════════════════════════════ -->
 <div class="screen hidden" id="screen-thankyou">
   <div class="thankyou-body">
     <div class="thankyou-icon">🙏</div>
@@ -702,9 +697,7 @@ html, body {
   </div>
 </div>
 
-<!-- 字型狀態 -->
 <div id="font-status"></div>
-<!-- Toast -->
 <div id="toast"></div>
 
 <script>
@@ -742,7 +735,7 @@ function updateVas(v) {
     `linear-gradient(to right, var(--gold2) 0%, var(--gold2) ${pct}, rgba(155,122,58,0.18) ${pct}, rgba(155,122,58,0.18) 100%)`;
 }
 
-// VAS 全域暫存（單頁應用不跨頁，直接用變數比 localStorage 更可靠）
+// VAS 全域暫存
 let pendingVasScore = -1;
 let pendingVasLabel = '';
 
@@ -750,7 +743,6 @@ function confirmVasAndStart() {
   const score = parseInt(document.getElementById('vas-slider').value);
   pendingVasScore = score;
   pendingVasLabel = getVasLabel(score);
-  // 同時寫入 localStorage 作為備份
   localStorage.setItem('wm-vas-score', String(score));
   localStorage.setItem('wm-vas-label', pendingVasLabel);
   goTo('screen-write');
@@ -792,7 +784,7 @@ let timerInterval = null;
 let timerSeconds  = 0;
 let lastStrokeEnd = null;
 let sessionStart  = null;
-let strokeFirstPt = null; // 當前筆劃的第一個點，用於基線角度計算（書寫過程中不做分字）
+let strokeFirstPt = null;
 
 // ══════════════════════════════
 // NAVIGATION
@@ -865,7 +857,8 @@ function guideFont(text, sizePx) {
 
 function initWriting() {
   document.getElementById('write-prompt-text').textContent = selectedTask;
-
+  
+  isDrawing = false;
   sessionData = {
     strokes: [], pauseDurations: [], pressureValues: [],
     totalTime: 0, strokeCount: 0,
@@ -1014,7 +1007,7 @@ function drawGrid(W, H) {
 }
 
 // ══════════════════════════════
-// DRAWING
+// DRAWING (CORE FIX)
 // ══════════════════════════════
 function getPos(e) {
   const rect = dCanvas().getBoundingClientRect();
@@ -1036,7 +1029,6 @@ function recordPoint(e, pos) {
   const tiltX = e.tiltX || 0;
   const tiltY = e.tiltY || 0;
 
-  // 基線角度（相對於該筆劃第一個點；charId 在書寫完成後由 segmentChars 補齊）
   const ref = strokeFirstPt || pos;
   const dx = pos.x - ref.x;
   const dy = pos.y - ref.y;
@@ -1051,7 +1043,7 @@ function recordPoint(e, pos) {
     tiltY,
     tiltMag:  Math.round(Math.sqrt(tiltX * tiltX + tiltY * tiltY) * 100) / 100,
     baselineAngle: angle,
-    charId:   0,          // 暫存 0，書寫完成後由 segmentChars() 填入正確值
+    charId:   0,
     strokeId: sessionData.strokeCount,
     ts:       now,
   });
@@ -1060,88 +1052,6 @@ function recordPoint(e, pos) {
   sessionData.tiltYValues.push(tiltY);
   sessionData.baselineAngles.push(angle);
 }
-
-function onPointerDown(e) {
-  e.preventDefault();
-  saveUndo();
-  isDrawing = true;
-
-  const now = Date.now();
-
-  // 先取得當前起筆位置，供分字空間判斷使用
-  const pos = getPos(e);
-
-  // 停頓記錄（書寫過程中不做分字，charId 留到書寫完成後由 segmentChars 計算）
-  if (lastStrokeEnd !== null) {
-    const pause = (now - lastStrokeEnd) / 1000;
-    sessionData.pauseDurations.push(Math.round(pause * 100) / 100);
-  }
-  sessionData.strokeCount++;
-
-  // 記錄本筆劃的起始點，供 recordPoint 計算基線角度使用
-  strokeFirstPt = pos;
-
-  lastX = pos.x; lastY = pos.y;
-  lastWidth = getPressureWidth(e);
-  recordPoint(e, pos);
-
-  const ctx = dCtx();
-  ctx.beginPath();
-  ctx.arc(lastX, lastY, lastWidth / 2, 0, Math.PI * 2);
-  ctx.fillStyle = currentColor;
-  ctx.fill();
-
-  updatePressureHUD(e);
-}
-
-function onPointerMove(e) {
-  e.preventDefault();
-  updatePressureHUD(e);
-  if (!isDrawing) return;
-
-  const events = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
-  const ctx = dCtx();
-
-  for (const ev of events) {
-    const pos = getPos(ev);
-    const w   = getPressureWidth(ev);
-    const avg = (lastWidth + w) / 2;
-
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(pos.x, pos.y);
-    ctx.lineWidth = avg;
-    ctx.lineCap   = 'round';
-    ctx.lineJoin  = 'round';
-    ctx.strokeStyle = currentColor;
-    ctx.stroke();
-
-    recordPoint(ev, pos);
-    lastX = pos.x; lastY = pos.y; lastWidth = w;
-  }
-}
-
-function onPointerUp(e) {
-  isDrawing = false;
-  lastStrokeEnd = Date.now();
-  updatePressureHUD(e, true);
-}
-
-['pointerdown','pointermove','pointerup','pointerout','pointercancel'].forEach(evt => {
-  document.addEventListener(evt, (e) => {
-    const dc = dCanvas();
-    if (!dc || currentScreen !== 'screen-write') return;
-    if (evt === 'pointerdown') {
-      // 只有觸發點在畫布區域（#canvas-area）內才開始繪製
-      // 避免點工具列按鈕時因事件冒泡誤觸畫布
-      const canvasArea = document.getElementById('canvas-area');
-      if (!canvasArea || !canvasArea.contains(e.target)) return;
-      onPointerDown(e);
-    }
-    else if (evt === 'pointermove') onPointerMove(e);
-    else onPointerUp(e);
-  });
-});
 
 function updatePressureHUD(e, released) {
   let p = 0;
@@ -1153,6 +1063,108 @@ function updatePressureHUD(e, released) {
   const fill = document.getElementById('pressure-fill');
   if (fill) fill.style.width = (p * 100) + '%';
 }
+
+function bindCanvasEvents() {
+  const dcv = document.getElementById('draw-canvas');
+
+  // 1. 徹底封殺 Safari 預設的觸控手勢，防止筆畫被系統縮放/滾動事件吞噬
+  const preventTouch = (e) => { e.preventDefault(); };
+  dcv.addEventListener('touchstart', preventTouch, { passive: false });
+  dcv.addEventListener('touchmove', preventTouch, { passive: false });
+  dcv.addEventListener('touchend', preventTouch, { passive: false });
+
+  dcv.addEventListener('pointerdown', (e) => {
+    // 2. 必須先阻止預設行為，再判斷！否則掌觸誤判會讓 Safari 進入滾動模式
+    e.preventDefault(); 
+    if (e.pointerType === 'touch') return; 
+    
+    saveUndo();
+    isDrawing = true;
+    
+    try { dcv.setPointerCapture(e.pointerId); } catch(err) {}
+    
+    const pos = getPos(e);
+    lastX = pos.x; lastY = pos.y;
+    lastWidth = getPressureWidth(e);
+    
+    // 3. 改用帶有極微小位移的線段 (lineTo) 取代圓形 (arc)，觸發硬體加速，實現下筆即刻出墨
+    const ctx = dCtx();
+    ctx.beginPath();
+    ctx.lineCap   = 'round';
+    ctx.lineJoin  = 'round';
+    ctx.lineWidth = Math.max(lastWidth, maxWidth * 0.4);
+    ctx.strokeStyle = currentColor;
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(lastX + 0.01, lastY + 0.01); 
+    ctx.stroke();
+
+    recordPoint(e, pos);
+    updatePressureHUD(e);
+
+    const now = Date.now();
+    if (lastStrokeEnd !== null) {
+      const pause = (now - lastStrokeEnd) / 1000;
+      sessionData.pauseDurations.push(Math.round(pause * 100) / 100);
+    }
+    sessionData.strokeCount++;
+    strokeFirstPt = pos;
+  }, { passive: false });
+
+  dcv.addEventListener('pointermove', (e) => {
+    e.preventDefault(); 
+    if (!isDrawing || e.pointerType === 'touch') return;
+    
+    updatePressureHUD(e);
+    
+    let events = [e];
+    if (typeof e.getCoalescedEvents === 'function') {
+      try {
+        const coalesced = e.getCoalescedEvents();
+        if (coalesced && coalesced.length > 0) events = coalesced;
+      } catch(err) {}
+    }
+
+    const ctx = dCtx();
+    for (const ev of events) {
+      const pos = getPos(ev);
+      const w   = getPressureWidth(ev);
+      const avg = (lastWidth + w) / 2;
+
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.lineWidth = avg;
+      ctx.lineCap   = 'round';
+      ctx.lineJoin  = 'round';
+      ctx.strokeStyle = currentColor;
+      ctx.stroke();
+
+      recordPoint(ev, pos);
+      lastX = pos.x; lastY = pos.y; lastWidth = w;
+    }
+  }, { passive: false });
+
+  dcv.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    isDrawing = false;
+    try { dcv.releasePointerCapture(e.pointerId); } catch(err) {}
+    lastStrokeEnd = Date.now();
+    updatePressureHUD(e, true);
+  });
+
+  dcv.addEventListener('pointercancel', (e) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    isDrawing = false;
+    try { dcv.releasePointerCapture(e.pointerId); } catch(err) {}
+    lastStrokeEnd = Date.now();
+    updatePressureHUD(e, true);
+  });
+}
+
+// 執行綁定
+window.addEventListener('DOMContentLoaded', bindCanvasEvents);
 
 // ══════════════════════════════
 // UNDO / CLEAR
@@ -1246,7 +1258,6 @@ async function submitToSheets(record) {
   const pv = record.pressureValues || [];
   const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0;
 
-  // ── VAS 讀取：優先用全域變數（同頁不跨頁，最可靠），localStorage 作備援 ──
   const vasScore = pendingVasScore !== -1
     ? pendingVasScore
     : (() => {
@@ -1282,7 +1293,6 @@ async function submitToSheets(record) {
   try {
     const url = SHEETS_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
     await fetch(url, { method: 'GET', mode: 'no-cors' });
-    // 送出後清除，避免下次書寫殘留舊值
     localStorage.removeItem('wm-vas-score');
     localStorage.removeItem('wm-vas-label');
     pendingVasScore = -1;
@@ -1294,7 +1304,6 @@ async function submitToSheets(record) {
 
 // ══════════════════════════════
 // POST-WRITING CHARACTER SEGMENTATION
-// 書寫完成後執行：依底字格位 x 中心，將每個筆劃分配到最近的字
 // ══════════════════════════════
 function segmentChars() {
   const rp = sessionData.rawPoints;
@@ -1303,7 +1312,6 @@ function segmentChars() {
   const allChars = [...(selectedTask || '')];
   if (!allChars.length) return;
 
-  // ── 與 drawGuideChars() 完全相同的座標公式 ──
   const area  = document.getElementById('canvas-area');
   const W     = area.clientWidth;
   const H     = area.clientHeight;
@@ -1316,13 +1324,11 @@ function segmentChars() {
   const startX   = (W - drawW) / 2;
   const startY   = (H - drawCell) / 2;
 
-  // 每個字的格位中心 x（1-indexed charId）
   const charCenters = allChars.map((_, i) => ({
     charId: i + 1,
     cx: startX + i * drawCell + drawCell / 2,
   }));
 
-  // ── 計算每個 strokeId 的 x 中心 ──
   const strokeXCtr = {};
   for (const pt of rp) {
     if (!strokeXCtr[pt.strokeId]) strokeXCtr[pt.strokeId] = { sum: 0, count: 0 };
@@ -1330,7 +1336,6 @@ function segmentChars() {
     strokeXCtr[pt.strokeId].count += 1;
   }
 
-  // ── 每個 stroke → 最近底字格的 charId ──
   const strokeToChar = {};
   for (const [strokeId, v] of Object.entries(strokeXCtr)) {
     const xCtr = v.sum / v.count;
@@ -1343,10 +1348,8 @@ function segmentChars() {
     strokeToChar[strokeId] = nearest.charId;
   }
 
-  // ── 將 charId 寫回 rawPoints ──
   for (const pt of rp) pt.charId = strokeToChar[pt.strokeId] ?? 1;
 
-  // ── 重建 charBounds（只含有書寫到的字） ──
   sessionData.charBounds = {};
   for (const pt of rp) {
     if (!sessionData.charBounds[pt.charId]) {
@@ -1367,10 +1370,8 @@ function segmentChars() {
 function finishWriting() {
   stopTimer();
 
-  // 書寫完成後才做分字（y 軸分行 + x 軸間隙分析），結果寫入 charBounds
   segmentChars();
 
-  // 計算書寫特徵（用於本地儲存紀錄，不送情緒判斷）
   const pv = sessionData.pressureValues;
   const pd = sessionData.pauseDurations;
   const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0.5;
@@ -1379,25 +1380,22 @@ function finishWriting() {
     ? Math.sqrt(pv.reduce((acc,v) => acc + Math.pow(v-avgPressure,2), 0) / pv.length)
     : 0;
 
-  // ── 新特徵：平均字間距（相鄰字元 bounding box 之間的水平距離） ──
   const charIds = Object.keys(sessionData.charBounds).map(Number).sort((a, b) => a - b);
   const spacings = [];
   for (let i = 1; i < charIds.length; i++) {
     const prev = sessionData.charBounds[charIds[i - 1]];
     const curr = sessionData.charBounds[charIds[i]];
     const gap  = curr.minX - prev.maxX;
-    if (gap > -50) spacings.push(gap); // 排除明顯重疊（同一字內多筆被誤判）
+    if (gap > -50) spacings.push(gap); 
   }
   const avgCharSpacing = spacings.length
     ? Math.round(spacings.reduce((a, b) => a + b, 0) / spacings.length)
     : 0;
 
-  // ── 新特徵：書寫速度（採樣點數 / 書寫秒數） ──
   const writingSpeed = sessionData.totalTime > 0
     ? Math.round(sessionData.rawPoints.length / sessionData.totalTime)
     : 0;
 
-  // ── 新特徵：字元數 ──
   const charCount = Object.keys(sessionData.charBounds).length;
 
   const record = {
