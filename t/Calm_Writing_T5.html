@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Calm Writing</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* 花園明朝字型 — 支援客語 CJK Extension A/B 特殊字 */
+@font-face {
+  font-family: 'HanaMinA';
+  src: url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff') format('woff');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HanaMinB';
+  src: url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff') format('woff');
+  font-display: swap;
+}
+</style>
+<style>
+*, *::before, *::after { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+:root {
+  --cream:   #f8f3eb;
+  --warm:    #ede4d3;
+  --ink:     #2a1f14;
+  --ink2:    #3d2e1e;
+  --gold:    #9b7a3a;
+  --gold2:   #c4a35a;
+  --sage:    #6b7c5e;
+  --mist:    #8a9ba8;
+  --red:     #8b2c2c;
+  --grid:    rgba(155,122,58,0.18);
+  --shadow:  rgba(42,31,20,0.12);
+  --r: 16px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--cream);
+  font-family: 'Noto Sans TC', sans-serif;
+  color: var(--ink);
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* ══════════════════════════════
+   SCREENS
+══════════════════════════════ */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 24px;
+  transition: opacity 0.5s, transform 0.5s;
+  background: var(--cream);
+}
+.screen.hidden {
+  opacity: 0; pointer-events: none; transform: translateY(20px);
+}
+
+/* ══════════════════════════════
+   WELCOME + VAS SCREEN
+══════════════════════════════ */
+#screen-welcome {
+  background: radial-gradient(ellipse at 30% 40%, rgba(155,122,58,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 70%, rgba(107,124,94,0.06) 0%, transparent 50%),
+              var(--cream);
+  overflow-y: auto;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.welcome-scroll {
+  width: 100%; max-width: 480px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.welcome-deco {
+  position: fixed;
+  top: -30px; right: -20px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 180px;
+  font-weight: 900;
+  color: rgba(155,122,58,0.06);
+  line-height: 1;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.logo-mark {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 32px rgba(42,31,20,0.2);
+  margin-bottom: 20px;
+  position: relative; z-index: 1;
+}
+.logo-mark svg { width: 34px; height: 34px; }
+
+.welcome-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  margin-bottom: 6px;
+  position: relative; z-index: 1;
+}
+.welcome-sub {
+  font-size: 12px;
+  color: var(--gold);
+  letter-spacing: 0.3em;
+  margin-bottom: 32px;
+  position: relative; z-index: 1;
+}
+
+/* ── VAS 元件 ── */
+.vas-card {
+  width: 100%;
+  background: white;
+  border-radius: var(--r);
+  padding: 24px 20px 20px;
+  box-shadow: 0 4px 24px var(--shadow);
+  margin-bottom: 20px;
+  position: relative; z-index: 1;
+}
+
+.vas-question {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 16px;
+  color: var(--ink);
+  margin-bottom: 6px;
+  letter-spacing: 0.05em;
+}
+
+.vas-hint {
+  font-size: 12px;
+  color: rgba(42,31,20,0.45);
+  margin-bottom: 24px;
+  letter-spacing: 0.03em;
+}
+
+.vas-slider-wrap { position: relative; }
+
+#vas-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, var(--gold2) 0%, var(--gold2) 50%, rgba(155,122,58,0.18) 50%, rgba(155,122,58,0.18) 100%);
+  outline: none;
+  margin-bottom: 10px;
+}
+#vas-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--ink);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(42,31,20,0.3);
+  transition: transform 0.15s;
+}
+#vas-slider::-webkit-slider-thumb:active { transform: scale(1.15); }
+
+.vas-anchors {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(42,31,20,0.4);
+  letter-spacing: 0.03em;
+  margin-bottom: 20px;
+}
+
+.vas-value-display {
+  text-align: center;
+  padding: 12px 0;
+  border-top: 1px solid rgba(155,122,58,0.12);
+  border-bottom: 1px solid rgba(155,122,58,0.12);
+  margin-bottom: 20px;
+}
+.vas-num {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+}
+.vas-label {
+  font-size: 13px;
+  color: var(--gold);
+  margin-top: 4px;
+  letter-spacing: 0.08em;
+}
+
+.btn-vas-confirm {
+  width: 100%;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: 50px;
+  padding: 15px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(42,31,20,0.25);
+}
+.btn-vas-confirm:hover {
+  background: var(--ink2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(42,31,20,0.3);
+}
+.btn-vas-confirm:active { transform: translateY(0); }
+
+/* 固定書寫句子說明 */
+.task-preview {
+  width: 100%;
+  background: rgba(155,122,58,0.07);
+  border: 1px solid rgba(155,122,58,0.2);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  position: relative; z-index: 1;
+}
+.task-preview-label {
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 0.15em;
+  margin-bottom: 6px;
+}
+.task-preview-text {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 17px;
+  color: var(--ink);
+  letter-spacing: 0.08em;
+  line-height: 1.7;
+}
+
+/* ══════════════════════════════
+   WRITING SCREEN
+══════════════════════════════ */
+#screen-write {
+  padding: 0;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+#write-top {
+  background: var(--ink);
+  padding: 12px 20px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+.write-prompt {
+  flex: 1;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 15px;
+  color: rgba(248,243,235,0.9);
+  letter-spacing: 0.08em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.write-tools {
+  display: flex; gap: 8px;
+}
+.tool-btn {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.7);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.tool-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+.tool-btn.active { background: rgba(155,122,58,0.4); border-color: var(--gold2); color: var(--gold2); }
+
+.grid-picker {
+  display: none; position: absolute; top: 58px; right: 20px;
+  background: var(--ink2);
+  border-radius: 10px;
+  padding: 8px;
+  gap: 6px;
+  flex-direction: column;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.grid-picker.open { display: flex; }
+.grid-opt {
+  padding: 8px 14px;
+  border-radius: 6px;
+  color: rgba(248,243,235,0.8);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.grid-opt:hover { background: rgba(255,255,255,0.1); }
+.grid-opt.active { background: rgba(155,122,58,0.3); color: var(--gold2); }
+
+#canvas-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+}
+#grid-canvas, #guide-canvas, #draw-canvas {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+#guide-canvas { z-index: 1; pointer-events: none; }
+#draw-canvas  { z-index: 2; touch-action: none; cursor: crosshair; }
+
+#write-bottom {
+  background: var(--ink);
+  padding: 10px 20px;
+  display: flex; align-items: center; gap: 16px;
+  flex-shrink: 0;
+}
+
+.pressure-wrap {
+  display: flex; align-items: center; gap: 8px;
+  flex: 1;
+}
+.pressure-label { font-size: 10px; color: rgba(248,243,235,0.4); letter-spacing: 0.1em; }
+.pressure-track {
+  flex: 1; height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px; overflow: hidden;
+}
+#pressure-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--sage), var(--gold2));
+  border-radius: 2px;
+  transition: width 0.06s;
+}
+
+#timer-wrap {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 13px;
+  color: rgba(248,243,235,0.5);
+  letter-spacing: 0.05em;
+}
+
+.btn-done {
+  background: rgba(155,122,58,0.2);
+  border: 1px solid rgba(155,122,58,0.4);
+  color: var(--gold2);
+  border-radius: 50px;
+  padding: 7px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.btn-done:hover { background: rgba(155,122,58,0.35); }
+
+#breath-guide {
+  position: absolute;
+  bottom: 70px; left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column; align-items: center; gap: 10px;
+  z-index: 20;
+}
+#breath-guide.show { display: flex; }
+.breath-circle {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: 2px solid rgba(155,122,58,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--gold2);
+  animation: breathe 4s ease-in-out infinite;
+}
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 1; }
+}
+.breath-text { font-size: 11px; color: var(--gold); letter-spacing: 0.1em; }
+
+/* ══════════════════════════════
+   THANK YOU SCREEN
+══════════════════════════════ */
+#screen-thankyou {
+  background: radial-gradient(ellipse at 50% 40%, rgba(107,124,94,0.1) 0%, transparent 60%),
+              var(--cream);
+}
+
+.thankyou-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+  max-width: 360px;
+}
+
+.thankyou-icon {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  box-shadow: 0 4px 24px var(--shadow);
+}
+
+.thankyou-title {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.15em;
+}
+
+.thankyou-subtitle {
+  font-size: 14px;
+  color: rgba(42,31,20,0.5);
+  line-height: 2;
+  letter-spacing: 0.05em;
+}
+
+.thankyou-divider {
+  width: 40px; height: 1px;
+  background: rgba(155,122,58,0.3);
+}
+
+.btn-restart {
+  margin-top: 8px;
+  background: var(--ink);
+  color: var(--cream);
+  border: none;
+  border-radius: 50px;
+  padding: 13px 36px;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(42,31,20,0.25);
+}
+.btn-restart:hover {
+  background: var(--ink2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(42,31,20,0.3);
+}
+
+/* ══════════════════════════════
+   COLOR PICKER (floating)
+══════════════════════════════ */
+#color-picker-panel {
+  position: absolute; top: 58px; left: 20px;
+  background: var(--ink2);
+  border-radius: 12px;
+  padding: 12px;
+  display: none; flex-direction: column; gap: 8px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+#color-picker-panel.open { display: flex; }
+.cp-row { display: flex; gap: 8px; }
+.cp-swatch {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.cp-swatch:hover { transform: scale(1.15); }
+.cp-swatch.active { border-color: white; transform: scale(1.15); }
+.cp-size-wrap {
+  padding: 4px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.cp-size-label { font-size: 10px; color: rgba(248,243,235,0.4); white-space: nowrap; }
+.cp-slider {
+  flex: 1; -webkit-appearance: none;
+  height: 3px; background: rgba(255,255,255,0.2);
+  border-radius: 2px; outline: none;
+}
+.cp-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  background: white; border-radius: 50%; cursor: pointer;
+}
+.guide-opacity-wrap {
+  padding: 4px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* 客語字型狀態提示 */
+#font-status {
+  position: fixed; top: 68px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(107,124,94,0.92);
+  color: white; font-size: 12px;
+  padding: 7px 16px; border-radius: 50px;
+  z-index: 200; display: none;
+  letter-spacing: 0.06em; pointer-events: none;
+}
+
+/* 底字提示標籤 */
+#guide-badge {
+  position: absolute; top: 10px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(155,122,58,0.15);
+  border: 1px solid rgba(155,122,58,0.3);
+  color: var(--gold); font-size: 11px;
+  padding: 4px 14px; border-radius: 50px;
+  letter-spacing: 0.08em; pointer-events: none;
+  z-index: 5; white-space: nowrap;
+  transition: opacity 0.6s;
+}
+
+/* ══════════════════════════════
+   MISC
+══════════════════════════════ */
+.back-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(248,243,235,0.2);
+  background: transparent;
+  color: rgba(248,243,235,0.7);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.back-btn:hover { background: rgba(255,255,255,0.1); }
+
+#toast {
+  position: fixed; bottom: 100px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: rgba(42,31,20,0.9);
+  color: var(--cream);
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 200;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(42,31,20,0.15); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="screen" id="screen-welcome">
+  <div class="welcome-deco">靜</div>
+  <div class="welcome-scroll">
+
+    <div class="logo-mark">
+      <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 4 C19 4 8 12 8 22 C8 28.627 13.373 34 20 34 C26.627 34 32 28.627 32 22 C32 12 19 4 19 4Z" stroke="#f8f3eb" stroke-width="1.5" fill="none"/>
+        <line x1="19" y1="10" x2="19" y2="30" stroke="#f8f3eb" stroke-width="1" stroke-dasharray="2 2"/>
+        <line x1="11" y1="20" x2="29" y2="20" stroke="#f8f3eb" stroke-width="1" stroke-dasharray="2 2"/>
+      </svg>
+    </div>
+    <div class="welcome-title">寫字靜心</div>
+    <div class="welcome-sub">書寫壓力感知研究</div>
+
+    <div class="task-preview">
+      <div class="task-preview-label">✦ 今日書寫內容</div>
+      <div class="task-preview-text" id="task-preview-text">山高水遠，心寬路廣</div>
+    </div>
+
+    <div class="vas-card">
+      <div class="vas-question">您現在感受到的壓力程度如何？</div>
+      <div class="vas-hint">請拖曳滑桿至符合您此刻感受的位置，再開始書寫</div>
+
+      <div class="vas-slider-wrap">
+        <input type="range" id="vas-slider" min="0" max="100" value="50" step="1"
+          oninput="updateVas(this.value)">
+      </div>
+      <div class="vas-anchors">
+        <span>完全沒有壓力</span>
+        <span>極度有壓力</span>
+      </div>
+
+      <div class="vas-value-display">
+        <div class="vas-num" id="vas-num">50</div>
+        <div class="vas-label" id="vas-label">中等壓力感</div>
+      </div>
+
+      <button class="btn-vas-confirm" onclick="confirmVasAndStart()">
+        完成測量，開始書寫
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="screen hidden" id="screen-write">
+  <div id="write-top">
+    <button class="back-btn" onclick="goTo('screen-welcome')">←</button>
+    <div class="write-prompt" id="write-prompt-text">山高水遠，心寬路廣</div>
+    <div class="write-tools">
+      <div class="tool-btn" title="顏色/筆刷" onclick="toggleColorPanel()">🖌</div>
+      <div class="tool-btn" title="格線" onclick="toggleGridPicker()">⊞</div>
+      <div class="tool-btn" title="上一步" onclick="undo()">↩</div>
+      <div class="tool-btn" title="清除" onclick="clearCanvas()">✕</div>
+    </div>
+  </div>
+
+  <div class="grid-picker" id="grid-picker">
+    <div class="grid-opt active" data-grid="rice" onclick="setGrid('rice',this)">米字格</div>
+    <div class="grid-opt" data-grid="field" onclick="setGrid('field',this)">田字格</div>
+    <div class="grid-opt" data-grid="line" onclick="setGrid('line',this)">橫線格</div>
+    <div class="grid-opt" data-grid="none" onclick="setGrid('none',this)">無格</div>
+  </div>
+
+  <div id="color-picker-panel">
+    <div class="cp-row">
+      <div class="cp-swatch active" style="background:#2a1f14" data-color="#2a1f14" onclick="setColor(this)"></div>
+      <div class="cp-swatch" style="background:#8b2c2c" data-color="#8b2c2c" onclick="setColor(this)"></div>
+      <div class="cp-swatch" style="background:#2c5f7a" data-color="#2c5f7a" onclick="setColor(this)"></div>
+      <div class="cp-swatch" style="background:#6b7c5e" data-color="#6b7c5e" onclick="setColor(this)"></div>
+      <div class="cp-swatch" style="background:#9b7a3a" data-color="#9b7a3a" onclick="setColor(this)"></div>
+    </div>
+    <div class="cp-size-wrap">
+      <span class="cp-size-label">筆刷</span>
+      <input type="range" class="cp-slider" id="brush-size" min="1" max="40" value="6" oninput="maxWidth=parseInt(this.value)">
+    </div>
+    <div class="guide-opacity-wrap">
+      <span class="cp-size-label">底字</span>
+      <input type="range" class="cp-slider" id="guide-opacity-slider" min="0" max="100" value="18"
+             oninput="setGuideOpacity(parseInt(this.value))">
+    </div>
+    <div class="guide-opacity-wrap">
+      <span class="cp-size-label">字大小</span>
+      <input type="range" class="cp-slider" id="cell-size-slider" min="100" max="500" value="220"
+             oninput="setCellSize(parseInt(this.value))">
+    </div>
+  </div>
+
+  <div id="canvas-area">
+    <canvas id="grid-canvas"></canvas>
+    <canvas id="guide-canvas"></canvas>
+    <canvas id="draw-canvas"></canvas>
+    <div id="guide-badge">淡色底字模式 · 照著描寫</div>
+
+    <div id="breath-guide">
+      <div class="breath-circle">吸⋯</div>
+      <div class="breath-text">先跟著呼吸，再開始書寫</div>
+    </div>
+  </div>
+
+  <div id="write-bottom">
+    <div class="pressure-wrap">
+      <span class="pressure-label">筆壓</span>
+      <div class="pressure-track">
+        <div id="pressure-fill"></div>
+      </div>
+    </div>
+    <div id="timer-wrap">00:00</div>
+    <button class="btn-done" onclick="finishWriting()">完成書寫</button>
+  </div>
+</div>
+
+<div class="screen hidden" id="screen-thankyou">
+  <div class="thankyou-body">
+    <div class="thankyou-icon">🙏</div>
+    <div class="thankyou-title">感謝您的參與</div>
+    <div class="thankyou-divider"></div>
+    <div class="thankyou-subtitle">
+      您的書寫資料已成功記錄<br>
+      感謝您協助本次研究測試<br>
+      您的貢獻對研究非常重要
+    </div>
+    <button class="btn-restart" onclick="goTo('screen-welcome')">再次書寫</button>
+  </div>
+</div>
+
+<div id="font-status"></div>
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════
+// 固定書寫句子（T 版本統一使用此句）
+// ══════════════════════════════
+const FIXED_TASK = '山高水遠，心寬路廣';
+
+// ══════════════════════════════
+// VAS 設定
+// ══════════════════════════════
+const VAS_LABELS = [
+  [0,  10,  '幾乎沒有壓力感'],
+  [11, 25,  '輕微壓力'],
+  [26, 45,  '有些壓力'],
+  [46, 55,  '中等壓力感'],
+  [56, 74,  '明顯有壓力'],
+  [75, 89,  '壓力感很強'],
+  [90, 100, '極度有壓力'],
+];
+
+function getVasLabel(v) {
+  for (const [lo, hi, txt] of VAS_LABELS) {
+    if (v >= lo && v <= hi) return txt;
+  }
+  return '';
+}
+
+function updateVas(v) {
+  const val = parseInt(v);
+  document.getElementById('vas-num').textContent = val;
+  document.getElementById('vas-label').textContent = getVasLabel(val);
+  const pct = val + '%';
+  document.getElementById('vas-slider').style.background =
+    `linear-gradient(to right, var(--gold2) 0%, var(--gold2) ${pct}, rgba(155,122,58,0.18) ${pct}, rgba(155,122,58,0.18) 100%)`;
+}
+
+// VAS 全域暫存
+let pendingVasScore = -1;
+let pendingVasLabel = '';
+
+function confirmVasAndStart() {
+  const score = parseInt(document.getElementById('vas-slider').value);
+  pendingVasScore = score;
+  pendingVasLabel = getVasLabel(score);
+  localStorage.setItem('wm-vas-score', String(score));
+  localStorage.setItem('wm-vas-label', pendingVasLabel);
+  goTo('screen-write');
+}
+
+// 初始化 VAS 顯示
+updateVas(50);
+document.getElementById('task-preview-text').textContent = FIXED_TASK;
+
+// ══════════════════════════════
+// 狀態變數
+// ══════════════════════════════
+let currentScreen = 'screen-welcome';
+let selectedTask  = FIXED_TASK;
+let currentColor  = '#2a1f14';
+let maxWidth      = 6;
+let currentGrid   = 'rice';
+let guideOpacity  = 0.18;
+let hakkaFontLoaded = false;
+let cellSize      = 220;
+
+let sessionData = {
+  strokes: [],
+  pauseDurations: [],
+  pressureValues: [],
+  totalTime: 0,
+  strokeCount: 0,
+  rawPoints: [],
+  charBounds: {},
+  tiltXValues: [],
+  tiltYValues: [],
+  baselineAngles: [],
+};
+
+let isDrawing     = false;
+let lastX = 0, lastY = 0, lastWidth = 2;
+let undoStack     = [];
+let timerInterval = null;
+let timerSeconds  = 0;
+let lastStrokeEnd = null;
+let sessionStart  = null;
+let strokeFirstPt = null;
+
+// ══════════════════════════════
+// NAVIGATION
+// ══════════════════════════════
+function goTo(id) {
+  document.getElementById(currentScreen).classList.add('hidden');
+  document.getElementById(id).classList.remove('hidden');
+  currentScreen = id;
+
+  if (id === 'screen-write') initWriting();
+  if (id !== 'screen-write') stopTimer();
+
+  document.getElementById('grid-picker').classList.remove('open');
+  document.getElementById('color-picker-panel').classList.remove('open');
+}
+
+// ══════════════════════════════
+// CANVAS SETUP
+// ══════════════════════════════
+const gCanvas  = () => document.getElementById('grid-canvas');
+const guCanvas = () => document.getElementById('guide-canvas');
+const dCanvas  = () => document.getElementById('draw-canvas');
+const gCtx     = () => gCanvas().getContext('2d');
+const guCtx    = () => guCanvas().getContext('2d');
+const dCtx     = () => dCanvas().getContext('2d');
+
+let fontALoaded = false;
+let fontBLoaded = false;
+
+async function loadHanaFonts() {
+  const statusEl = document.getElementById('font-status');
+  try {
+    statusEl.textContent = '客語字型載入中…';
+    statusEl.style.display = 'block';
+
+    const fontA = new FontFace('HanaMinA',
+      "url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff2') format('woff2')," +
+      "url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff') format('woff')"
+    );
+    const fontB = new FontFace('HanaMinB',
+      "url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff2') format('woff2')," +
+      "url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff') format('woff')"
+    );
+
+    await fontA.load();
+    document.fonts.add(fontA);
+    fontALoaded = true;
+
+    statusEl.textContent = '載入 B 區字型…';
+    await fontB.load();
+    document.fonts.add(fontB);
+    fontBLoaded = true;
+
+    hakkaFontLoaded = true;
+    statusEl.textContent = '✓ 客語字型已就緒';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 2000);
+
+    if (currentScreen === 'screen-write') drawGuideChars();
+  } catch (err) {
+    statusEl.textContent = '字型載入失敗，請確認網路連線';
+    setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+  }
+}
+
+function guideFont(text, sizePx) {
+  const hasSpecial = [...text].some(c => c.codePointAt(0) < 0x4E00 || c.codePointAt(0) > 0x9FFF);
+  if (hasSpecial) return `${sizePx}px 'HanaMinB', 'HanaMinA', 'Noto Serif TC', serif`;
+  return `${sizePx}px 'Noto Serif TC', serif`;
+}
+
+function initWriting() {
+  document.getElementById('write-prompt-text').textContent = selectedTask;
+  
+  isDrawing = false;
+  sessionData = {
+    strokes: [], pauseDurations: [], pressureValues: [],
+    totalTime: 0, strokeCount: 0,
+    rawPoints: [], charBounds: {},
+    tiltXValues: [], tiltYValues: [], baselineAngles: [],
+  };
+  undoStack = [];
+  timerSeconds = 0;
+  strokeFirstPt = null;
+  lastStrokeEnd = null;
+  updateTimer();
+  sessionStart = Date.now();
+
+  resizeCanvases();
+  startTimer();
+
+  document.getElementById('breath-guide').classList.remove('show');
+
+  const hasSpecial = [...selectedTask].some(c => c.codePointAt(0) < 0x4E00 || c.codePointAt(0) > 0x9FFF);
+  if (hasSpecial && !hakkaFontLoaded) loadHanaFonts();
+}
+
+function resizeCanvases() {
+  const area = document.getElementById('canvas-area');
+  const W = area.clientWidth;
+  const H = area.clientHeight;
+  const dpr = window.devicePixelRatio || 1;
+
+  [gCanvas(), guCanvas(), dCanvas()].forEach(c => {
+    c.width  = W * dpr;
+    c.height = H * dpr;
+    c.style.width  = W + 'px';
+    c.style.height = H + 'px';
+  });
+  gCtx().scale(dpr, dpr);
+  guCtx().scale(dpr, dpr);
+  dCtx().scale(dpr, dpr);
+
+  drawGrid(W, H);
+  drawGuideChars();
+}
+
+function setGuideOpacity(val) {
+  guideOpacity = val / 100;
+  drawGuideChars();
+}
+
+function setCellSize(val) {
+  cellSize = val;
+  const area = document.getElementById('canvas-area');
+  drawGrid(area.clientWidth, area.clientHeight);
+}
+
+function drawGuideChars() {
+  const area = document.getElementById('canvas-area');
+  const W = area.clientWidth;
+  const H = area.clientHeight;
+  const ctx = guCtx();
+  ctx.clearRect(0, 0, W, H);
+
+  if (guideOpacity <= 0 || !selectedTask) return;
+
+  const chars = [...selectedTask];
+  const n = chars.length;
+  const cell = cellSize;
+
+  const totalW = n * cell;
+  const scale  = totalW > W * 0.95 ? (W * 0.95) / totalW : 1;
+  const drawCell = cell * scale;
+  const drawW    = n * drawCell;
+
+  const startX = (W - drawW) / 2;
+  const startY = (H - drawCell) / 2;
+
+  ctx.globalAlpha = guideOpacity;
+  ctx.fillStyle = '#2a1f14';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  chars.forEach((ch, i) => {
+    const cx = startX + i * drawCell + drawCell / 2;
+    const cy = startY + drawCell / 2;
+    ctx.font = guideFont(ch, drawCell * 0.82);
+    ctx.fillText(ch, cx, cy);
+  });
+
+  ctx.globalAlpha = 1;
+
+  const badge = document.getElementById('guide-badge');
+  if (badge) badge.style.opacity = guideOpacity > 0 ? '1' : '0';
+
+  const hasSpecial = chars.some(c => c.codePointAt(0) < 0x4E00 || c.codePointAt(0) > 0x9FFF);
+  if (hasSpecial && !hakkaFontLoaded) loadHanaFonts();
+}
+
+function drawGrid(W, H) {
+  const ctx = gCtx();
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.fillStyle = '#f8f3eb';
+  ctx.fillRect(0, 0, W, H);
+
+  for (let i = 0; i < 4000; i++) {
+    const x = Math.random() * W;
+    const y = Math.random() * H;
+    ctx.fillStyle = `rgba(155,122,58,${Math.random() * 0.025})`;
+    ctx.fillRect(x, y, 1, 1);
+  }
+
+  if (currentGrid === 'none') { drawGuideChars(); return; }
+
+  const cell = cellSize;
+  ctx.strokeStyle = 'rgba(155,122,58,0.22)';
+  ctx.lineWidth = 0.8;
+
+  if (currentGrid === 'rice' || currentGrid === 'field') {
+    for (let x = 0; x <= W; x += cell) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    for (let y = 0; y <= H; y += cell) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.strokeStyle = 'rgba(155,122,58,0.12)';
+    ctx.setLineDash([3, 4]);
+    for (let x = 0; x <= W; x += cell) {
+      for (let y = 0; y <= H; y += cell) {
+        const cx = x + cell / 2, cy = y + cell / 2;
+        ctx.beginPath(); ctx.moveTo(x, cy); ctx.lineTo(x + cell, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx, y + cell); ctx.stroke();
+        if (currentGrid === 'rice') {
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + cell, y + cell); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x + cell, y); ctx.lineTo(x, y + cell); ctx.stroke();
+        }
+      }
+    }
+    ctx.setLineDash([]);
+  } else if (currentGrid === 'line') {
+    const lh = 60;
+    ctx.strokeStyle = 'rgba(155,122,58,0.2)';
+    for (let y = lh; y <= H; y += lh) {
+      ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(W - 30, y); ctx.stroke();
+    }
+  }
+
+  drawGuideChars();
+}
+
+// ══════════════════════════════
+// DRAWING (CORE FIX)
+// ══════════════════════════════
+function getPos(e) {
+  const rect = dCanvas().getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function getPressureWidth(e) {
+  let p = 0.5;
+  if (e.pointerType === 'pen' && e.pressure > 0) p = e.pressure;
+  else if (e.pointerType === 'touch' && e.pressure > 0) p = e.pressure;
+  sessionData.pressureValues.push(p);
+  return Math.max(1, p * maxWidth);
+}
+
+function recordPoint(e, pos) {
+  const now   = Date.now();
+  const p     = (e.pointerType === 'pen' && e.pressure > 0) ? e.pressure
+              : (e.pointerType === 'touch' && e.pressure > 0) ? e.pressure : 0.5;
+  const tiltX = e.tiltX || 0;
+  const tiltY = e.tiltY || 0;
+
+  const ref = strokeFirstPt || pos;
+  const dx = pos.x - ref.x;
+  const dy = pos.y - ref.y;
+  const angle = Math.round(Math.atan2(dy, dx + 0.1) * (180 / Math.PI) * 100) / 100;
+
+  sessionData.rawPoints.push({
+    x:        Math.round(pos.x),
+    y:        Math.round(pos.y),
+    pressure: Math.round(p * 1023),
+    pressureNorm: p,
+    tiltX,
+    tiltY,
+    tiltMag:  Math.round(Math.sqrt(tiltX * tiltX + tiltY * tiltY) * 100) / 100,
+    baselineAngle: angle,
+    charId:   0,
+    strokeId: sessionData.strokeCount,
+    ts:       now,
+  });
+
+  sessionData.tiltXValues.push(tiltX);
+  sessionData.tiltYValues.push(tiltY);
+  sessionData.baselineAngles.push(angle);
+}
+
+function updatePressureHUD(e, released) {
+  let p = 0;
+  if (!released) {
+    if (e.pointerType === 'pen') p = e.pressure;
+    else if (e.pointerType === 'touch') p = e.pressure > 0 ? e.pressure : (isDrawing ? 0.4 : 0);
+    else p = isDrawing ? 0.5 : 0;
+  }
+  const fill = document.getElementById('pressure-fill');
+  if (fill) fill.style.width = (p * 100) + '%';
+}
+
+function bindCanvasEvents() {
+  const dcv = document.getElementById('draw-canvas');
+
+  // 1. 徹底封殺 Safari 預設的觸控手勢，防止筆畫被系統縮放/滾動事件吞噬
+  const preventTouch = (e) => { e.preventDefault(); };
+  dcv.addEventListener('touchstart', preventTouch, { passive: false });
+  dcv.addEventListener('touchmove', preventTouch, { passive: false });
+  dcv.addEventListener('touchend', preventTouch, { passive: false });
+
+  dcv.addEventListener('pointerdown', (e) => {
+    // 2. 必須先阻止預設行為，再判斷！否則掌觸誤判會讓 Safari 進入滾動模式
+    e.preventDefault(); 
+    if (e.pointerType === 'touch') return; 
+    
+    saveUndo();
+    isDrawing = true;
+    
+    try { dcv.setPointerCapture(e.pointerId); } catch(err) {}
+    
+    const pos = getPos(e);
+    lastX = pos.x; lastY = pos.y;
+    lastWidth = getPressureWidth(e);
+    
+    // 3. 改用帶有極微小位移的線段 (lineTo) 取代圓形 (arc)，觸發硬體加速，實現下筆即刻出墨
+    const ctx = dCtx();
+    ctx.beginPath();
+    ctx.lineCap   = 'round';
+    ctx.lineJoin  = 'round';
+    ctx.lineWidth = Math.max(lastWidth, maxWidth * 0.4);
+    ctx.strokeStyle = currentColor;
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(lastX + 0.01, lastY + 0.01); 
+    ctx.stroke();
+
+    recordPoint(e, pos);
+    updatePressureHUD(e);
+
+    const now = Date.now();
+    if (lastStrokeEnd !== null) {
+      const pause = (now - lastStrokeEnd) / 1000;
+      sessionData.pauseDurations.push(Math.round(pause * 100) / 100);
+    }
+    sessionData.strokeCount++;
+    strokeFirstPt = pos;
+  }, { passive: false });
+
+  dcv.addEventListener('pointermove', (e) => {
+    e.preventDefault(); 
+    if (!isDrawing || e.pointerType === 'touch') return;
+    
+    updatePressureHUD(e);
+    
+    let events = [e];
+    if (typeof e.getCoalescedEvents === 'function') {
+      try {
+        const coalesced = e.getCoalescedEvents();
+        if (coalesced && coalesced.length > 0) events = coalesced;
+      } catch(err) {}
+    }
+
+    const ctx = dCtx();
+    for (const ev of events) {
+      const pos = getPos(ev);
+      const w   = getPressureWidth(ev);
+      const avg = (lastWidth + w) / 2;
+
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.lineWidth = avg;
+      ctx.lineCap   = 'round';
+      ctx.lineJoin  = 'round';
+      ctx.strokeStyle = currentColor;
+      ctx.stroke();
+
+      recordPoint(ev, pos);
+      lastX = pos.x; lastY = pos.y; lastWidth = w;
+    }
+  }, { passive: false });
+
+  dcv.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    isDrawing = false;
+    try { dcv.releasePointerCapture(e.pointerId); } catch(err) {}
+    lastStrokeEnd = Date.now();
+    updatePressureHUD(e, true);
+  });
+
+  dcv.addEventListener('pointercancel', (e) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    isDrawing = false;
+    try { dcv.releasePointerCapture(e.pointerId); } catch(err) {}
+    lastStrokeEnd = Date.now();
+    updatePressureHUD(e, true);
+  });
+}
+
+// 執行綁定
+window.addEventListener('DOMContentLoaded', bindCanvasEvents);
+
+// ══════════════════════════════
+// UNDO / CLEAR
+// ══════════════════════════════
+function saveUndo() {
+  const dc = dCanvas();
+  if (!dc) return;
+  undoStack.push(dCtx().getImageData(0, 0, dc.width, dc.height));
+  if (undoStack.length > 25) undoStack.shift();
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  dCtx().putImageData(undoStack.pop(), 0, 0);
+}
+
+function clearCanvas() {
+  saveUndo();
+  const dc = dCanvas();
+  dCtx().clearRect(0, 0, dc.width, dc.height);
+}
+
+// ══════════════════════════════
+// TIMER
+// ══════════════════════════════
+function startTimer() {
+  stopTimer();
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    updateTimer();
+    sessionData.totalTime = timerSeconds;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+}
+
+function updateTimer() {
+  const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+  const s = String(timerSeconds % 60).padStart(2, '0');
+  const tw = document.getElementById('timer-wrap');
+  if (tw) tw.textContent = `${m}:${s}`;
+}
+
+// ══════════════════════════════
+// GRID / COLOR TOGGLES
+// ══════════════════════════════
+function toggleGridPicker() {
+  document.getElementById('color-picker-panel').classList.remove('open');
+  document.getElementById('grid-picker').classList.toggle('open');
+}
+
+function toggleColorPanel() {
+  document.getElementById('grid-picker').classList.remove('open');
+  document.getElementById('color-picker-panel').classList.toggle('open');
+}
+
+function setGrid(name, el) {
+  currentGrid = name;
+  document.querySelectorAll('.grid-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('grid-picker').classList.remove('open');
+  const area = document.getElementById('canvas-area');
+  drawGrid(area.clientWidth, area.clientHeight);
+}
+
+function setColor(el) {
+  document.querySelectorAll('.cp-swatch').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  currentColor = el.dataset.color;
+}
+
+// ══════════════════════════════
+// GOOGLE SHEETS 數據上傳
+// ══════════════════════════════
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyqde7EtjJJLoBxiGQstbqQWdZFEAGHQU2KFFkpf0nzfMbKaroI08LB8hdMPjZTvXpy/exec';
+const APP_VERSION = 'T3';
+
+function getParticipantId() {
+  let pid = localStorage.getItem('wm-participant-id');
+  if (!pid) {
+    pid = 'P' + Math.random().toString(36).substr(2, 6).toUpperCase();
+    localStorage.setItem('wm-participant-id', pid);
+  }
+  return pid;
+}
+
+async function submitToSheets(record) {
+  if (!SHEETS_URL) return;
+  const pv = record.pressureValues || [];
+  const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0;
+
+  const vasScore = pendingVasScore !== -1
+    ? pendingVasScore
+    : (() => {
+        const raw = localStorage.getItem('wm-vas-score');
+        return (raw !== null && raw !== '') ? parseInt(raw, 10) : -1;
+      })();
+  const vasLabel = pendingVasLabel || (localStorage.getItem('wm-vas-label') ?? '');
+
+  const payload = {
+    timestamp:             new Date().toISOString(),
+    participant_id:        getParticipantId(),
+    session_duration_sec:  Math.round((record.totalTime || 0)),
+    avg_pressure:          avgPressure.toFixed(3),
+    pressure_cv:           avgPressure > 0
+                             ? (record.pressureVariance / avgPressure).toFixed(3)
+                             : '0',
+    stroke_count:          record.strokeCount || 0,
+    pause_count:           (record.pauseDurations || []).length,
+    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2000).length,
+    char_count:            record.charCount ?? 0,
+    avg_pause_duration_ms: record.avgPause != null
+                             ? Math.round(record.avgPause * 1000)
+                             : 0,
+    avg_char_spacing:      record.avgCharSpacing ?? 0,
+    writing_speed:         record.writingSpeed   ?? 0,
+    emotion_result:        null,
+    emotion_score:         null,
+    vas_score:             vasScore,
+    vas_label:             vasLabel,
+    app_version:           APP_VERSION,
+  };
+
+  try {
+    const url = SHEETS_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+    await fetch(url, { method: 'GET', mode: 'no-cors' });
+    localStorage.removeItem('wm-vas-score');
+    localStorage.removeItem('wm-vas-label');
+    pendingVasScore = -1;
+    pendingVasLabel = '';
+  } catch (err) {
+    console.warn('數據上傳失敗（不影響使用）:', err);
+  }
+}
+
+// ══════════════════════════════
+// POST-WRITING CHARACTER SEGMENTATION
+// ══════════════════════════════
+function segmentChars() {
+  const rp = sessionData.rawPoints;
+  if (!rp.length) return;
+
+  const allChars = [...(selectedTask || '')];
+  if (!allChars.length) return;
+
+  const area  = document.getElementById('canvas-area');
+  const W     = area.clientWidth;
+  const H     = area.clientHeight;
+  const n     = allChars.length;
+  const cell  = cellSize;
+  const totalW   = n * cell;
+  const scale    = totalW > W * 0.95 ? (W * 0.95) / totalW : 1;
+  const drawCell = cell * scale;
+  const drawW    = n * drawCell;
+  const startX   = (W - drawW) / 2;
+  const startY   = (H - drawCell) / 2;
+
+  const charCenters = allChars.map((_, i) => ({
+    charId: i + 1,
+    cx: startX + i * drawCell + drawCell / 2,
+  }));
+
+  const strokeXCtr = {};
+  for (const pt of rp) {
+    if (!strokeXCtr[pt.strokeId]) strokeXCtr[pt.strokeId] = { sum: 0, count: 0 };
+    strokeXCtr[pt.strokeId].sum   += pt.x;
+    strokeXCtr[pt.strokeId].count += 1;
+  }
+
+  const strokeToChar = {};
+  for (const [strokeId, v] of Object.entries(strokeXCtr)) {
+    const xCtr = v.sum / v.count;
+    let nearest = charCenters[0];
+    let minDist = Math.abs(xCtr - charCenters[0].cx);
+    for (const c of charCenters) {
+      const d = Math.abs(xCtr - c.cx);
+      if (d < minDist) { minDist = d; nearest = c; }
+    }
+    strokeToChar[strokeId] = nearest.charId;
+  }
+
+  for (const pt of rp) pt.charId = strokeToChar[pt.strokeId] ?? 1;
+
+  sessionData.charBounds = {};
+  for (const pt of rp) {
+    if (!sessionData.charBounds[pt.charId]) {
+      sessionData.charBounds[pt.charId] = {
+        minX: pt.x, maxX: pt.x, minY: pt.y, maxY: pt.y,
+        firstX: pt.x, firstY: pt.y,
+      };
+    }
+    const b = sessionData.charBounds[pt.charId];
+    b.minX = Math.min(b.minX, pt.x); b.maxX = Math.max(b.maxX, pt.x);
+    b.minY = Math.min(b.minY, pt.y); b.maxY = Math.max(b.maxY, pt.y);
+  }
+}
+
+// ══════════════════════════════
+// FINISH
+// ══════════════════════════════
+function finishWriting() {
+  stopTimer();
+
+  segmentChars();
+
+  const pv = sessionData.pressureValues;
+  const pd = sessionData.pauseDurations;
+  const avgPressure = pv.length ? pv.reduce((a,b)=>a+b,0)/pv.length : 0.5;
+  const avgPause    = pd.length ? pd.reduce((a,b)=>a+b,0)/pd.length : 0;
+  const pressureVariance = pv.length > 1
+    ? Math.sqrt(pv.reduce((acc,v) => acc + Math.pow(v-avgPressure,2), 0) / pv.length)
+    : 0;
+
+  const charIds = Object.keys(sessionData.charBounds).map(Number).sort((a, b) => a - b);
+  const spacings = [];
+  for (let i = 1; i < charIds.length; i++) {
+    const prev = sessionData.charBounds[charIds[i - 1]];
+    const curr = sessionData.charBounds[charIds[i]];
+    const gap  = curr.minX - prev.maxX;
+    if (gap > -50) spacings.push(gap); 
+  }
+  const avgCharSpacing = spacings.length
+    ? Math.round(spacings.reduce((a, b) => a + b, 0) / spacings.length)
+    : 0;
+
+  const writingSpeed = sessionData.totalTime > 0
+    ? Math.round(sessionData.rawPoints.length / sessionData.totalTime)
+    : 0;
+
+  const charCount = Object.keys(sessionData.charBounds).length;
+
+  const record = {
+    id:               Date.now(),
+    date:             new Date().toISOString().slice(0, 10),
+    text:             selectedTask,
+    avgPause:         Math.round(avgPause * 100) / 100,
+    pauseDurations:   sessionData.pauseDurations,
+    pressureVariance: Math.round(pressureVariance * 1000) / 1000,
+    pressureValues:   sessionData.pressureValues.map(p => Math.round(p * 100) / 100),
+    strokeCount:      sessionData.strokeCount,
+    totalTime:        sessionData.totalTime,
+    pointCount:       sessionData.rawPoints.length,
+    charCount,
+    avgCharSpacing,
+    writingSpeed,
+    rawPoints:        sessionData.rawPoints.length > 500
+                        ? sessionData.rawPoints.filter((_,i) => i % Math.ceil(sessionData.rawPoints.length/500) === 0)
+                        : sessionData.rawPoints,
+  };
+
+  try {
+    const key = 'writing-mindfulness-sessions';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.push(record);
+    if (existing.length > 200) existing.splice(0, existing.length - 200);
+    localStorage.setItem(key, JSON.stringify(existing));
+  } catch(e) {}
+
+  submitToSheets(record);
+  goTo('screen-thankyou');
+}
+
+// ══════════════════════════════
+// TOAST
+// ══════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════════════
+// RESIZE
+// ══════════════════════════════
+window.addEventListener('resize', () => {
+  if (currentScreen === 'screen-write') resizeCanvases();
+});
+
+document.addEventListener('pointerdown', (e) => {
+  const gp  = document.getElementById('grid-picker');
+  const cp  = document.getElementById('color-picker-panel');
+  if (!e.target.closest('#grid-picker') && !e.target.closest('.tool-btn')) gp.classList.remove('open');
+  if (!e.target.closest('#color-picker-panel') && !e.target.closest('.tool-btn')) cp.classList.remove('open');
+}, true);
+</script>
+</body>
+</html>
