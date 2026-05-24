@@ -319,11 +319,48 @@ html, body {
 .stat-unit { font-size:11px; color:var(--gold); }
 .stat-label { font-size:11px; color:rgba(42,31,20,0.45); margin-top:4px; letter-spacing:0.05em; }
 
-.trail-wrap { overflow-x:auto; padding-bottom:8px; margin-bottom:28px; scrollbar-width:none; }
-.trail-wrap::-webkit-scrollbar { display:none; }
-.trail-row { display:flex; gap:10px; width:max-content; padding:2px; }
-.trail-item { display:flex; flex-direction:column; align-items:center; gap:4px; background:white; border-radius:12px; padding:12px 10px; box-shadow:0 2px 8px var(--shadow); min-width:68px; }
-.trail-icon { font-size:24px; }
+/* ── 日/週/月 看板 ── */
+.board-wrap { margin-bottom:24px; }
+.board-tabs { display:flex; background:rgba(155,122,58,0.08); border-radius:50px; padding:3px; margin-bottom:16px; gap:2px; }
+.board-tab { flex:1; text-align:center; padding:7px 0; font-size:13px; border-radius:50px; cursor:pointer; transition:all 0.2s; color:rgba(42,31,20,0.42); letter-spacing:0.1em; user-select:none; }
+.board-tab.active { background:white; color:var(--ink); box-shadow:0 1px 8px rgba(42,31,20,0.1); font-weight:500; }
+
+/* 日 view */
+.day-section { margin-bottom:20px; }
+.day-label { font-size:11px; color:rgba(42,31,20,0.45); letter-spacing:0.1em; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.day-lock-tag { font-size:10px; color:rgba(42,31,20,0.3); background:rgba(42,31,20,0.05); border-radius:50px; padding:1px 8px; }
+.session-card { background:white; border-radius:14px; padding:12px 14px; margin-bottom:8px; border:2px solid transparent; transition:border-color 0.18s, transform 0.12s; box-shadow:0 2px 8px var(--shadow); }
+.session-card.is-rep { border-color:var(--gold2); background:rgba(196,163,90,0.04); }
+.session-card.is-today { cursor:pointer; }
+.session-card.is-today:active { transform:scale(0.985); }
+.sc-top { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+.sc-emo { font-size:20px; flex-shrink:0; line-height:1; }
+.sc-text { font-family:'Noto Serif TC',serif; font-size:15px; font-weight:700; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sc-time { font-size:11px; color:rgba(42,31,20,0.32); flex-shrink:0; }
+.sc-rep-badge { font-size:10px; background:rgba(196,163,90,0.14); border:1px solid rgba(196,163,90,0.4); color:var(--gold); border-radius:50px; padding:2px 9px; letter-spacing:0.05em; white-space:nowrap; flex-shrink:0; }
+.sc-lock-icon { font-size:12px; color:rgba(42,31,20,0.22); flex-shrink:0; }
+.sc-meta { font-size:11px; color:rgba(42,31,20,0.38); letter-spacing:0.04em; padding-left:28px; }
+.sc-hint { font-size:10px; color:rgba(155,122,58,0.55); padding-left:28px; letter-spacing:0.04em; margin-top:2px; }
+
+/* 週 view */
+.week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+.week-cell { display:flex; flex-direction:column; align-items:center; gap:3px; background:white; border-radius:12px; padding:10px 3px 8px; box-shadow:0 1px 6px var(--shadow); }
+.week-cell.today-cell { background:rgba(155,122,58,0.07); border:1px solid rgba(155,122,58,0.2); }
+.wc-name { font-size:10px; color:rgba(42,31,20,0.4); }
+.wc-icon { font-size:22px; line-height:1.2; }
+.wc-empty { font-size:18px; color:rgba(42,31,20,0.12); line-height:1.2; }
+.wc-date { font-size:10px; color:rgba(42,31,20,0.38); }
+
+/* 月 view */
+.month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.mc-header { text-align:center; font-size:10px; color:rgba(42,31,20,0.38); padding:4px 0 7px; }
+.mc-cell { display:flex; flex-direction:column; align-items:center; padding:5px 2px 4px; border-radius:8px; min-height:46px; }
+.mc-cell.mc-today { background:rgba(155,122,58,0.1); }
+.mc-cell.mc-future { opacity:0.3; }
+.mc-empty-cell { min-height:46px; }
+.mc-num { font-size:10px; color:rgba(42,31,20,0.42); margin-bottom:3px; }
+.mc-emo { font-size:16px; line-height:1; }
+.board-empty { color:rgba(42,31,20,0.4); font-size:13px; padding:36px 0; text-align:center; line-height:2; }
 .trail-label { font-size:10px; color:var(--gold); letter-spacing:0.05em; }
 .trail-date { font-size:9px; color:rgba(42,31,20,0.4); }
 
@@ -334,13 +371,6 @@ html, body {
 .badge-name { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--ink); }
 .badge-desc { font-size:11px; color:rgba(42,31,20,0.5); line-height:1.5; }
 
-.history-wrap { background:white; border-radius:var(--r); padding:16px; box-shadow:0 2px 10px var(--shadow); }
-.session-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid rgba(42,31,20,0.06); }
-.session-row:last-child { border-bottom:none; }
-.sr-date { font-size:11px; color:rgba(42,31,20,0.4); min-width:46px; flex-shrink:0; }
-.sr-text { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.sr-emotion { font-size:12px; color:var(--sage); min-width:58px; text-align:right; flex-shrink:0; }
-.sr-time { font-size:11px; color:rgba(42,31,20,0.4); min-width:26px; text-align:right; flex-shrink:0; }
 
 /* 字帖今日亮點 */
 .corpus-card { position:relative; }
@@ -584,25 +614,25 @@ html, body {
         <div class="stat-label">累計書寫</div>
       </div>
       <div class="stat-box">
-        <div><span class="stat-num" id="j-mins">0</span><span class="stat-unit"> 分</span></div>
-        <div class="stat-label">累計時間</div>
+        <div id="j-time-display" style="white-space:nowrap;">
+          <span class="stat-num" id="j-mins">0</span><span class="stat-unit">分</span><span class="stat-num" id="j-secs" style="font-size:0.82em">00</span><span class="stat-unit">秒</span>
+        </div>
+        <div class="stat-label">今日時間</div>
       </div>
     </div>
-    <!-- 情緒足跡 -->
-    <div class="section-title">近期情緒足跡</div>
-    <div class="trail-wrap">
-      <div class="trail-row" id="j-trail">
-        <div style="color:rgba(42,31,20,0.4);font-size:13px;padding:20px;">載入中…</div>
+    <!-- 心情看板 -->
+    <div class="section-title">心情看板</div>
+    <div class="board-wrap">
+      <div class="board-tabs">
+        <div class="board-tab active" onclick="switchBoardTab('day',this)">日</div>
+        <div class="board-tab" onclick="switchBoardTab('week',this)">週</div>
+        <div class="board-tab" onclick="switchBoardTab('month',this)">月</div>
       </div>
+      <div id="board-content"><div class="board-empty">載入中…</div></div>
     </div>
     <!-- 徽章 -->
     <div class="section-title">成長徽章</div>
     <div class="badges-grid" id="j-badges"></div>
-    <!-- 書寫紀錄 -->
-    <div class="section-title">書寫紀錄</div>
-    <div class="history-wrap">
-      <div id="j-history"><div style="color:rgba(42,31,20,0.4);font-size:13px;padding:16px;text-align:center;">載入中…</div></div>
-    </div>
   </div>
 </div>
 
@@ -725,10 +755,12 @@ function submitToSheets(record, result) {
     streak: userProfile ? userProfile.streak : 0,
     totalSessions: userProfile ? userProfile.totalSessions : 0,
   };
+  // no-cors 只允許 simple content-type；application/json 會被瀏覽器攔截
+  // 改用 text/plain，Apps Script 透過 e.postData.contents 讀到相同的 JSON 字串
   fetch(SHEETS_URL, {
     method: 'POST',
     mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(payload)
   }).catch(() => {}); // 靜默失敗，不影響主流程
 }
@@ -979,8 +1011,16 @@ async function saveSessionToFirebase(record, emotion) {
       emotion:     emotion,
       totalTime:   record.totalTime,
       strokeCount: record.strokeCount,
-      ts:          firebase.database.ServerValue.TIMESTAMP
+      ts:          firebase.database.ServerValue.TIMESTAMP,
+      clientTs:    record.id   // Date.now() at record creation，用於代表心情識別
     });
+
+    // 初始化今日代表心情（每天第一筆才設定，之後由使用者手動更改）
+    const repRef  = db.ref('users/' + uid + '/repEmotions/' + today);
+    const repSnap = await repRef.once('value');
+    if (!repSnap.exists()) {
+      await repRef.set({ emotion, clientTs: record.id });
+    }
 
     // 更新連續天數
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
@@ -1125,68 +1165,212 @@ function renderJourneyScreen() {
   if (fbReady) {
     Promise.all([
       db.ref('users/' + fbUser.uid + '/stats').once('value'),
-      db.ref('users/' + fbUser.uid + '/sessions').limitToLast(50).once('value')
-    ]).then(([statsSnap, sessSnap]) => {
+      db.ref('users/' + fbUser.uid + '/sessions').limitToLast(100).once('value'),
+      db.ref('users/' + fbUser.uid + '/repEmotions').once('value'),
+    ]).then(([statsSnap, sessSnap, repSnap]) => {
       const stats = statsSnap.val() || {};
       const sessions = [];
       sessSnap.forEach(c => sessions.unshift(c.val()));
-      renderJourneyUI(stats, sessions);
-    }).catch(() => renderJourneyUI({}, getLocalSessions().slice(-50).reverse()));
+      const repEmotions = repSnap.val() || {};
+      renderJourneyUI(stats, sessions, repEmotions);
+    }).catch(() => renderJourneyUI({}, getLocalSessions().slice(-100).reverse(), {}));
   } else {
-    const sessions = getLocalSessions().slice(-50).reverse();
-    renderJourneyUI({ streak: userProfile.streak, totalSessions: sessions.length, badges: userProfile.badges }, sessions);
+    const sessions = getLocalSessions().slice(-100).reverse();
+    renderJourneyUI({ streak: userProfile.streak, totalSessions: sessions.length, badges: userProfile.badges }, sessions, {});
   }
 }
 
-function renderJourneyUI(stats, sessions) {
-  const streak = stats.streak || 0;
-  const total  = stats.totalSessions || sessions.length;
-  const badges = stats.badges || {};
-  const totalMins = Math.round(sessions.reduce((a, s) => a + (s.totalTime || 0), 0) / 60);
+// ── 看板狀態 ──
+let boardTab         = 'day';
+let boardSessions    = [];
+let boardRepEmotions = {};
+const B_ICON  = { calm:'🍃', focused:'✨', tense:'🌱' };
+const B_LABEL = { calm:'平靜', focused:'專注', tense:'調整中' };
+
+function renderJourneyUI(stats, sessions, repEmotions) {
+  const streak  = stats.streak || 0;
+  const total   = stats.totalSessions || sessions.length;
+  const badges  = stats.badges || {};
+  const today   = todayKey();
+  // 今日所有書寫的總秒數
+  const todaySecs = Math.round(sessions
+    .filter(s => s.date === today)
+    .reduce((a, s) => a + (s.totalTime || 0), 0));
+  const todayMins = Math.floor(todaySecs / 60);
+  const todayRemS = todaySecs % 60;
 
   document.getElementById('j-streak').textContent = streak;
   document.getElementById('j-total').textContent  = total;
-  document.getElementById('j-mins').textContent   = totalMins;
+  document.getElementById('j-mins').textContent   = todayMins;
+  document.getElementById('j-secs').textContent   = String(todayRemS).padStart(2, '0');
 
-  // 情緒足跡
-  const trail  = document.getElementById('j-trail');
-  const last7  = sessions.slice(0, 7);
-  const icons  = { calm:'🍃', focused:'✨', tense:'🌱', unknown:'○' };
-  const labels = { calm:'平靜', focused:'專注', tense:'調整中', unknown:'' };
-  if (last7.length) {
-    trail.innerHTML = last7.map(s => `
-      <div class="trail-item">
-        <div class="trail-icon">${icons[s.emotion] || '○'}</div>
-        <div class="trail-label">${labels[s.emotion] || ''}</div>
-        <div class="trail-date">${(s.date || '').slice(5)}</div>
-      </div>`).join('');
-  } else {
-    trail.innerHTML = '<div style="color:rgba(42,31,20,0.4);font-size:13px;padding:20px 0;">還沒有書寫紀錄，開始你的第一次吧 🌱</div>';
-  }
+  // 快照存到模組層，供 switchBoardTab 使用
+  boardSessions    = sessions;
+  boardRepEmotions = repEmotions;
+  boardTab         = 'day';
+
+  // 重設 tab 狀態
+  document.querySelectorAll('.board-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
+  renderBoard();
 
   // 徽章
-  const badgeGrid = document.getElementById('j-badges');
-  badgeGrid.innerHTML = BADGE_DEFS.map(b => `
+  document.getElementById('j-badges').innerHTML = BADGE_DEFS.map(b => `
     <div class="badge-item${badges[b.id] ? '' : ' locked'}">
       <div class="badge-icon">${b.icon}</div>
       <div class="badge-name">${b.name}</div>
       <div class="badge-desc">${b.desc}</div>
     </div>`).join('');
+}
 
-  // 書寫紀錄
-  const hist = document.getElementById('j-history');
-  if (sessions.length) {
-    const emoLabel = { calm:'🍃 平靜', focused:'✨ 專注', tense:'🌱 調整中' };
-    hist.innerHTML = sessions.slice(0, 15).map(s => `
-      <div class="session-row">
-        <div class="sr-date">${(s.date || '').slice(5)}</div>
-        <div class="sr-text">${s.text || ''}</div>
-        <div class="sr-emotion">${emoLabel[s.emotion] || ''}</div>
-        <div class="sr-time">${Math.round((s.totalTime || 0) / 60)}分</div>
-      </div>`).join('');
-  } else {
-    hist.innerHTML = '<div style="color:rgba(42,31,20,0.4);font-size:13px;padding:16px;text-align:center;">尚無書寫紀錄</div>';
+function switchBoardTab(tab, el) {
+  boardTab = tab;
+  document.querySelectorAll('.board-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderBoard();
+}
+
+function renderBoard() {
+  const el = document.getElementById('board-content');
+  if (!el) return;
+  if (boardTab === 'day')   el.innerHTML = renderDayBoard();
+  if (boardTab === 'week')  el.innerHTML = renderWeekBoard();
+  if (boardTab === 'month') el.innerHTML = renderMonthBoard();
+}
+
+// ── 日 看板 ──
+function renderDayBoard() {
+  const today     = todayKey();
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+
+  // 依日期分組
+  const byDate = {};
+  boardSessions.forEach(s => {
+    const d = s.date || today;
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(s);
+  });
+  const dates = Object.keys(byDate).sort().reverse().slice(0, 14);
+  if (!dates.length) return '<div class="board-empty">還沒有書寫紀錄<br>開始你的第一次吧 🌱</div>';
+
+  return dates.map(date => {
+    const isToday    = date === today;
+    const rep        = boardRepEmotions[date] || {};
+    const repClientTs = typeof rep === 'object' ? rep.clientTs : null;
+    const repEmotion  = typeof rep === 'object' ? rep.emotion  : rep;
+    // 按 ts 排序（舊→新），UI 顯示新→舊
+    const daySessions = [...byDate[date]].sort((a, b) => (a.ts || a.clientTs || 0) - (b.ts || b.clientTs || 0));
+
+    const dateLabel = date === today ? '今天'
+                    : date === yesterday ? '昨天'
+                    : date.replace(/^\d{4}-/, '').replace('-', '/');
+
+    const cards = [...daySessions].reverse().map((s, revIdx) => {
+      const origIdx = daySessions.length - 1 - revIdx; // 在排序陣列中的原始 idx
+      // 判斷是否為代表：優先比 clientTs，否則比 emotion 最後一筆
+      let isRep = false;
+      if (repClientTs && s.clientTs) {
+        isRep = (s.clientTs === repClientTs);
+      } else if (repEmotion) {
+        const lastIdx = daySessions.reduce((last, ss, i) => ss.emotion === repEmotion ? i : last, -1);
+        isRep = origIdx === lastIdx;
+      } else {
+        isRep = origIdx === daySessions.length - 1; // 無代表設定：預設最新
+      }
+
+      const timeStr = s.ts
+        ? new Date(s.ts).toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit', hour12:false })
+        : (s.clientTs ? new Date(s.clientTs).toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit', hour12:false }) : '');
+      const mins = Math.round((s.totalTime || 0) / 60);
+
+      return `
+        <div class="session-card${isRep ? ' is-rep' : ''}${isToday && !isRep ? ' is-today' : ''}"
+             ${isToday && !isRep ? `onclick="setRepEmotion('${date}','${s.emotion}',${s.clientTs || s.id || 0})"` : ''}>
+          <div class="sc-top">
+            <span class="sc-emo">${B_ICON[s.emotion] || '○'}</span>
+            <span class="sc-text">${s.text || ''}</span>
+            ${timeStr ? `<span class="sc-time">${timeStr}</span>` : ''}
+            ${isRep  ? '<span class="sc-rep-badge">代表心情</span>' : ''}
+            ${!isToday ? '<span class="sc-lock-icon">🔒</span>' : ''}
+          </div>
+          <div class="sc-meta">${B_LABEL[s.emotion] || ''}${mins > 0 ? ' · ' + mins + ' 分鐘' : ''}</div>
+          ${isToday && !isRep ? '<div class="sc-hint">點此設為今日代表心情</div>' : ''}
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="day-section">
+        <div class="day-label">
+          ${dateLabel}
+          ${!isToday ? '<span class="day-lock-tag">已鎖定</span>' : ''}
+        </div>
+        ${cards}
+      </div>`;
+  }).join('');
+}
+
+// ── 週 看板 ──
+function renderWeekBoard() {
+  const today    = todayKey();
+  const dayNames = ['日','一','二','三','四','五','六'];
+  const days     = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000);
+    days.push(d.toISOString().slice(0, 10));
   }
+  return '<div class="week-grid">' + days.map(date => {
+    const rep     = boardRepEmotions[date];
+    const emo     = rep ? (typeof rep === 'object' ? rep.emotion : rep) : null;
+    const isToday = date === today;
+    const dow     = new Date(date + 'T12:00:00').getDay();
+    const dayNum  = date.slice(8);
+    return `
+      <div class="week-cell${isToday ? ' today-cell' : ''}">
+        <div class="wc-name">${dayNames[dow]}</div>
+        <div class="${emo ? 'wc-icon' : 'wc-empty'}">${emo ? (B_ICON[emo] || '·') : '·'}</div>
+        <div class="wc-date">${parseInt(dayNum)}</div>
+      </div>`;
+  }).join('') + '</div>';
+}
+
+// ── 月 看板 ──
+function renderMonthBoard() {
+  const today    = todayKey();
+  const now      = new Date();
+  const year     = now.getFullYear();
+  const month    = now.getMonth();
+  const firstDow = new Date(year, month, 1).getDay();
+  const lastDay  = new Date(year, month + 1, 0).getDate();
+  const dayNames = ['日','一','二','三','四','五','六'];
+
+  let html = '<div class="month-grid">';
+  html += dayNames.map(d => `<div class="mc-header">${d}</div>`).join('');
+  for (let i = 0; i < firstDow; i++) html += '<div class="mc-empty-cell"></div>';
+  for (let day = 1; day <= lastDay; day++) {
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const rep     = boardRepEmotions[dateStr];
+    const emo     = rep ? (typeof rep === 'object' ? rep.emotion : rep) : null;
+    const isToday  = dateStr === today;
+    const isFuture = dateStr > today;
+    html += `
+      <div class="mc-cell${isToday ? ' mc-today' : ''}${isFuture ? ' mc-future' : ''}">
+        <div class="mc-num">${day}</div>
+        <div class="mc-emo">${emo && !isFuture ? (B_ICON[emo] || '') : ''}</div>
+      </div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── 設定代表心情（今天限定） ──
+function setRepEmotion(date, emotion, clientTs) {
+  if (date !== todayKey()) return;
+  const val = { emotion, clientTs: clientTs || 0 };
+  boardRepEmotions[date] = val;
+  if (fbReady) {
+    db.ref('users/' + fbUser.uid + '/repEmotions/' + date).set(val).catch(() => {});
+  }
+  renderBoard();
+  showToast('已設定為今日代表心情 ✦');
 }
 // ══════════════════════════════
 // 語料庫 CORPUS
