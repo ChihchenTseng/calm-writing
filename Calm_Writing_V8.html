@@ -1,0 +1,218 @@
+新的
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>寫字靜心</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;700;900&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+@font-face {
+  font-family: 'HanaMinA';
+  src: url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff') format('woff');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HanaMinB';
+  src: url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff') format('woff');
+  font-display: swap;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body, html { width: 100%; height: 100%; overflow: hidden; background: #070b12; font-family: 'Noto Sans TC', sans-serif; color: #d1d9e6; user-select: none; -webkit-user-select: none; }
+
+/* ══ 全螢幕呼吸模組 ══ */
+#breath-overlay {
+  position: fixed; inset: 0; z-index: 400;
+  background: radial-gradient(ellipse at 30% 20%, rgba(20,30,60,0.98) 0%, rgba(5,10,25,0.99) 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.8s ease;
+}
+#breath-overlay.show { opacity: 1; pointer-events: auto; }
+#bo-stars { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.bo-star { position: absolute; border-radius: 50%; background: white; animation: bo-twinkle ease-in-out infinite; }
+@keyframes bo-twinkle { 0%,100%{opacity:0.05;transform:scale(1);} 50%{opacity:0.5;transform:scale(1.5);} }
+.bo-title { position:relative;z-index:1; font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.45em; color:rgba(160,185,255,0.45); margin-bottom:56px; }
+.bo-ring-wrap { position:relative;z-index:1; width:240px; height:240px; display:flex; align-items:center; justify-content:center; margin-bottom:44px; }
+.bo-ring-outer { position:absolute;inset:0;border-radius:50%; border:1px solid rgba(120,155,255,0.2); animation:bo-expand 8s ease-in-out infinite; }
+.bo-ring-mid { position:absolute;inset:24px;border-radius:50%; border:1px solid rgba(140,170,255,0.15); animation:bo-expand 8s ease-in-out infinite 0.3s; }
+.bo-circle { width:110px;height:110px;border-radius:50%; background:radial-gradient(ellipse at 38% 32%,rgba(100,140,255,0.4),rgba(60,90,210,0.2) 50%,rgba(30,50,150,0.1)); border:1.5px solid rgba(140,175,255,0.55); box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); display:flex;align-items:center;justify-content:center; animation:bo-breathe 8s ease-in-out infinite; }
+.bo-circle-text { font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.2em; color:rgba(200,218,255,0.9); text-align:center; user-select:none; }
+@keyframes bo-breathe {
+  0%   { transform:scale(1);   box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); }
+  40%  { transform:scale(1.75);box-shadow:0 0 90px rgba(80,120,255,0.5),0 0 160px rgba(80,120,255,0.2),inset 0 0 60px rgba(100,150,255,0.25); }
+  50%  { transform:scale(1.75);box-shadow:0 0 90px rgba(80,120,255,0.5),0 0 160px rgba(80,120,255,0.2),inset 0 0 60px rgba(100,150,255,0.25); }
+  100% { transform:scale(1);   box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); }
+}
+@keyframes bo-expand { 0%,100%{transform:scale(1);opacity:0.5;} 40%,50%{transform:scale(1.2);opacity:1;} }
+.bo-phase { position:relative;z-index:1; font-size:12px;letter-spacing:0.3em; color:rgba(150,180,255,0.55); margin-bottom:10px;min-height:18px; font-family:'Noto Serif TC',serif; }
+.bo-counter { position:relative;z-index:1; font-family:'Noto Serif TC',serif; font-size:48px; color:rgba(170,200,255,0.35); margin-bottom:36px; letter-spacing:0.05em; line-height:1; }
+.bo-progress { position:relative;z-index:1; display:flex;gap:10px;margin-bottom:44px; }
+.bo-dot { width:7px;height:7px;border-radius:50%; background:rgba(120,155,255,0.18); transition:background 0.6s,transform 0.4s; }
+.bo-dot.done { background:rgba(150,185,255,0.75); transform:scale(1.4); }
+.bo-skip { position:relative;z-index:1; background:transparent; border:1px solid rgba(120,155,255,0.22); color:rgba(150,180,255,0.45); border-radius:50px;padding:11px 32px; font-size:13px;letter-spacing:0.18em; cursor:pointer;transition:all 0.25s; font-family:'Noto Serif TC',serif; }
+.bo-skip:hover { border-color:rgba(150,185,255,0.5); color:rgba(190,215,255,0.8); background:rgba(100,140,255,0.07); }
+</style>
+</head>
+<body>
+
+<div id="breath-overlay">
+  <div id="bo-stars"></div>
+  <div class="bo-title">· 先 讓 呼 吸 安 定 ·</div>
+  <div class="bo-ring-wrap">
+    <div class="bo-ring-outer"></div>
+    <div class="bo-ring-mid"></div>
+    <div class="bo-circle">
+      <div class="bo-circle-text" id="bo-circle-text">吸氣</div>
+    </div>
+  </div>
+  <div class="bo-phase" id="bo-phase">跟著圓圈的節奏呼吸</div>
+  <div class="bo-counter" id="bo-counter">4</div>
+  <div class="bo-progress" id="bo-progress"></div>
+  <button class="bo-skip" onclick="skipBreathOverlay()">我準備好了，開始書寫 →</button>
+</div>
+
+<div id="bubble-layer"></div>
+
+<script>
+
+function updatePressureHUD(e, released) {
+  let p = 0;
+  if (!released) {
+    if (e.pointerType === 'pen') p = e.pressure;
+    else if (e.pointerType === 'touch') p = e.pressure > 0 ? e.pressure : (isDrawing ? 0.4 : 0);
+    else p = isDrawing ? 0.5 : 0;
+  }
+  const fill = document.getElementById('pressure-fill');
+  if (fill) fill.style.width = (p * 100) + '%';
+  
+  // 核心修改點：在繪製中且未放開時，呼叫壓力觸發檢查
+  if (!released && isDrawing) checkPressureTrigger(p);
+}
+
+function initWriting() {
+  currentScreen = 'screen-write';
+  switchScreen('screen-write');
+  
+  // 核心修改點：開啟書寫頁面時，重置此 session 的呼吸觸發計數與狀態
+  breathTriggeredThisSession = false;
+  highPressureCount = 0;
+  
+  resizeCanvases();
+  // ... 其餘原始初始化邏輯 ...
+}
+
+function finishWriting() {
+  // 核心修改點：結束書寫或儲存時，強制清理並隱藏呼吸模組
+  skipBreathOverlay();
+  
+  // ... 原本的結束書寫、上傳 Firebase 邏輯 ...
+}
+
+
+// ══ 全螢幕呼吸模組核心邏輯 ══
+let breathOverlayActive = false, breathCycleTimer = null, breathCycles = 0;
+let breathTriggeredThisSession = false, highPressureCount = 0;
+const HIGH_PRESSURE_THRESHOLD = 0.75, HIGH_PRESSURE_STREAK = 15, BREATH_TOTAL_CYCLES = 4;
+
+function initBoStars() {
+  const c = document.getElementById('bo-stars'); 
+  if(!c) return;
+  c.innerHTML = '';
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div'); s.className = 'bo-star';
+    const sz = 0.5 + Math.random() * 2;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
+    c.appendChild(s);
+  }
+}
+
+function checkPressureTrigger(pressure) {
+  if (breathTriggeredThisSession || breathOverlayActive) return;
+  if (pressure >= HIGH_PRESSURE_THRESHOLD) {
+    highPressureCount++;
+    if (highPressureCount >= HIGH_PRESSURE_STREAK) triggerBreathOverlay();
+  } else {
+    highPressureCount = Math.max(0, highPressureCount - 2);
+  }
+}
+
+function triggerBreathOverlay() {
+  breathTriggeredThisSession = true; 
+  breathOverlayActive = true; 
+  highPressureCount = 0;
+  isDrawing = false; 
+  if(typeof canvasPointers !== 'undefined' && canvasPointers.clear) canvasPointers.clear(); 
+  breathCycles = 0;
+  
+  initBoStars();
+  document.getElementById('bo-progress').innerHTML = Array.from({length:BREATH_TOTAL_CYCLES},()=>'<div class="bo-dot"></div>').join('');
+  document.getElementById('breath-overlay').classList.add('show');
+  startBreathCycle();
+}
+
+function startBreathCycle() {
+  clearTimeout(breathCycleTimer);
+  runPhase('吸 氣', 4, () => runPhase('屏 息', 2, () => runPhase('吐 氣', 4, () => {
+    breathCycles++;
+    const dots = document.querySelectorAll('#bo-progress .bo-dot');
+    if (dots[breathCycles-1]) dots[breathCycles-1].classList.add('done');
+    if (breathCycles >= BREATH_TOTAL_CYCLES) {
+      document.getElementById('bo-phase').textContent = '你已平靜下來 ✦';
+      document.getElementById('bo-counter').textContent = '';
+      setTimeout(skipBreathOverlay, 1200);
+    } else { startBreathCycle(); }
+  })));
+}
+
+function runPhase(label, seconds, callback) {
+  document.getElementById('bo-phase').textContent = label;
+  document.getElementById('bo-circle-text').textContent = label.replace(/ /g,'');
+  let remain = seconds;
+  document.getElementById('bo-counter').textContent = remain;
+  const tick = () => { 
+    remain--; 
+    document.getElementById('bo-counter').textContent = remain > 0 ? remain : ''; 
+    if (remain <= 0) { callback(); return; } 
+    breathCycleTimer = setTimeout(tick, 1000); 
+  };
+  breathCycleTimer = setTimeout(tick, 1000);
+}
+
+function skipBreathOverlay() {
+  clearTimeout(breathCycleTimer); 
+  breathOverlayActive = false;
+  const overlay = document.getElementById('breath-overlay');
+  if(overlay) overlay.classList.remove('show');
+}
+
+// ── 原本檔案底部的其餘 Toast 監聽、心情選取器監聽、Resize 事件等 ──
+initMoodPicker();
+if(typeof fbReady !== 'undefined' && fbReady) listenMoodBubbles();
+
+// ── Toast ──
+let toastTimer;
+function showToast(msg){ const t=document.getElementById('toast'); if(t){ t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800); } }
+
+window.addEventListener('resize',()=>{ if(currentScreen==='screen-write') resizeCanvases(); });
+
+document.addEventListener('pointerdown',(e)=>{
+  const gp=document.getElementById('grid-picker'); const cp=document.getElementById('color-picker-panel');
+  if(gp && !e.target.closest('#grid-picker')&&!e.target.closest('.tool-btn')) gp.classList.remove('open');
+  if(cp && !e.target.closest('#color-picker-panel')&&!e.target.closest('.tool-btn')) cp.classList.remove('open');
+},true);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'mood-custom-input') {
+    e.preventDefault();
+    if(typeof submitCustomMood === 'function') submitCustomMood();
+  }
+});
+</script>
+</body>
+</html>
