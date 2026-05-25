@@ -1,3 +1,4 @@
+新的
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -21,1873 +22,197 @@
        url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff') format('woff');
   font-display: swap;
 }
-</style>
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root {
-  --cream:#f8f3eb; --warm:#ede4d3; --ink:#2a1f14; --ink2:#3d2e1e;
-  --gold:#9b7a3a; --gold2:#c4a35a; --sage:#6b7c5e; --mist:#8a9ba8;
-  --red:#8b2c2c; --grid:rgba(155,122,58,0.18); --shadow:rgba(42,31,20,0.12); --r:16px;
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body, html { width: 100%; height: 100%; overflow: hidden; background: #070b12; font-family: 'Noto Sans TC', sans-serif; color: #d1d9e6; user-select: none; -webkit-user-select: none; }
+
+/* ══ 全螢幕呼吸模組 ══ */
+#breath-overlay {
+  position: fixed; inset: 0; z-index: 400;
+  background: radial-gradient(ellipse at 30% 20%, rgba(20,30,60,0.98) 0%, rgba(5,10,25,0.99) 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.8s ease;
 }
-html, body {
-  height:100%; background:var(--cream); font-family:'Noto Sans TC',sans-serif;
-  color:var(--ink); overflow:hidden; touch-action:none;
-  -webkit-user-select:none; -moz-user-select:none; user-select:none;
-  -webkit-touch-callout:none;
+#breath-overlay.show { opacity: 1; pointer-events: auto; }
+#bo-stars { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.bo-star { position: absolute; border-radius: 50%; background: white; animation: bo-twinkle ease-in-out infinite; }
+@keyframes bo-twinkle { 0%,100%{opacity:0.05;transform:scale(1);} 50%{opacity:0.5;transform:scale(1.5);} }
+.bo-title { position:relative;z-index:1; font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.45em; color:rgba(160,185,255,0.45); margin-bottom:56px; }
+.bo-ring-wrap { position:relative;z-index:1; width:240px; height:240px; display:flex; align-items:center; justify-content:center; margin-bottom:44px; }
+.bo-ring-outer { position:absolute;inset:0;border-radius:50%; border:1px solid rgba(120,155,255,0.2); animation:bo-expand 8s ease-in-out infinite; }
+.bo-ring-mid { position:absolute;inset:24px;border-radius:50%; border:1px solid rgba(140,170,255,0.15); animation:bo-expand 8s ease-in-out infinite 0.3s; }
+.bo-circle { width:110px;height:110px;border-radius:50%; background:radial-gradient(ellipse at 38% 32%,rgba(100,140,255,0.4),rgba(60,90,210,0.2) 50%,rgba(30,50,150,0.1)); border:1.5px solid rgba(140,175,255,0.55); box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); display:flex;align-items:center;justify-content:center; animation:bo-breathe 8s ease-in-out infinite; }
+.bo-circle-text { font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.2em; color:rgba(200,218,255,0.9); text-align:center; user-select:none; }
+@keyframes bo-breathe {
+  0%   { transform:scale(1);   box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); }
+  40%  { transform:scale(1.75);box-shadow:0 0 90px rgba(80,120,255,0.5),0 0 160px rgba(80,120,255,0.2),inset 0 0 60px rgba(100,150,255,0.25); }
+  50%  { transform:scale(1.75);box-shadow:0 0 90px rgba(80,120,255,0.5),0 0 160px rgba(80,120,255,0.2),inset 0 0 60px rgba(100,150,255,0.25); }
+  100% { transform:scale(1);   box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); }
 }
-#canvas-area,#draw-canvas,#grid-canvas,#guide-canvas {
-  touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
-}
-.screen {
-  position:fixed; inset:0; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; padding:24px;
-  transition:opacity 0.5s,transform 0.5s; background:var(--cream);
-}
-.screen.hidden { opacity:0; pointer-events:none; transform:translateY(20px); }
-
-/* WELCOME */
-#screen-welcome {
-  background:radial-gradient(ellipse at 30% 40%,rgba(155,122,58,0.08) 0%,transparent 60%),
-             radial-gradient(ellipse at 70% 70%,rgba(107,124,94,0.06) 0%,transparent 50%),var(--cream);
-}
-.welcome-deco { position:absolute; top:-30px; right:-20px; font-family:'Noto Serif TC',serif; font-size:180px; font-weight:900; color:rgba(155,122,58,0.06); line-height:1; pointer-events:none; user-select:none; }
-.welcome-inner { text-align:center; max-width:480px; position:relative; z-index:1; }
-.logo-mark { width:72px; height:72px; margin:0 auto 24px; border-radius:50%; background:var(--ink); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 32px rgba(42,31,20,0.2); }
-.logo-mark svg { width:38px; height:38px; }
-.welcome-title { font-family:'Noto Serif TC',serif; font-size:36px; font-weight:700; letter-spacing:0.2em; color:var(--ink); margin-bottom:8px; }
-.welcome-sub { font-size:13px; color:var(--gold); letter-spacing:0.3em; margin-bottom:32px; }
-.welcome-desc { font-size:14px; line-height:2; color:rgba(42,31,20,0.6); margin-bottom:32px; }
-.companions-bar { display:flex; align-items:center; gap:10px; background:rgba(155,122,58,0.08); border:1px solid rgba(155,122,58,0.2); border-radius:50px; padding:10px 20px; margin-bottom:24px; font-size:13px; color:var(--gold); }
-.companions-dots { display:flex; gap:4px; }
-.cdot { width:8px; height:8px; border-radius:50%; background:var(--gold2); animation:pulse-dot 2s infinite; }
-.cdot:nth-child(2){animation-delay:0.3s;} .cdot:nth-child(3){animation-delay:0.6s;} .cdot:nth-child(4){animation-delay:0.9s;} .cdot:nth-child(5){animation-delay:1.2s;}
-@keyframes pulse-dot { 0%,100%{opacity:0.3;transform:scale(1);} 50%{opacity:1;transform:scale(1.3);} }
-.welcome-btns { display:flex; flex-direction:column; align-items:center; gap:10px; }
-.btn-primary { display:inline-flex; align-items:center; gap:8px; background:var(--ink); color:var(--cream); border:none; border-radius:50px; padding:14px 36px; font-family:'Noto Serif TC',serif; font-size:16px; letter-spacing:0.15em; cursor:pointer; transition:background 0.2s,transform 0.15s,box-shadow 0.2s; box-shadow:0 4px 20px rgba(42,31,20,0.25); }
-.btn-primary:hover { background:var(--ink2); transform:translateY(-2px); box-shadow:0 8px 30px rgba(42,31,20,0.3); }
-.btn-ghost { background:transparent; border:1px solid rgba(42,31,20,0.2); color:var(--ink); border-radius:50px; padding:10px 24px; font-size:13px; cursor:pointer; transition:background 0.2s; }
-.btn-ghost:hover { background:rgba(42,31,20,0.06); }
-.welcome-secondary-btns { display:flex; gap:10px; }
-
-/* TASK */
-#screen-task { background:var(--cream); justify-content:flex-start; padding-top:0; overflow-y:auto; }
-.task-header { width:100%; background:var(--ink); color:var(--cream); padding:20px 28px; display:flex; align-items:center; gap:16px; }
-.task-header-title { font-family:'Noto Serif TC',serif; font-size:18px; letter-spacing:0.12em; }
-.task-header-sub { font-size:12px; color:rgba(248,243,235,0.5); margin-top:2px; }
-.task-body { width:100%; max-width:640px; margin:0 auto; padding:28px 20px 40px; }
-.mood-check { background:white; border-radius:var(--r); padding:20px; margin-bottom:24px; box-shadow:0 2px 12px var(--shadow); }
-.mood-check h3 { font-family:'Noto Serif TC',serif; font-size:15px; margin-bottom:14px; color:var(--ink2); }
-.mood-options { display:flex; gap:10px; }
-.mood-btn { flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px; border-radius:10px; border:2px solid transparent; background:var(--cream); cursor:pointer; transition:all 0.2s; font-size:11px; color:rgba(42,31,20,0.6); }
-.mood-btn .emoji { font-size:24px; }
-.mood-btn:hover { background:rgba(155,122,58,0.08); border-color:rgba(155,122,58,0.3); }
-.mood-btn.selected { background:rgba(155,122,58,0.12); border-color:var(--gold); color:var(--gold); }
-.section-title { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--gold); letter-spacing:0.15em; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-.section-title::after { content:''; flex:1; height:1px; background:rgba(155,122,58,0.2); }
-.task-cards { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:24px; }
-.task-card { background:white; border-radius:var(--r); padding:16px; border:2px solid transparent; cursor:pointer; transition:all 0.2s; box-shadow:0 2px 10px var(--shadow); }
-.task-card:hover { border-color:rgba(155,122,58,0.3); transform:translateY(-2px); }
-.task-card.selected { border-color:var(--gold); background:rgba(155,122,58,0.06); }
-.task-card .tc-label { font-size:10px; color:var(--gold); letter-spacing:0.1em; margin-bottom:6px; }
-.task-card .tc-text { font-family:'Noto Serif TC',serif; font-size:17px; line-height:1.7; color:var(--ink); }
-.task-card .tc-diff { margin-top:8px; display:flex; gap:4px; }
-.diff-dot { width:6px; height:6px; border-radius:50%; background:var(--gold2); }
-.diff-dot.empty { background:rgba(155,122,58,0.2); }
-.custom-input-wrap { background:white; border-radius:var(--r); padding:16px; box-shadow:0 2px 10px var(--shadow); margin-bottom:24px; }
-.custom-input-wrap textarea { width:100%; min-height:80px; border:1px solid rgba(155,122,58,0.25); border-radius:8px; padding:12px; font-family:'Noto Serif TC',serif; font-size:16px; color:var(--ink); background:var(--cream); resize:none; outline:none; line-height:1.8; }
-.custom-input-wrap textarea:focus { border-color:var(--gold); }
-.start-row { display:flex; gap:12px; }
-.btn-start { flex:1; background:var(--ink); color:var(--cream); border:none; border-radius:50px; padding:16px; font-family:'Noto Serif TC',serif; font-size:16px; letter-spacing:0.1em; cursor:pointer; transition:background 0.2s,transform 0.15s; box-shadow:0 4px 20px rgba(42,31,20,0.2); }
-.btn-start:hover { background:var(--ink2); transform:translateY(-1px); }
-
-/* WRITE */
-#screen-write { padding:0; justify-content:flex-start; align-items:stretch; }
-#write-top { background:var(--ink); padding:12px 20px; display:flex; align-items:center; gap:12px; flex-shrink:0; z-index:10; touch-action:none; -webkit-user-select:none; user-select:none; }
-.write-prompt { flex:1; font-family:'Noto Serif TC',serif; font-size:15px; color:rgba(248,243,235,0.9); letter-spacing:0.08em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; -webkit-user-select:none; user-select:none; pointer-events:none; }
-.write-tools { display:flex; gap:8px; }
-.tool-btn { width:34px; height:34px; border-radius:8px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.7); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; transition:background 0.15s; flex-shrink:0; }
-.tool-btn:hover { background:rgba(255,255,255,0.15); color:white; }
-.tool-btn.active { background:rgba(155,122,58,0.4); border-color:var(--gold2); color:var(--gold2); }
-.grid-picker { display:none; position:absolute; top:58px; right:20px; background:var(--ink2); border-radius:10px; padding:8px; gap:6px; flex-direction:column; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
-.grid-picker.open { display:flex; }
-.grid-opt { padding:8px 14px; border-radius:6px; color:rgba(248,243,235,0.8); font-size:13px; cursor:pointer; transition:background 0.15s; white-space:nowrap; }
-.grid-opt:hover { background:rgba(255,255,255,0.1); }
-.grid-opt.active { background:rgba(155,122,58,0.3); color:var(--gold2); }
-#canvas-area { flex:1; position:relative; overflow:hidden; }
-#grid-canvas,#guide-canvas,#draw-canvas { position:absolute; top:0; left:0; width:100%; height:100%; }
-#guide-canvas { z-index:1; pointer-events:none; }
-#draw-canvas { z-index:2; touch-action:none; cursor:crosshair; }
-#write-bottom { background:var(--ink); padding:10px 20px; display:flex; align-items:center; gap:16px; flex-shrink:0; touch-action:none; -webkit-user-select:none; user-select:none; }
-.pressure-wrap { display:flex; align-items:center; gap:8px; flex:1; }
-.pressure-label { font-size:10px; color:rgba(248,243,235,0.4); letter-spacing:0.1em; }
-.pressure-track { flex:1; height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden; }
-#pressure-fill { height:100%; width:0%; background:linear-gradient(90deg,var(--sage),var(--gold2)); border-radius:2px; transition:width 0.06s; }
-#timer-wrap { font-family:'Noto Serif TC',serif; font-size:13px; color:rgba(248,243,235,0.5); letter-spacing:0.05em; }
-.btn-done { background:rgba(155,122,58,0.2); border:1px solid rgba(155,122,58,0.4); color:var(--gold2); border-radius:50px; padding:7px 18px; font-size:13px; cursor:pointer; transition:background 0.2s; white-space:nowrap; touch-action:manipulation; }
-.btn-done:hover { background:rgba(155,122,58,0.35); }
-#breath-guide { position:absolute; bottom:70px; left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:10px; z-index:20; pointer-events:none; -webkit-user-select:none; user-select:none; }
-#breath-guide.show { display:flex; }
-.breath-circle { width:60px; height:60px; border-radius:50%; border:2px solid rgba(155,122,58,0.5); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--gold2); animation:breathe 4s ease-in-out infinite; }
-@keyframes breathe { 0%,100%{transform:scale(1);opacity:0.6;} 50%{transform:scale(1.4);opacity:1;} }
-.breath-text { font-size:11px; color:var(--gold); letter-spacing:0.1em; }
-
-/* FEEDBACK */
-#screen-feedback { background:radial-gradient(ellipse at 50% 30%,rgba(107,124,94,0.1) 0%,transparent 60%),var(--cream); overflow-y:auto; justify-content:flex-start; padding:0; }
-.feedback-body { width:100%; max-width:520px; margin:0 auto; padding:40px 24px 60px; }
-.feedback-icon { width:80px; height:80px; border-radius:50%; background:white; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:36px; box-shadow:0 4px 24px var(--shadow); }
-.feedback-title { font-family:'Noto Serif TC',serif; font-size:24px; text-align:center; color:var(--ink); margin-bottom:8px; letter-spacing:0.1em; }
-.feedback-subtitle { text-align:center; font-size:13px; color:rgba(42,31,20,0.5); margin-bottom:32px; line-height:1.8; }
-.emotion-card { background:white; border-radius:var(--r); padding:20px; margin-bottom:16px; box-shadow:0 2px 12px var(--shadow); position:relative; overflow:hidden; }
-.emotion-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; }
-.emotion-card.calm::before { background:var(--sage); }
-.emotion-card.tense::before { background:var(--red); }
-.emotion-card.focused::before { background:var(--gold); }
-.ec-label { font-size:10px; letter-spacing:0.15em; color:rgba(42,31,20,0.4); margin-bottom:10px; }
-.ec-visual { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-.ec-icon { font-size:32px; }
-.ec-bars { flex:1; display:flex; flex-direction:column; gap:4px; }
-.ec-bar-wrap { display:flex; align-items:center; gap:8px; font-size:10px; color:rgba(42,31,20,0.4); }
-.ec-bar-track { flex:1; height:5px; background:rgba(42,31,20,0.06); border-radius:3px; overflow:hidden; }
-.ec-bar-fill { height:100%; border-radius:3px; transition:width 1s ease; }
-.calm .ec-bar-fill { background:var(--sage); }
-.tense .ec-bar-fill { background:var(--red); }
-.focused .ec-bar-fill { background:var(--gold2); }
-.ec-desc { font-size:13px; color:rgba(42,31,20,0.65); line-height:1.8; }
-.suggestion-card { background:rgba(107,124,94,0.08); border:1px solid rgba(107,124,94,0.25); border-radius:var(--r); padding:18px; margin-bottom:16px; }
-.suggestion-card h4 { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--sage); margin-bottom:8px; letter-spacing:0.08em; }
-.suggestion-card p { font-size:13px; color:rgba(42,31,20,0.6); line-height:1.9; }
-.feedback-actions { display:flex; flex-direction:column; gap:10px; margin-top:24px; }
-
-/* COLOR PICKER */
-#color-picker-panel { position:absolute; top:58px; left:20px; background:var(--ink2); border-radius:12px; padding:12px; display:none; flex-direction:column; gap:8px; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
-#color-picker-panel.open { display:flex; }
-.cp-row { display:flex; gap:8px; }
-.cp-swatch { width:30px; height:30px; border-radius:50%; border:2px solid transparent; cursor:pointer; transition:transform 0.15s,border-color 0.15s; }
-.cp-swatch:hover { transform:scale(1.15); }
-.cp-swatch.active { border-color:white; transform:scale(1.15); }
-.cp-size-wrap,.guide-opacity-wrap { padding:4px 0; display:flex; align-items:center; gap:8px; }
-.cp-size-label { font-size:10px; color:rgba(248,243,235,0.4); white-space:nowrap; }
-.cp-slider { flex:1; -webkit-appearance:none; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; outline:none; }
-.cp-slider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; background:white; border-radius:50%; cursor:pointer; }
-
-/* MISC */
-#font-status { position:fixed; top:68px; left:50%; transform:translateX(-50%); background:rgba(107,124,94,0.92); color:white; font-size:12px; padding:7px 16px; border-radius:50px; z-index:200; display:none; letter-spacing:0.06em; pointer-events:none; }
-#guide-badge { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:rgba(155,122,58,0.15); border:1px solid rgba(155,122,58,0.3); color:var(--gold); font-size:11px; padding:4px 14px; border-radius:50px; letter-spacing:0.08em; pointer-events:none; z-index:5; white-space:nowrap; transition:opacity 0.6s; -webkit-user-select:none; user-select:none; }
-.filter-tab[data-cat='hakka-special'] { border-color:rgba(139,44,44,0.4); color:rgba(139,44,44,0.8); }
-.filter-tab[data-cat='hakka-special'].active { background:#8b2c2c; border-color:#8b2c2c; color:white; }
-.cc-romaji { font-size:9px; color:var(--mist); margin-top:4px; letter-spacing:0.05em; font-family:monospace; }
-.back-btn { width:34px; height:34px; border-radius:50%; border:1px solid rgba(248,243,235,0.2); background:transparent; color:rgba(248,243,235,0.7); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; flex-shrink:0; transition:background 0.15s; }
-.back-btn:hover { background:rgba(255,255,255,0.1); }
-#toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:rgba(42,31,20,0.9); color:var(--cream); padding:10px 22px; border-radius:50px; font-size:13px; opacity:0; pointer-events:none; transition:opacity 0.3s,transform 0.3s; z-index:200; letter-spacing:0.05em; white-space:nowrap; }
-#toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-::-webkit-scrollbar { width:4px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:rgba(42,31,20,0.15); border-radius:2px; }
-.filter-tabs { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:none; }
-.filter-tabs::-webkit-scrollbar { display:none; }
-.filter-tab { flex-shrink:0; padding:5px 14px; border-radius:50px; border:1px solid rgba(155,122,58,0.25); background:transparent; color:rgba(42,31,20,0.5); font-size:12px; cursor:pointer; transition:all 0.18s; white-space:nowrap; }
-.filter-tab:hover { background:rgba(155,122,58,0.08); color:var(--gold); }
-.filter-tab.active { background:var(--ink); color:var(--cream); border-color:var(--ink); }
-.corpus-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; max-height:320px; overflow-y:auto; padding-right:2px; }
-.corpus-card { background:white; border-radius:12px; padding:14px; border:2px solid transparent; cursor:pointer; transition:all 0.18s; box-shadow:0 2px 8px var(--shadow); }
-.corpus-card:hover { border-color:rgba(155,122,58,0.3); transform:translateY(-1px); }
-.corpus-card.selected { border-color:var(--gold); background:rgba(155,122,58,0.05); }
-.corpus-card .cc-cat { font-size:9px; letter-spacing:0.12em; color:var(--gold); margin-bottom:6px; display:flex; align-items:center; gap:4px; }
-.corpus-card .cc-text { font-family:'Noto Serif TC',serif; font-size:15px; line-height:1.7; color:var(--ink); }
-.corpus-card .cc-diff { margin-top:8px; display:flex; gap:3px; }
-.corpus-card .cc-diff .d { width:5px; height:5px; border-radius:50%; background:var(--gold2); }
-.corpus-card .cc-diff .d.e { background:rgba(155,122,58,0.18); }
-.today-pick { background:linear-gradient(135deg,rgba(155,122,58,0.12),rgba(107,124,94,0.1)); border:1px solid rgba(155,122,58,0.25); border-radius:12px; padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:background 0.2s; }
-.today-pick:hover { background:linear-gradient(135deg,rgba(155,122,58,0.18),rgba(107,124,94,0.14)); }
-.tp-badge { background:var(--gold); color:white; font-size:9px; letter-spacing:0.1em; padding:3px 8px; border-radius:50px; white-space:nowrap; flex-shrink:0; }
-.tp-text { font-family:'Noto Serif TC',serif; font-size:15px; color:var(--ink); flex:1; }
-.tp-arrow { color:var(--gold); font-size:16px; }
-
-/* ══════════════════════════════
-   V7 COMMUNITY STYLES
-══════════════════════════════ */
-
-/* 鼓勵卡 */
-.encourage-card { background:linear-gradient(135deg,rgba(107,124,94,0.1),rgba(155,122,58,0.08)); border:1px solid rgba(107,124,94,0.3); border-radius:var(--r); padding:20px; margin-bottom:16px; position:relative; overflow:hidden; }
-.encourage-card::before { content:'✦'; position:absolute; top:14px; right:18px; font-size:18px; color:rgba(155,122,58,0.2); }
-.encourage-streak { font-size:11px; color:var(--sage); letter-spacing:0.12em; margin-bottom:8px; }
-.encourage-text { font-family:'Noto Serif TC',serif; font-size:16px; color:var(--ink); line-height:1.9; }
-
-/* 心情泡泡選擇 */
-.mood-pick-section { background:white; border-radius:var(--r); padding:18px; margin-bottom:16px; box-shadow:0 2px 12px var(--shadow); }
-.mood-pick-section h4 { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--ink2); margin-bottom:12px; letter-spacing:0.08em; }
-.mood-pick-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
-.mood-pick-btn { background:var(--cream); border:1px solid rgba(155,122,58,0.25); border-radius:50px; padding:7px 16px; font-size:13px; color:rgba(42,31,20,0.7); cursor:pointer; transition:all 0.18s; letter-spacing:0.05em; }
-.mood-pick-btn:hover { background:rgba(155,122,58,0.1); border-color:var(--gold); color:var(--gold); }
-.mood-pick-btn.picked { background:rgba(155,122,58,0.15); border-color:var(--gold); color:var(--gold); }
-.mood-custom-row { display:flex; gap:8px; align-items:center; margin-top:4px; }
-.mood-custom-input { flex:1; background:var(--cream); border:1px solid rgba(155,122,58,0.22); border-radius:50px; padding:7px 16px; font-size:13px; color:var(--ink); font-family:'Noto Serif TC',serif; letter-spacing:0.05em; outline:none; transition:border-color 0.18s; -webkit-user-select:text; user-select:text; }
-.mood-custom-input::placeholder { color:rgba(42,31,20,0.32); }
-.mood-custom-input:focus { border-color:rgba(155,122,58,0.55); }
-.mood-custom-btn { flex-shrink:0; background:var(--cream); border:1px solid rgba(155,122,58,0.25); border-radius:50px; padding:7px 18px; font-size:13px; color:rgba(42,31,20,0.6); cursor:pointer; transition:all 0.18s; white-space:nowrap; }
-.mood-custom-btn:hover { background:rgba(155,122,58,0.1); border-color:var(--gold); color:var(--gold); }
-
-/* 浮動心情泡泡層 */
-#bubble-layer { position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden; }
-.mood-bubble { position:absolute; bottom:-40px; background:rgba(155,122,58,0.1); border:1px solid rgba(155,122,58,0.3); color:var(--gold); border-radius:50px; padding:6px 16px; font-size:13px; letter-spacing:0.08em; animation:bubble-float linear forwards; white-space:nowrap; font-family:'Noto Serif TC',serif; }
-@keyframes bubble-float { 0%{transform:translateY(0) scale(1);opacity:0.85;} 100%{transform:translateY(-110vh) scale(0.75);opacity:0;} }
-
-/* 今日共同書寫徽章 */
-.daily-count-wrap { display:flex; align-items:center; gap:8px; background:rgba(107,124,94,0.08); border:1px solid rgba(107,124,94,0.2); border-radius:50px; padding:8px 18px; margin-bottom:16px; font-size:13px; color:var(--sage); cursor:pointer; transition:background 0.2s, box-shadow 0.2s, transform 0.2s; user-select:none; }
-.daily-count-wrap:hover { background:rgba(107,124,94,0.15); box-shadow:0 3px 14px rgba(107,124,94,0.18); transform:translateY(-1px); }
-.daily-count-wrap strong { color:var(--sage); font-weight:700; }
-
-/* ── 泡泡房間 ── */
-#bubble-room {
-  position:fixed; inset:0; z-index:200;
-  background:
-    radial-gradient(ellipse at 20% 80%, rgba(90,55,160,0.55) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 20%, rgba(40,80,140,0.45) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(30,18,55,0.98) 0%, rgba(12,8,28,0.99) 100%);
-  display:flex; flex-direction:column;
-  opacity:0; transition:opacity 0.55s ease; pointer-events:none;
-  overflow:hidden;
-}
-#bubble-room.open { opacity:1; pointer-events:auto; }
-#bubble-room.hidden { display:none; }
-
-/* 星星 */
-#br-stars { position:absolute; inset:0; pointer-events:none; }
-.br-star { position:absolute; border-radius:50%; background:white; pointer-events:none;
-  animation:br-twinkle ease-in-out infinite; }
-@keyframes br-twinkle {
-  0%,100% { opacity:0.07; transform:scale(1); }
-  50% { opacity:0.55; transform:scale(1.6); }
-}
-
-/* 光暈 */
-.br-orb { position:absolute; border-radius:50%; pointer-events:none; filter:blur(60px); animation:br-orb-drift ease-in-out infinite alternate; }
-@keyframes br-orb-drift { from{transform:translate(0,0);} to{transform:translate(20px,14px);} }
-
-/* 頂部標題 */
-#br-header { position:relative; z-index:10; text-align:center; padding:54px 24px 16px; flex-shrink:0; }
-.br-title { font-family:'Noto Serif TC',serif; font-size:21px; letter-spacing:0.28em; color:rgba(225,210,255,0.92); margin-bottom:7px; }
-.br-sub { font-size:12px; letter-spacing:0.08em; color:rgba(180,160,225,0.5); line-height:2; }
-.br-count-line { margin-top:12px; font-size:12px; color:rgba(170,155,215,0.38); letter-spacing:0.06em; }
-.br-count-line strong { color:rgba(200,185,245,0.6); }
-.br-close { position:absolute; top:18px; right:18px; width:38px; height:38px; border-radius:50%;
-  background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
-  color:rgba(255,255,255,0.4); font-size:15px; cursor:pointer;
-  display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
-.br-close:hover { background:rgba(255,255,255,0.13); color:rgba(255,255,255,0.8); }
-
-/* 泡泡舞台 */
-#br-stage { position:relative; flex:1; overflow:hidden; }
-
-/* 泡泡本體 */
-.br-bubble { position:absolute; border-radius:50px;
-  font-family:'Noto Serif TC',serif; letter-spacing:0.14em; white-space:nowrap;
-  animation:br-drift ease-in-out infinite; pointer-events:none; }
-@keyframes br-drift {
-  0%   { transform:translate(0px, 0px) rotate(-0.5deg); }
-  18%  { transform:translate(9px,-16px) rotate(0.4deg); }
-  36%  { transform:translate(-7px,-9px) rotate(-0.3deg); }
-  54%  { transform:translate(11px,-22px) rotate(0.6deg); }
-  72%  { transform:translate(-5px,-12px) rotate(-0.4deg); }
-  88%  { transform:translate(6px,-6px) rotate(0.2deg); }
-  100% { transform:translate(0px, 0px) rotate(-0.5deg); }
-}
-@keyframes br-enter {
-  0%   { opacity:0; transform:translateY(28px) scale(0.65); }
-  60%  { opacity:1; transform:translateY(-4px) scale(1.04); }
-  100% { opacity:1; transform:translateY(0) scale(1); }
-}
-.br-bubble.br-new { animation:br-enter 0.65s cubic-bezier(0.34,1.56,0.64,1) forwards; }
-
-/* 節氣橫幅 */
-.season-banner { background:linear-gradient(135deg,rgba(155,122,58,0.08),rgba(107,124,94,0.08)); border:1px solid rgba(155,122,58,0.2); border-radius:12px; padding:12px 16px; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
-.season-icon { font-size:22px; flex-shrink:0; }
-.season-info { flex:1; }
-.season-name { font-size:11px; color:var(--gold); letter-spacing:0.12em; margin-bottom:3px; }
-.season-tip { font-size:12px; color:rgba(42,31,20,0.6); line-height:1.6; }
-
-/* ══ 我的旅程頁 ══ */
-#screen-journey { justify-content:flex-start; padding:0; overflow-y:auto; }
-.journey-header { width:100%; background:var(--ink); color:var(--cream); padding:20px 28px; display:flex; align-items:center; gap:16px; flex-shrink:0; }
-.journey-header-title { font-family:'Noto Serif TC',serif; font-size:18px; letter-spacing:0.12em; }
-.journey-header-sub { font-size:12px; color:rgba(248,243,235,0.5); margin-top:2px; }
-.journey-body { width:100%; max-width:640px; margin:0 auto; padding:24px 20px 60px; }
-
-.stats-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:28px; }
-.stat-box { background:white; border-radius:var(--r); padding:16px 10px; text-align:center; box-shadow:0 2px 10px var(--shadow); }
-.stat-num { font-family:'Noto Serif TC',serif; font-size:26px; font-weight:700; color:var(--gold); }
-.stat-unit { font-size:11px; color:var(--gold); }
-.stat-label { font-size:11px; color:rgba(42,31,20,0.45); margin-top:4px; letter-spacing:0.05em; }
-
-/* ── 日/週/月 看板 ── */
-.board-wrap { margin-bottom:24px; }
-.board-tabs { display:flex; background:rgba(155,122,58,0.08); border-radius:50px; padding:3px; margin-bottom:16px; gap:2px; }
-.board-tab { flex:1; text-align:center; padding:7px 0; font-size:13px; border-radius:50px; cursor:pointer; transition:all 0.2s; color:rgba(42,31,20,0.42); letter-spacing:0.1em; user-select:none; }
-.board-tab.active { background:white; color:var(--ink); box-shadow:0 1px 8px rgba(42,31,20,0.1); font-weight:500; }
-
-/* 日 view */
-.day-section { margin-bottom:20px; }
-.day-label { font-size:11px; color:rgba(42,31,20,0.45); letter-spacing:0.1em; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
-.day-lock-tag { font-size:10px; color:rgba(42,31,20,0.3); background:rgba(42,31,20,0.05); border-radius:50px; padding:1px 8px; }
-.session-card { background:white; border-radius:14px; padding:12px 14px; margin-bottom:8px; border:2px solid transparent; transition:border-color 0.18s, transform 0.12s; box-shadow:0 2px 8px var(--shadow); }
-.session-card.is-rep { border-color:var(--gold2); background:rgba(196,163,90,0.04); }
-.session-card.is-today { cursor:pointer; }
-.session-card.is-today:active { transform:scale(0.985); }
-.sc-top { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
-.sc-emo { font-size:20px; flex-shrink:0; line-height:1; }
-.sc-text { font-family:'Noto Serif TC',serif; font-size:15px; font-weight:700; color:var(--ink); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.sc-time { font-size:11px; color:rgba(42,31,20,0.32); flex-shrink:0; }
-.sc-rep-badge { font-size:10px; background:rgba(196,163,90,0.14); border:1px solid rgba(196,163,90,0.4); color:var(--gold); border-radius:50px; padding:2px 9px; letter-spacing:0.05em; white-space:nowrap; flex-shrink:0; }
-.sc-lock-icon { font-size:12px; color:rgba(42,31,20,0.22); flex-shrink:0; }
-.sc-meta { font-size:11px; color:rgba(42,31,20,0.38); letter-spacing:0.04em; padding-left:28px; }
-.sc-hint { font-size:10px; color:rgba(155,122,58,0.55); padding-left:28px; letter-spacing:0.04em; margin-top:2px; }
-
-/* 週 view */
-.week-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
-.week-cell { display:flex; flex-direction:column; align-items:center; gap:3px; background:white; border-radius:12px; padding:10px 3px 8px; box-shadow:0 1px 6px var(--shadow); }
-.week-cell.today-cell { background:rgba(155,122,58,0.07); border:1px solid rgba(155,122,58,0.2); }
-.wc-name { font-size:10px; color:rgba(42,31,20,0.4); }
-.wc-icon { font-size:22px; line-height:1.2; }
-.wc-empty { font-size:18px; color:rgba(42,31,20,0.12); line-height:1.2; }
-.wc-date { font-size:10px; color:rgba(42,31,20,0.38); }
-
-/* 月 view */
-.month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
-.mc-header { text-align:center; font-size:10px; color:rgba(42,31,20,0.38); padding:4px 0 7px; }
-.mc-cell { display:flex; flex-direction:column; align-items:center; padding:5px 2px 4px; border-radius:8px; min-height:46px; }
-.mc-cell.mc-today { background:rgba(155,122,58,0.1); }
-.mc-cell.mc-future { opacity:0.3; }
-.mc-empty-cell { min-height:46px; }
-.mc-num { font-size:10px; color:rgba(42,31,20,0.42); margin-bottom:3px; }
-.mc-emo { font-size:16px; line-height:1; }
-.board-empty { color:rgba(42,31,20,0.4); font-size:13px; padding:36px 0; text-align:center; line-height:2; }
-.trail-label { font-size:10px; color:var(--gold); letter-spacing:0.05em; }
-.trail-date { font-size:9px; color:rgba(42,31,20,0.4); }
-
-.badges-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px; }
-.badge-item { background:white; border-radius:var(--r); padding:14px; box-shadow:0 2px 10px var(--shadow); border:2px solid rgba(155,122,58,0.35); background:rgba(155,122,58,0.04); display:flex; flex-direction:column; gap:5px; }
-.badge-item.locked { border-color:rgba(42,31,20,0.08); background:white; filter:grayscale(0.7); opacity:0.55; }
-.badge-icon { font-size:26px; }
-.badge-name { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--ink); }
-.badge-desc { font-size:11px; color:rgba(42,31,20,0.5); line-height:1.5; }
-
-
-/* 字帖今日亮點 */
-.corpus-card { position:relative; }
-.today-glow {
-  position:absolute; top:8px; right:8px;
-  width:8px; height:8px; border-radius:50%;
-  background:var(--gold2);
-  box-shadow:0 0 6px rgba(196,163,90,0.8);
-  animation:glow-pulse 2s ease-in-out infinite;
-}
-@keyframes glow-pulse { 0%,100%{opacity:0.6;transform:scale(1);} 50%{opacity:1;transform:scale(1.4);} }
+@keyframes bo-expand { 0%,100%{transform:scale(1);opacity:0.5;} 40%,50%{transform:scale(1.2);opacity:1;} }
+.bo-phase { position:relative;z-index:1; font-size:12px;letter-spacing:0.3em; color:rgba(150,180,255,0.55); margin-bottom:10px;min-height:18px; font-family:'Noto Serif TC',serif; }
+.bo-counter { position:relative;z-index:1; font-family:'Noto Serif TC',serif; font-size:48px; color:rgba(170,200,255,0.35); margin-bottom:36px; letter-spacing:0.05em; line-height:1; }
+.bo-progress { position:relative;z-index:1; display:flex;gap:10px;margin-bottom:44px; }
+.bo-dot { width:7px;height:7px;border-radius:50%; background:rgba(120,155,255,0.18); transition:background 0.6s,transform 0.4s; }
+.bo-dot.done { background:rgba(150,185,255,0.75); transform:scale(1.4); }
+.bo-skip { position:relative;z-index:1; background:transparent; border:1px solid rgba(120,155,255,0.22); color:rgba(150,180,255,0.45); border-radius:50px;padding:11px 32px; font-size:13px;letter-spacing:0.18em; cursor:pointer;transition:all 0.25s; font-family:'Noto Serif TC',serif; }
+.bo-skip:hover { border-color:rgba(150,185,255,0.5); color:rgba(190,215,255,0.8); background:rgba(100,140,255,0.07); }
 </style>
 </head>
-
-
-</html>
 <body>
-<!-- WELCOME SCREEN -->
-<div class="screen" id="screen-welcome">
-  <div class="welcome-deco">靜</div>
-  <div class="welcome-inner">
-    <div class="logo-mark">
-      <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M19 4 C19 4 8 12 8 22 C8 28.627 13.373 34 20 34 C26.627 34 32 28.627 32 22 C32 12 19 4 19 4Z" stroke="#f8f3eb" stroke-width="1.5" fill="none"/>
-        <line x1="19" y1="10" x2="19" y2="30" stroke="#f8f3eb" stroke-width="1" stroke-dasharray="2 2"/>
-        <line x1="11" y1="20" x2="29" y2="20" stroke="#f8f3eb" stroke-width="1" stroke-dasharray="2 2"/>
-      </svg>
-    </div>
-    <div class="welcome-title">寫字靜心</div>
-    <div class="welcome-sub">AI 情緒感知書寫系統</div>
-    <div class="companions-bar">
-      <div class="companions-dots">
-        <div class="cdot"></div><div class="cdot"></div><div class="cdot"></div>
-        <div class="cdot"></div><div class="cdot"></div>
-      </div>
-      現在有 <strong id="companion-count">--</strong> 位其他夥伴正在一起書寫
-    </div>
-    <p class="welcome-desc">
-      書寫不只是練字，<br>
-      是讓心回到此刻的方式。<br>
-      每一筆，都是與自己的相遇。
-    </p>
-    <div class="welcome-btns">
-      <button class="btn-primary" onclick="goTo('screen-task')">開始今日練習</button>
-      <div class="welcome-secondary-btns">
-        <button class="btn-ghost" onclick="goTo('screen-journey')">🌱 我的旅程</button>
-      </div>
+
+<div id="breath-overlay">
+  <div id="bo-stars"></div>
+  <div class="bo-title">· 先 讓 呼 吸 安 定 ·</div>
+  <div class="bo-ring-wrap">
+    <div class="bo-ring-outer"></div>
+    <div class="bo-ring-mid"></div>
+    <div class="bo-circle">
+      <div class="bo-circle-text" id="bo-circle-text">吸氣</div>
     </div>
   </div>
+  <div class="bo-phase" id="bo-phase">跟著圓圈的節奏呼吸</div>
+  <div class="bo-counter" id="bo-counter">4</div>
+  <div class="bo-progress" id="bo-progress"></div>
+  <button class="bo-skip" onclick="skipBreathOverlay()">我準備好了，開始書寫 →</button>
 </div>
 
-<!-- TASK SCREEN -->
-<div class="screen hidden" id="screen-task">
-  <div class="task-header">
-    <button class="back-btn" onclick="goTo('screen-welcome')">←</button>
-    <div>
-      <div class="task-header-title">選擇今日書寫內容</div>
-      <div class="task-header-sub">依照你現在的狀態，選擇合適的文字</div>
-    </div>
-  </div>
-  <div class="task-body" id="task-body-scroll">
-    <!-- 節氣橫幅 -->
-    <div class="season-banner" id="season-banner">
-      <div class="season-icon" id="season-icon">✦</div>
-      <div class="season-info">
-        <div class="season-name" id="season-name">節氣時節</div>
-        <div class="season-tip" id="season-tip">靜下心來，感受此刻</div>
-      </div>
-    </div>
-    <!-- 今日共同書寫 -->
-    <div class="daily-count-wrap" onclick="showBubbleRoom()">
-      🌿 今天已有 <strong><span class="daily-count-val">0</span></strong> 位夥伴在書寫靜心 &nbsp;›
-    </div>
-    <!-- 心情確認 -->
-    <div class="mood-check">
-      <h3>現在的你，感覺如何？</h3>
-      <div class="mood-options">
-        <div class="mood-btn" data-mood="calm" onclick="selectMood(this)"><span class="emoji">😌</span>平靜</div>
-        <div class="mood-btn" data-mood="tired" onclick="selectMood(this)"><span class="emoji">😔</span>疲憊</div>
-        <div class="mood-btn" data-mood="anxious" onclick="selectMood(this)"><span class="emoji">😟</span>焦慮</div>
-        <div class="mood-btn" data-mood="happy" onclick="selectMood(this)"><span class="emoji">🙂</span>愉快</div>
-      </div>
-    </div>
-    <!-- 今日推薦 -->
-    <div class="section-title">今日推薦</div>
-    <div class="today-pick" id="today-pick-banner" onclick="pickToday()">
-      <div class="tp-badge">✦ 今日精選</div>
-      <div class="tp-text" id="today-pick-text">載入中…</div>
-      <div class="tp-arrow">›</div>
-    </div>
-    <!-- 語料庫 -->
-    <div class="section-title">語料庫</div>
-    <div class="filter-tabs" id="filter-tabs">
-      <button class="filter-tab active" data-cat="all" onclick="filterCorpus('all',this)">全部</button>
-      <button class="filter-tab" data-cat="single" onclick="filterCorpus('single',this)">單字</button>
-      <button class="filter-tab" data-cat="hakka" onclick="filterCorpus('hakka',this)">客家諺語</button>
-      <button class="filter-tab" data-cat="hakka-special" onclick="filterCorpus('hakka-special',this)">客語特殊字 ✦</button>
-      <button class="filter-tab" data-cat="miaoli" onclick="filterCorpus('miaoli',this)">苗栗地景</button>
-      <button class="filter-tab" data-cat="wisdom" onclick="filterCorpus('wisdom',this)">處世智慧</button>
-      <button class="filter-tab" data-cat="nature" onclick="filterCorpus('nature',this)">自然意象</button>
-      <button class="filter-tab" data-cat="sutra" onclick="filterCorpus('sutra',this)">靜心經句</button>
-    </div>
-    <div class="corpus-grid" id="corpus-grid"></div>
-    <!-- 自由書寫 -->
-    <div class="section-title">自由書寫</div>
-    <div class="custom-input-wrap">
-      <div class="ec-label" style="margin-bottom:8px;">輸入任何你想寫的文字（名字、歌詞、經文…）</div>
-      <textarea id="custom-text" placeholder="例如：我愛台灣、阿彌陀佛、自己的名字…"></textarea>
-    </div>
-    <div class="start-row">
-      <button class="btn-start" onclick="startWriting()">開始書寫 →</button>
-    </div>
-  </div>
-</div>
-
-<!-- WRITING SCREEN -->
-<div class="screen hidden" id="screen-write">
-  <div id="write-top">
-    <button class="back-btn" onclick="goTo('screen-task')">←</button>
-    <div class="write-prompt" id="write-prompt-text">靜</div>
-    <div class="write-tools">
-      <div class="tool-btn" title="顏色/筆刷" onclick="toggleColorPanel()">🖌</div>
-      <div class="tool-btn" title="格線" onclick="toggleGridPicker()">⊞</div>
-      <div class="tool-btn" title="上一步" onclick="undo()">↩</div>
-      <div class="tool-btn" title="清除" onclick="clearCanvas()">✕</div>
-    </div>
-  </div>
-  <div class="grid-picker" id="grid-picker">
-    <div class="grid-opt active" data-grid="rice" onclick="setGrid('rice',this)">米字格</div>
-    <div class="grid-opt" data-grid="field" onclick="setGrid('field',this)">田字格</div>
-    <div class="grid-opt" data-grid="line" onclick="setGrid('line',this)">橫線格</div>
-    <div class="grid-opt" data-grid="none" onclick="setGrid('none',this)">無格</div>
-  </div>
-  <div id="color-picker-panel">
-    <div class="cp-row">
-      <div class="cp-swatch active" style="background:#2a1f14" data-color="#2a1f14" onclick="setColor(this)"></div>
-      <div class="cp-swatch" style="background:#8b2c2c" data-color="#8b2c2c" onclick="setColor(this)"></div>
-      <div class="cp-swatch" style="background:#2c5f7a" data-color="#2c5f7a" onclick="setColor(this)"></div>
-      <div class="cp-swatch" style="background:#6b7c5e" data-color="#6b7c5e" onclick="setColor(this)"></div>
-      <div class="cp-swatch" style="background:#9b7a3a" data-color="#9b7a3a" onclick="setColor(this)"></div>
-    </div>
-    <div class="cp-size-wrap">
-      <span class="cp-size-label">筆刷</span>
-      <input type="range" class="cp-slider" id="brush-size" min="1" max="40" value="6" oninput="maxWidth=parseInt(this.value)">
-    </div>
-    <div class="guide-opacity-wrap">
-      <span class="cp-size-label">底字</span>
-      <input type="range" class="cp-slider" id="guide-opacity-slider" min="0" max="100" value="18" oninput="setGuideOpacity(parseInt(this.value))">
-    </div>
-    <div class="guide-opacity-wrap">
-      <span class="cp-size-label">字大小</span>
-      <input type="range" class="cp-slider" id="cell-size-slider" min="100" max="500" value="220" oninput="setCellSize(parseInt(this.value))">
-    </div>
-  </div>
-  <div id="canvas-area">
-    <canvas id="grid-canvas"></canvas>
-    <canvas id="guide-canvas"></canvas>
-    <canvas id="draw-canvas"></canvas>
-    <div id="guide-badge">淡色底字模式 · 照著描寫</div>
-    <div id="breath-guide">
-      <div class="breath-circle">吸⋯</div>
-      <div class="breath-text">先跟著呼吸，再開始書寫</div>
-    </div>
-  </div>
-  <div id="write-bottom">
-    <div class="pressure-wrap">
-      <span class="pressure-label">筆壓</span>
-      <div class="pressure-track"><div id="pressure-fill"></div></div>
-    </div>
-    <div id="timer-wrap">00:00</div>
-    <button class="btn-done" onclick="finishWriting()">完成書寫</button>
-  </div>
-</div>
-
-<!-- FEEDBACK SCREEN -->
-<div class="screen hidden" id="screen-feedback">
-  <div class="feedback-body">
-    <div class="feedback-icon" id="fb-icon">🍃</div>
-    <div class="feedback-title" id="fb-title">你今天寫得很好</div>
-    <div class="feedback-subtitle" id="fb-subtitle">書寫過程穩定而專注<br>這一刻，你給了自己一份禮物</div>
-    <!-- 鼓勵卡（V7 新增） -->
-    <div class="encourage-card" id="encourage-card">
-      <div class="encourage-streak" id="encourage-streak"></div>
-      <div class="encourage-text" id="encourage-text">謝謝你今天選擇了書寫靜心 🌱</div>
-    </div>
-    <!-- 情緒感知 -->
-    <div class="emotion-card" id="emotion-card">
-      <div class="ec-label">書寫狀態感知</div>
-      <div class="ec-visual">
-        <div class="ec-icon" id="ec-icon">🌊</div>
-        <div class="ec-bars" id="ec-bars"></div>
-      </div>
-      <div class="ec-desc" id="ec-desc"></div>
-    </div>
-    <!-- 建議卡 -->
-    <div class="suggestion-card" id="suggestion-card">
-      <h4>✦ 給你的小提醒</h4>
-      <p id="suggestion-text"></p>
-    </div>
-    <!-- 今日社群數字（V7 新增） -->
-    <div class="daily-count-wrap" style="justify-content:center;" onclick="showBubbleRoom()">
-      🌿 今天和你一起書寫的夥伴：<strong><span class="daily-count-val">0</span></strong> 位 &nbsp;›
-    </div>
-    <!-- 心情泡泡投票（V7 新增） -->
-    <div class="mood-pick-section">
-      <h4>🫧 此刻你的心情是？</h4>
-      <p style="font-size:12px;color:rgba(42,31,20,0.5);margin-bottom:12px;line-height:1.7;">選一個詞，或自己寫，匿名飄向夥伴們的畫面</p>
-      <div class="mood-pick-grid" id="mood-pick-grid"></div>
-      <div class="mood-custom-row">
-        <input id="mood-custom-input" class="mood-custom-input" type="text" maxlength="8" placeholder="或輸入自己的心情詞…" />
-        <button class="mood-custom-btn" onclick="submitCustomMood()">送出 🫧</button>
-      </div>
-    </div>
-    <div class="feedback-actions">
-      <button class="btn-primary" style="width:100%;justify-content:center" onclick="goTo('screen-task')">再練習一次</button>
-      <button class="btn-ghost" onclick="goTo('screen-journey')">🌱 查看我的成長旅程</button>
-      <button class="btn-ghost" onclick="goTo('screen-welcome')">回首頁</button>
-    </div>
-  </div>
-</div>
-
-<!-- JOURNEY SCREEN（V7 新增） -->
-<div class="screen hidden" id="screen-journey">
-  <div class="journey-header">
-    <button class="back-btn" onclick="goTo('screen-welcome')">←</button>
-    <div>
-      <div class="journey-header-title">我的成長旅程</div>
-      <div class="journey-header-sub">每一次書寫都是與自己的相遇</div>
-    </div>
-  </div>
-  <div class="journey-body">
-    <!-- 統計數字 -->
-    <div class="section-title">書寫統計</div>
-    <div class="stats-row">
-      <div class="stat-box">
-        <div><span class="stat-num" id="j-streak">0</span><span class="stat-unit"> 天</span></div>
-        <div class="stat-label">連續天數</div>
-      </div>
-      <div class="stat-box">
-        <div><span class="stat-num" id="j-total">0</span><span class="stat-unit"> 次</span></div>
-        <div class="stat-label">累計書寫</div>
-      </div>
-      <div class="stat-box">
-        <div id="j-time-display" style="white-space:nowrap;">
-          <span class="stat-num" id="j-mins">0</span><span class="stat-unit">分</span><span class="stat-num" id="j-secs" style="font-size:0.82em">00</span><span class="stat-unit">秒</span>
-        </div>
-        <div class="stat-label">今日時間</div>
-      </div>
-    </div>
-    <!-- 心情看板 -->
-    <div class="section-title">心情看板</div>
-    <div class="board-wrap">
-      <div class="board-tabs">
-        <div class="board-tab active" onclick="switchBoardTab('day',this)">日</div>
-        <div class="board-tab" onclick="switchBoardTab('week',this)">週</div>
-        <div class="board-tab" onclick="switchBoardTab('month',this)">月</div>
-      </div>
-      <div id="board-content"><div class="board-empty">載入中…</div></div>
-    </div>
-    <!-- 徽章 -->
-    <div class="section-title">成長徽章</div>
-    <div class="badges-grid" id="j-badges"></div>
-  </div>
-</div>
-
-
-<!-- 心情泡泡層 -->
 <div id="bubble-layer"></div>
 
-<!-- 泡泡房間浮層 -->
-<div id="bubble-room" class="hidden">
-  <div id="br-stars"></div>
-  <!-- 背景光暈 -->
-  <div class="br-orb" style="width:320px;height:320px;left:-80px;top:30%;background:rgba(100,60,200,0.18);animation-duration:8s;"></div>
-  <div class="br-orb" style="width:260px;height:260px;right:-60px;top:15%;background:rgba(40,100,180,0.15);animation-duration:11s;animation-delay:3s;"></div>
-  <div class="br-orb" style="width:200px;height:200px;left:30%;bottom:-40px;background:rgba(160,80,200,0.12);animation-duration:9s;animation-delay:1.5s;"></div>
-  <div id="br-header">
-    <button class="br-close" onclick="hideBubbleRoom()">✕</button>
-    <div class="br-title">夥伴們的心情</div>
-    <div class="br-sub">書寫靜心後，大家匿名留下的心情<br>飄在這裡，靜靜相伴</div>
-    <div class="br-count-line">今天共 <strong id="br-count">0</strong> 位夥伴一起書寫</div>
-  </div>
-  <div id="br-stage"></div>
-</div>
-<!-- 字型狀態 -->
-<div id="font-status"></div>
-<!-- Toast -->
-<div id="toast"></div>
 <script>
-// ══════════════════════════════
-// FIREBASE CONFIG & INIT
-// ══════════════════════════════
-const firebaseConfig = {
-  apiKey: "AIzaSyBzx23QX-3v-kEgR_Q2dFgnOdR6WKFRJ88",
-  authDomain: "calm-writing.firebaseapp.com",
-  databaseURL: "https://calm-writing-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "calm-writing",
-  storageBucket: "calm-writing.firebasestorage.app",
-  messagingSenderId: "833349495151",
-  appId: "1:833349495151:web:406266376e24760793209a",
-  measurementId: "G-45G42JHCCS"
-};
-firebase.initializeApp(firebaseConfig);
-const db   = firebase.database();
-const auth = firebase.auth();
-let fbUser = null, fbReady = false;
 
-(async () => {
-  try {
-    const cred = await auth.signInAnonymously();
-    fbUser  = cred.user;
-    fbReady = true;
-    setupPresence();
-    loadUserProfile();
-    listenDailyCount();
-    listenMoodBubbles();
-  } catch(err) {
-    console.warn('Firebase unavailable, local mode only');
+function updatePressureHUD(e, released) {
+  let p = 0;
+  if (!released) {
+    if (e.pointerType === 'pen') p = e.pressure;
+    else if (e.pointerType === 'touch') p = e.pressure > 0 ? e.pressure : (isDrawing ? 0.4 : 0);
+    else p = isDrawing ? 0.5 : 0;
   }
-})();
-
-// ══════════════════════════════
-// PRESENCE 同伴燈
-// ══════════════════════════════
-function setupPresence() {
-  const uid     = fbUser.uid;
-  const presRef = db.ref('presence/' + uid);
-  db.ref('.info/connected').on('value', snap => {
-    if (snap.val()) {
-      presRef.onDisconnect().remove();
-      presRef.set({ ts: firebase.database.ServerValue.TIMESTAMP });
-    }
-  });
-  // 即時監聽總人數（扣掉自己）
-  db.ref('presence').on('value', snap => {
-    const total = snap.numChildren();
-    const others = Math.max(0, total - 1);
-    const el = document.getElementById('companion-count');
-    if (el) el.textContent = others;
-  });
+  const fill = document.getElementById('pressure-fill');
+  if (fill) fill.style.width = (p * 100) + '%';
+  
+  // 核心修改點：在繪製中且未放開時，呼叫壓力觸發檢查
+  if (!released && isDrawing) checkPressureTrigger(p);
 }
 
-// ══════════════════════════════
-// DAILY COUNT 每日書寫人次
-// ══════════════════════════════
-function todayKey() { return new Date().toISOString().slice(0, 10); }
-
-function listenDailyCount() {
-  db.ref('daily/' + todayKey() + '/count').on('value', snap => {
-    const n = snap.val() || 0;
-    document.querySelectorAll('.daily-count-val').forEach(el => el.textContent = n);
-  });
+function initWriting() {
+  currentScreen = 'screen-write';
+  switchScreen('screen-write');
+  
+  // 核心修改點：開啟書寫頁面時，重置此 session 的呼吸觸發計數與狀態
+  breathTriggeredThisSession = false;
+  highPressureCount = 0;
+  
+  resizeCanvases();
+  // ... 其餘原始初始化邏輯 ...
 }
 
-async function incrementDailyCount() {
-  if (!fbReady) return;
-  try {
-    await db.ref('daily/' + todayKey() + '/count').transaction(n => (n || 0) + 1);
-  } catch(e) {}
+function finishWriting() {
+  // 核心修改點：結束書寫或儲存時，強制清理並隱藏呼吸模組
+  skipBreathOverlay();
+  
+  // ... 原本的結束書寫、上傳 Firebase 邏輯 ...
 }
 
-// ══════════════════════════════
-// ── Google Sheets 上傳 ──
-const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbyqde7EtjJJLoBxiGQstbqQWdZFEAGHQU2KFFkpf0nzfMbKaroI08LB8hdMPjZTvXpy/exec';
 
-function getParticipantId() {
-  // V6 相同邏輯：localStorage 中的持久匿名 ID
-  let pid = localStorage.getItem('wm-participant-id');
-  if (!pid) {
-    pid = 'P-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
-    localStorage.setItem('wm-participant-id', pid);
-  }
-  return pid;
-}
+// ══ 全螢幕呼吸模組核心邏輯 ══
+let breathOverlayActive = false, breathCycleTimer = null, breathCycles = 0;
+let breathTriggeredThisSession = false, highPressureCount = 0;
+const HIGH_PRESSURE_THRESHOLD = 0.75, HIGH_PRESSURE_STREAK = 15, BREATH_TOTAL_CYCLES = 4;
 
-async function submitToSheets(record, result) {
-  if (!SHEETS_URL) return;
-  const pv = record.pressureValues || [];
-  const avgPressure = pv.length ? pv.reduce((a, b) => a + b, 0) / pv.length : 0;
-
-  // 欄位名稱與 V6 保持一致，Apps Script doGet(e) 讀 e.parameter.data
-  const payload = {
-    timestamp:             new Date().toISOString(),
-    participant_id:        getParticipantId(),
-    app_version:           'V7',
-    text:                  record.text,
-    pre_mood:              record.mood,
-    session_duration_sec:  Math.round(record.totalTime || 0),
-    avg_pressure:          avgPressure.toFixed(3),
-    pressure_cv:           avgPressure > 0 ? (record.pressureVariance / avgPressure).toFixed(3) : '0',
-    stroke_count:          record.strokeCount || 0,
-    pause_count:           (record.pauseDurations || []).length,
-    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2).length,
-    char_count:            result.charCount ?? 0,
-    avg_pause_duration_ms: record.avgPause != null ? Math.round(record.avgPause * 1000) : 0,
-    avg_char_spacing:      result.avgCharSpacing ?? 0,
-    writing_speed:         result.writingSpeed   ?? 0,
-    avg_tilt_mag:          result.avgTiltMag     ?? 0,
-    baseline_variance:     result.baselineVariance ?? 0,
-    emotion_result:        result.dominant        ?? null,
-    emotion_calm:          result.calm            != null ? result.calm.toFixed(3)    : null,
-    emotion_focused:       result.focused         != null ? result.focused.toFixed(3) : null,
-    emotion_tense:         result.tense           != null ? result.tense.toFixed(3)   : null,
-    streak:                userProfile ? userProfile.streak        : 0,
-    total_sessions:        userProfile ? userProfile.totalSessions : 0,
-  };
-
-  // V6 相同方式：GET + ?data=，完全避開 CORS preflight 問題
-  try {
-    const url = SHEETS_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
-    await fetch(url, { method: 'GET', mode: 'no-cors' });
-  } catch (err) {
-    console.warn('Google Sheets 上傳失敗（不影響使用）:', err);
-  }
-}
-
-// ══════════════════════════════
-// BUBBLE ROOM 泡泡房間
-// ══════════════════════════════
-let brOpen = false;
-
-const BR_PALETTE = [
-  { bg:'rgba(175,145,255,0.16)', bdr:'rgba(200,178,255,0.45)', txt:'rgba(225,215,255,0.92)', glow:'rgba(175,145,255,0.38)' },
-  { bg:'rgba(120,205,200,0.14)', bdr:'rgba(155,230,225,0.42)', txt:'rgba(195,245,242,0.92)', glow:'rgba(120,205,200,0.35)' },
-  { bg:'rgba(255,175,145,0.14)', bdr:'rgba(255,200,175,0.42)', txt:'rgba(255,228,215,0.92)', glow:'rgba(255,175,145,0.35)' },
-  { bg:'rgba(140,185,255,0.14)', bdr:'rgba(170,205,255,0.42)', txt:'rgba(210,225,255,0.92)', glow:'rgba(140,185,255,0.35)' },
-  { bg:'rgba(255,150,185,0.14)', bdr:'rgba(255,180,205,0.42)', txt:'rgba(255,215,228,0.92)', glow:'rgba(255,150,185,0.35)' },
-  { bg:'rgba(150,230,160,0.14)', bdr:'rgba(180,245,188,0.42)', txt:'rgba(215,250,220,0.92)', glow:'rgba(150,230,160,0.35)' },
-  { bg:'rgba(245,215,120,0.14)', bdr:'rgba(255,235,155,0.42)', txt:'rgba(255,245,200,0.92)', glow:'rgba(245,215,120,0.35)' },
-];
-
-function showBubbleRoom() {
-  brOpen = true;
-  const room = document.getElementById('bubble-room');
-  room.classList.remove('hidden');
-  requestAnimationFrame(() => requestAnimationFrame(() => room.classList.add('open')));
-  // sync count badge
-  const cv = document.querySelector('.daily-count-val');
-  const bc = document.getElementById('br-count');
-  if (cv && bc) bc.textContent = cv.textContent;
-  createBrStars();
-  renderBrMoods();
-}
-
-function hideBubbleRoom() {
-  brOpen = false;
-  const room = document.getElementById('bubble-room');
-  room.classList.remove('open');
-  setTimeout(() => {
-    room.classList.add('hidden');
-    const stage = document.getElementById('br-stage');
-    const stars = document.getElementById('br-stars');
-    if (stage) stage.innerHTML = '';
-    if (stars) stars.innerHTML = '';
-  }, 580);
-}
-
-function createBrStars() {
-  const c = document.getElementById('br-stars');
+function initBoStars() {
+  const c = document.getElementById('bo-stars'); 
+  if(!c) return;
   c.innerHTML = '';
-  for (let i = 0; i < 75; i++) {
-    const s = document.createElement('div');
-    s.className = 'br-star';
-    const sz = 0.7 + Math.random() * 2.3;
-    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${1.8+Math.random()*5}s;animation-delay:${Math.random()*5}s;`;
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div'); s.className = 'bo-star';
+    const sz = 0.5 + Math.random() * 2;
+    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
     c.appendChild(s);
   }
 }
 
-function renderBrMoods() {
-  const stage = document.getElementById('br-stage');
-  stage.innerHTML = '';
-  if (!fbReady) {
-    // 沒有 Firebase：顯示示範泡泡（低透明度）
-    MOOD_WORDS.forEach(w => addBrBubble(stage, w, 1, true));
-    return;
-  }
-  db.ref('daily/' + todayKey() + '/moods').once('value', snap => {
-    const counts = {};
-    snap.forEach(child => {
-      const w = (child.val().mood||'').trim();
-      if (w) counts[w] = (counts[w]||0) + 1;
-    });
-    const entries = Object.entries(counts);
-    if (entries.length === 0) {
-      MOOD_WORDS.forEach(w => addBrBubble(stage, w, 1, true));
-    } else {
-      entries.forEach(([w, n]) => addBrBubble(stage, w, n, false));
-    }
-    // 即時新泡泡
-    db.ref('daily/' + todayKey() + '/moods').limitToLast(1).on('child_added', snap2 => {
-      if (!brOpen) return;
-      const word = (snap2.val().mood||'').trim();
-      if (!word) return;
-      const exists = stage.querySelector(`.br-bubble[data-word="${word}"]`);
-      if (!exists) addBrBubble(stage, word, 1, false, true);
-    });
-  });
-}
-
-function addBrBubble(stage, word, count, ghost, isNew) {
-  // 每個詞固定同一個顏色（by char code sum）
-  const ci = ([...word].reduce((a, c) => a + c.charCodeAt(0), 0)) % BR_PALETTE.length;
-  const p  = BR_PALETTE[ci];
-  const sz = Math.max(1, Math.min(count, 7));
-  const fontSize   = 13 + sz * 1.8;
-  const paddingCSS = `${5+sz}px ${13+sz*2}px`;
-  const glowSize   = 8 + sz * 5;
-
-  const b = document.createElement('div');
-  b.className = 'br-bubble' + (isNew ? ' br-new' : '');
-  b.dataset.word = word;
-  b.textContent  = word;
-
-  const left  = 5  + Math.random() * 78;
-  const top   = 8  + Math.random() * 72;
-  const dur   = 8  + Math.random() * 10;
-  const delay = Math.random() * 6;
-
-  b.style.cssText = `
-    left:${left}%; top:${top}%;
-    font-size:${fontSize}px;
-    padding:${paddingCSS};
-    background:${ghost ? 'rgba(255,255,255,0.04)' : p.bg};
-    border:1px solid ${ghost ? 'rgba(255,255,255,0.10)' : p.bdr};
-    color:${ghost ? 'rgba(255,255,255,0.16)' : p.txt};
-    box-shadow:0 0 ${glowSize}px ${ghost ? 'rgba(255,255,255,0.05)' : p.glow};
-    animation-name:${isNew ? 'br-enter' : 'br-drift'};
-    animation-duration:${isNew ? '0.65s' : dur+'s'};
-    animation-delay:${isNew ? '0s' : delay+'s'};
-    animation-timing-function:${isNew ? 'cubic-bezier(0.34,1.56,0.64,1)' : 'ease-in-out'};
-    animation-fill-mode:${isNew ? 'forwards' : 'none'};
-    animation-iteration-count:${isNew ? '1' : 'infinite'};
-  `;
-  stage.appendChild(b);
-
-  // 入場後切換為漂浮動畫
-  if (isNew) {
-    setTimeout(() => {
-      if (!b.parentNode) return;
-      b.style.animationName = 'br-drift';
-      b.style.animationDuration = dur + 's';
-      b.style.animationDelay = '0s';
-      b.style.animationTimingFunction = 'ease-in-out';
-      b.style.animationFillMode = 'none';
-      b.style.animationIterationCount = 'infinite';
-    }, 700);
-  }
-}
-
-// MOOD BUBBLES 心情泡泡
-// ══════════════════════════════
-const MOOD_WORDS = ['平靜','釋放','溫柔','專注','感恩','輕盈','安定','清明','喜悅','放鬆'];
-let moodPicked = false;
-
-function initMoodPicker() {
-  moodPicked = false;
-  const grid = document.getElementById('mood-pick-grid');
-  grid.innerHTML = MOOD_WORDS.map(w =>
-    `<button class="mood-pick-btn" onclick="pickMood(this,'${w}')">${w}</button>`
-  ).join('');
-  // 清空自訂輸入框
-  const inp = document.getElementById('mood-custom-input');
-  if (inp) inp.value = '';
-}
-
-function submitCustomMood() {
-  const inp = document.getElementById('mood-custom-input');
-  if (!inp) return;
-  const word = inp.value.trim().replace(/\s+/g,'');
-  if (!word) { inp.focus(); return; }
-  if ([...word].length > 8) { showToast('心情詞最多 8 個字 🌱'); return; }
-  // 把預設按鈕的 picked 狀態清掉，交給自訂詞
-  document.querySelectorAll('.mood-pick-btn').forEach(b => b.classList.remove('picked'));
-  inp.disabled = true;
-  document.querySelector('.mood-custom-btn').disabled = true;
-  document.querySelector('.mood-custom-btn').textContent = '已送出 ✓';
-  moodPicked = true;
-  spawnBubble(word);
-  showToast('心情已悄悄分享出去了 🫧');
-  if (fbReady) {
-    try {
-      db.ref('daily/' + todayKey() + '/moods').push({ mood: word, ts: Date.now() });
-    } catch(e) {}
-  }
-}
-
-async function pickMood(el, word) {
-  if (moodPicked) return;
-  moodPicked = true;
-  document.querySelectorAll('.mood-pick-btn').forEach(b => b.classList.remove('picked'));
-  el.classList.add('picked');
-  spawnBubble(word);
-  showToast('心情已悄悄分享出去了 🫧');
-  if (fbReady) {
-    try {
-      await db.ref('daily/' + todayKey() + '/moods').push({
-        mood: word,
-        ts: firebase.database.ServerValue.TIMESTAMP
-      });
-    } catch(e) {}
-  }
-}
-
-function listenMoodBubbles() {
-  db.ref('daily/' + todayKey() + '/moods').limitToLast(20).on('child_added', snap => {
-    if (currentScreen === 'screen-feedback') spawnBubble(snap.val().mood);
-  });
-}
-
-function spawnBubble(word) {
-  if (currentScreen !== 'screen-feedback') return;
-  const layer = document.getElementById('bubble-layer');
-  const b = document.createElement('div');
-  b.className = 'mood-bubble';
-  b.textContent = word;
-  b.style.left = (8 + Math.random() * 84) + '%';
-  const dur = 5 + Math.random() * 4;
-  b.style.animationDuration = dur + 's';
-  layer.appendChild(b);
-  setTimeout(() => b.remove(), dur * 1000 + 200);
-}
-
-// ══════════════════════════════
-// USER PROFILE 個人資料
-// ══════════════════════════════
-let userProfile = { streak: 0, lastDate: null, totalSessions: 0, badges: {} };
-
-function loadUserProfile() {
-  if (!fbReady) {
-    // 從 localStorage 估算
-    const sessions = getLocalSessions();
-    userProfile.totalSessions = sessions.length;
-    return;
-  }
-  db.ref('users/' + fbUser.uid + '/stats').once('value').then(snap => {
-    const d = snap.val() || {};
-    userProfile.streak        = d.streak        || 0;
-    userProfile.lastDate      = d.lastDate      || null;
-    userProfile.totalSessions = d.totalSessions || 0;
-    userProfile.badges        = d.badges        || {};
-  });
-}
-
-function getLocalSessions() {
-  try { return JSON.parse(localStorage.getItem('writing-mindfulness-sessions') || '[]'); }
-  catch(e) { return []; }
-}
-
-async function saveSessionToFirebase(record, emotion) {
-  if (!fbReady) return;
-  const uid   = fbUser.uid;
-  const today = todayKey();
-
-  try {
-    await db.ref('users/' + uid + '/sessions').push({
-      date:        record.date,
-      text:        record.text,
-      mood:        record.mood,
-      emotion:     emotion,
-      totalTime:   record.totalTime,
-      strokeCount: record.strokeCount,
-      ts:          firebase.database.ServerValue.TIMESTAMP,
-      clientTs:    record.id   // Date.now() at record creation，用於代表心情識別
-    });
-
-    // 初始化今日代表心情（每天第一筆才設定，之後由使用者手動更改）
-    const repRef  = db.ref('users/' + uid + '/repEmotions/' + today);
-    const repSnap = await repRef.once('value');
-    if (!repSnap.exists()) {
-      await repRef.set({ emotion, clientTs: record.id });
-    }
-
-    // 更新連續天數
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    let newStreak = userProfile.lastDate === yesterday ? userProfile.streak + 1
-                  : userProfile.lastDate === today    ? userProfile.streak
-                  : 1;
-
-    const newTotal  = userProfile.totalSessions + 1;
-    const oldBadges = { ...userProfile.badges };
-    const newBadges = { ...oldBadges };
-
-    if (newTotal  >= 1)  newBadges.first      = true;
-    if (newStreak >= 3)  newBadges.streak3    = true;
-    if (newStreak >= 7)  newBadges.streak7    = true;
-    if (newTotal  >= 10) newBadges.sessions10 = true;
-    if (newTotal  >= 30) newBadges.sessions30 = true;
-
-    // 累計平靜次數
-    const calmCount = (userProfile.calmCount || 0) + (emotion === 'calm' ? 1 : 0);
-    if (calmCount >= 5) newBadges.calm5 = true;
-
-    await db.ref('users/' + uid + '/stats').set({
-      streak: newStreak, lastDate: today,
-      totalSessions: newTotal, badges: newBadges, calmCount
-    });
-
-    // 通知新徽章
-    notifyNewBadges(oldBadges, newBadges, newStreak);
-
-    // 更新 local profile
-    userProfile.streak        = newStreak;
-    userProfile.lastDate      = today;
-    userProfile.totalSessions = newTotal;
-    userProfile.badges        = newBadges;
-    userProfile.calmCount     = calmCount;
-
-  } catch(e) { console.warn('Firebase save error:', e); }
-}
-
-const BADGE_DEFS = [
-  { id:'first',      icon:'🌱', name:'初心者',   desc:'完成第一次書寫靜心' },
-  { id:'streak3',    icon:'🌿', name:'三日堅持', desc:'連續練習三天' },
-  { id:'streak7',    icon:'🌳', name:'七日修行', desc:'連續練習七天' },
-  { id:'sessions10', icon:'⭐', name:'十次書寫', desc:'累計完成十次書寫' },
-  { id:'sessions30', icon:'🌸', name:'書寫達人', desc:'累計完成三十次書寫' },
-  { id:'calm5',      icon:'🍃', name:'靜心達人', desc:'五次以上平靜書寫狀態' },
-];
-
-function notifyNewBadges(old, cur, streak) {
-  const msgs = [];
-  if (!old.first      && cur.first)      msgs.push('🌱 獲得「初心者」徽章！歡迎踏上書寫靜心的旅程');
-  if (!old.streak3    && cur.streak3)    msgs.push(`🌿 獲得「三日堅持」徽章！你已連續練習 ${streak} 天`);
-  if (!old.streak7    && cur.streak7)    msgs.push('🌳 獲得「七日修行」徽章！一週的堅持了不起');
-  if (!old.sessions10 && cur.sessions10) msgs.push('⭐ 獲得「十次書寫」徽章！');
-  if (!old.sessions30 && cur.sessions30) msgs.push('🌸 獲得「書寫達人」徽章！');
-  if (!old.calm5      && cur.calm5)      msgs.push('🍃 獲得「靜心達人」徽章！');
-  if (msgs.length) setTimeout(() => showToast(msgs[0]), 1800);
-}
-
-// ══════════════════════════════
-// ENCOURAGEMENT 鼓勵卡
-// ══════════════════════════════
-function getEncouragement(emotion, streak, total) {
-  if (total <= 1) return {
-    streak: '', text: '歡迎踏上書寫靜心的旅程 🌱\n每一段修行都始於第一個筆畫，很高興你在這裡。'
-  };
-  const streakLabel = streak > 1 ? `✦ 連續第 ${streak} 天書寫靜心` : '';
-  const pools = {
-    calm: [
-      '今天的你很平靜，這份寧靜是真實的力量 🍃\n繼續讓書寫成為你每日回家的方式。',
-      '書寫帶你回到了當下，這很難得。\n平靜不是沒有風浪，而是風浪中那份穩定。',
-      '你今天的筆觸告訴我，你正在好好照顧自己 🌊\n這份對自己的溫柔，請繼續保有。',
-    ],
-    focused: [
-      '你今天非常專注，心手合一的感覺是一份禮物 ✨\n這種在場感，正是書寫靜心的核心體驗。',
-      '這份專注是內在清明的訊號。\n每次書寫，你都在為自己的心創造一個安靜的角落。',
-    ],
-    tense: [
-      '謝謝你今天還是動筆了，這本身就很勇敢 🌱\n不管今天的狀態如何，你選擇了書寫，這很重要。',
-      '緊繃的日子，更需要這樣的小片刻。\n書寫不需要完美，只需要在這裡，就夠了。',
-      '不需要追求完美，每一次練習都有其意義。\n明天的你，會因為今天動筆而感謝自己的。',
-    ]
-  };
-  if (streak >= 7) return { streak: streakLabel, text: `連續七天以上的書寫，你的心正在悄悄改變 🌳\n這 ${streak} 天的每日練習，是你給自己最美麗的禮物。` };
-  if (streak >= 3) return { streak: streakLabel, text: `已經連續 ${streak} 天了，這份堅持在滋養你 🌿\n你正在建立一個美好的習慣，繼續走。` };
-  const pool = pools[emotion] || pools.calm;
-  return { streak: streakLabel, text: pool[Math.floor(Math.random() * pool.length)] };
-}
-
-// ══════════════════════════════
-// SEASONAL THEMES 節氣
-// ══════════════════════════════
-const SOLAR_TERMS = [
-  { name:'小寒', m:1,  d1:5,  d2:19, icon:'❄️', tip:'寒意正深，以靜字取暖，讓心慢下來。',         cat:'single'  },
-  { name:'大寒', m:1,  d1:20, d2:31, icon:'❄️', tip:'最冷時節，書寫是冬日最溫暖的儀式。',         cat:'wisdom'  },
-  { name:'立春', m:2,  d1:3,  d2:17, icon:'🌱', tip:'春意初萌，新的開始，寫下你的心願。',         cat:'nature'  },
-  { name:'雨水', m:2,  d1:18, d2:29, icon:'🌧', tip:'細雨滋潤，讓筆尖也帶著柔和的水氣。',        cat:'nature'  },
-  { name:'驚蟄', m:3,  d1:5,  d2:19, icon:'🌿', tip:'萬物甦醒，書寫也是一種喚醒自己的方式。',    cat:'nature'  },
-  { name:'春分', m:3,  d1:20, d2:31, icon:'🌸', tip:'晝夜平分，心也找到了平衡的節奏。',          cat:'hakka'   },
-  { name:'清明', m:4,  d1:4,  d2:19, icon:'🌺', tip:'清明時節，寫下對先人的思念與感恩。',        cat:'sutra'   },
-  { name:'穀雨', m:4,  d1:20, d2:30, icon:'🌻', tip:'雨水豐沛，苗栗山野滿是生機。',              cat:'miaoli'  },
-  { name:'立夏', m:5,  d1:5,  d2:20, icon:'☀️', tip:'夏日開始，讓書寫帶來一絲清涼。',            cat:'miaoli'  },
-  { name:'小滿', m:5,  d1:21, d2:31, icon:'🌾', tip:'小小的滿足，是此刻最真實的幸福。',          cat:'wisdom'  },
-  { name:'芒種', m:6,  d1:5,  d2:20, icon:'🎋', tip:'播種的季節，書寫是另一種耕耘。',            cat:'hakka'   },
-  { name:'夏至', m:6,  d1:21, d2:30, icon:'☀️', tip:'一年最長的白晝，讓心慢下來感受。',          cat:'single'  },
-  { name:'小暑', m:7,  d1:6,  d2:21, icon:'🌊', tip:'暑熱漸盛，書寫讓心找到清涼之地。',          cat:'nature'  },
-  { name:'大暑', m:7,  d1:22, d2:31, icon:'🌞', tip:'最熱時節，以靜心對抗炎夏。',               cat:'sutra'   },
-  { name:'立秋', m:8,  d1:7,  d2:22, icon:'🍂', tip:'秋意初至，書寫讓心跟著沉靜下來。',          cat:'wisdom'  },
-  { name:'處暑', m:8,  d1:23, d2:31, icon:'🌤', tip:'暑氣漸消，是整理心情的好時節。',            cat:'nature'  },
-  { name:'白露', m:9,  d1:7,  d2:22, icon:'🌿', tip:'露水清澈，讓筆觸也帶著這份純淨。',          cat:'nature'  },
-  { name:'秋分', m:9,  d1:23, d2:30, icon:'🍁', tip:'秋色正好，苗栗的山野換上了金黃。',          cat:'miaoli'  },
-  { name:'寒露', m:10, d1:7,  d2:22, icon:'🌙', tip:'夜涼露寒，靜心書寫最宜此刻。',             cat:'sutra'   },
-  { name:'霜降', m:10, d1:23, d2:31, icon:'❄️', tip:'霜降時節，讓智慧的文字暖心。',             cat:'wisdom'  },
-  { name:'立冬', m:11, d1:6,  d2:21, icon:'🍂', tip:'冬日啟程，靜字是最好的暖爐。',             cat:'single'  },
-  { name:'小雪', m:11, d1:22, d2:30, icon:'❄️', tip:'初雪飄落，書寫帶你進入靜謐的白色世界。',   cat:'nature'  },
-  { name:'大雪', m:12, d1:6,  d2:21, icon:'❄️', tip:'大雪紛飛，讓心也隨之安靜下來。',           cat:'sutra'   },
-  { name:'冬至', m:12, d1:22, d2:31, icon:'🌙', tip:'一年最長的夜，書寫是點亮內心的燈。',       cat:'wisdom'  },
-];
-
-function getSolarTerm() {
-  const m = new Date().getMonth() + 1;
-  const d = new Date().getDate();
-  return SOLAR_TERMS.find(t => t.m === m && d >= t.d1 && d <= t.d2)
-      || { name:'書寫靜心', icon:'✦', tip:'靜下心來，讓每一筆都是與自己的對話。', cat:'all' };
-}
-
-function initSeasonBanner() {
-  const term = getSolarTerm();
-  document.getElementById('season-icon').textContent = term.icon;
-  document.getElementById('season-name').textContent = '節氣 · ' + term.name;
-  document.getElementById('season-tip').textContent  = term.tip;
-}
-
-// ══════════════════════════════
-// MAP OVERLAY 今日地圖
-// ══════════════════════════════
-
-// ══════════════════════════════
-// JOURNEY SCREEN 我的旅程
-// ══════════════════════════════
-function renderJourneyScreen() {
-  if (fbReady) {
-    Promise.all([
-      db.ref('users/' + fbUser.uid + '/stats').once('value'),
-      db.ref('users/' + fbUser.uid + '/sessions').limitToLast(100).once('value'),
-      db.ref('users/' + fbUser.uid + '/repEmotions').once('value'),
-    ]).then(([statsSnap, sessSnap, repSnap]) => {
-      const stats = statsSnap.val() || {};
-      const sessions = [];
-      sessSnap.forEach(c => sessions.unshift(c.val()));
-      const repEmotions = repSnap.val() || {};
-      renderJourneyUI(stats, sessions, repEmotions);
-    }).catch(() => renderJourneyUI({}, getLocalSessions().slice(-100).reverse(), {}));
+function checkPressureTrigger(pressure) {
+  if (breathTriggeredThisSession || breathOverlayActive) return;
+  if (pressure >= HIGH_PRESSURE_THRESHOLD) {
+    highPressureCount++;
+    if (highPressureCount >= HIGH_PRESSURE_STREAK) triggerBreathOverlay();
   } else {
-    const sessions = getLocalSessions().slice(-100).reverse();
-    renderJourneyUI({ streak: userProfile.streak, totalSessions: sessions.length, badges: userProfile.badges }, sessions, {});
+    highPressureCount = Math.max(0, highPressureCount - 2);
   }
 }
 
-// ── 看板狀態 ──
-let boardTab         = 'day';
-let boardSessions    = [];
-let boardRepEmotions = {};
-const B_ICON  = { calm:'🍃', focused:'✨', tense:'🌱' };
-const B_LABEL = { calm:'平靜', focused:'專注', tense:'調整中' };
-
-function renderJourneyUI(stats, sessions, repEmotions) {
-  const streak  = stats.streak || 0;
-  const total   = stats.totalSessions || sessions.length;
-  const badges  = stats.badges || {};
-  const today   = todayKey();
-  // 今日所有書寫的總秒數
-  const todaySecs = Math.round(sessions
-    .filter(s => s.date === today)
-    .reduce((a, s) => a + (s.totalTime || 0), 0));
-  const todayMins = Math.floor(todaySecs / 60);
-  const todayRemS = todaySecs % 60;
-
-  document.getElementById('j-streak').textContent = streak;
-  document.getElementById('j-total').textContent  = total;
-  document.getElementById('j-mins').textContent   = todayMins;
-  document.getElementById('j-secs').textContent   = String(todayRemS).padStart(2, '0');
-
-  // 快照存到模組層，供 switchBoardTab 使用
-  boardSessions    = sessions;
-  boardRepEmotions = repEmotions;
-  boardTab         = 'day';
-
-  // 重設 tab 狀態
-  document.querySelectorAll('.board-tab').forEach((t, i) => t.classList.toggle('active', i === 0));
-  renderBoard();
-
-  // 徽章
-  document.getElementById('j-badges').innerHTML = BADGE_DEFS.map(b => `
-    <div class="badge-item${badges[b.id] ? '' : ' locked'}">
-      <div class="badge-icon">${b.icon}</div>
-      <div class="badge-name">${b.name}</div>
-      <div class="badge-desc">${b.desc}</div>
-    </div>`).join('');
+function triggerBreathOverlay() {
+  breathTriggeredThisSession = true; 
+  breathOverlayActive = true; 
+  highPressureCount = 0;
+  isDrawing = false; 
+  if(typeof canvasPointers !== 'undefined' && canvasPointers.clear) canvasPointers.clear(); 
+  breathCycles = 0;
+  
+  initBoStars();
+  document.getElementById('bo-progress').innerHTML = Array.from({length:BREATH_TOTAL_CYCLES},()=>'<div class="bo-dot"></div>').join('');
+  document.getElementById('breath-overlay').classList.add('show');
+  startBreathCycle();
 }
 
-function switchBoardTab(tab, el) {
-  boardTab = tab;
-  document.querySelectorAll('.board-tab').forEach(t => t.classList.remove('active'));
-  if (el) el.classList.add('active');
-  renderBoard();
+function startBreathCycle() {
+  clearTimeout(breathCycleTimer);
+  runPhase('吸 氣', 4, () => runPhase('屏 息', 2, () => runPhase('吐 氣', 4, () => {
+    breathCycles++;
+    const dots = document.querySelectorAll('#bo-progress .bo-dot');
+    if (dots[breathCycles-1]) dots[breathCycles-1].classList.add('done');
+    if (breathCycles >= BREATH_TOTAL_CYCLES) {
+      document.getElementById('bo-phase').textContent = '你已平靜下來 ✦';
+      document.getElementById('bo-counter').textContent = '';
+      setTimeout(skipBreathOverlay, 1200);
+    } else { startBreathCycle(); }
+  })));
 }
 
-function renderBoard() {
-  const el = document.getElementById('board-content');
-  if (!el) return;
-  if (boardTab === 'day')   el.innerHTML = renderDayBoard();
-  if (boardTab === 'week')  el.innerHTML = renderWeekBoard();
-  if (boardTab === 'month') el.innerHTML = renderMonthBoard();
-}
-
-// ── 日 看板 ──
-function renderDayBoard() {
-  const today     = todayKey();
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-
-  // 依日期分組
-  const byDate = {};
-  boardSessions.forEach(s => {
-    const d = s.date || today;
-    if (!byDate[d]) byDate[d] = [];
-    byDate[d].push(s);
-  });
-  const dates = Object.keys(byDate).sort().reverse().slice(0, 14);
-  if (!dates.length) return '<div class="board-empty">還沒有書寫紀錄<br>開始你的第一次吧 🌱</div>';
-
-  return dates.map(date => {
-    const isToday    = date === today;
-    const rep        = boardRepEmotions[date] || {};
-    const repClientTs = typeof rep === 'object' ? rep.clientTs : null;
-    const repEmotion  = typeof rep === 'object' ? rep.emotion  : rep;
-    // 按 ts 排序（舊→新），UI 顯示新→舊
-    const daySessions = [...byDate[date]].sort((a, b) => (a.ts || a.clientTs || 0) - (b.ts || b.clientTs || 0));
-
-    const dateLabel = date === today ? '今天'
-                    : date === yesterday ? '昨天'
-                    : date.replace(/^\d{4}-/, '').replace('-', '/');
-
-    const cards = [...daySessions].reverse().map((s, revIdx) => {
-      const origIdx = daySessions.length - 1 - revIdx; // 在排序陣列中的原始 idx
-      // 判斷是否為代表：優先比 clientTs，否則比 emotion 最後一筆
-      let isRep = false;
-      if (repClientTs && s.clientTs) {
-        isRep = (s.clientTs === repClientTs);
-      } else if (repEmotion) {
-        const lastIdx = daySessions.reduce((last, ss, i) => ss.emotion === repEmotion ? i : last, -1);
-        isRep = origIdx === lastIdx;
-      } else {
-        isRep = origIdx === daySessions.length - 1; // 無代表設定：預設最新
-      }
-
-      const timeStr = s.ts
-        ? new Date(s.ts).toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit', hour12:false })
-        : (s.clientTs ? new Date(s.clientTs).toLocaleTimeString('zh-TW', { hour:'2-digit', minute:'2-digit', hour12:false }) : '');
-      const mins = Math.round((s.totalTime || 0) / 60);
-
-      return `
-        <div class="session-card${isRep ? ' is-rep' : ''}${isToday && !isRep ? ' is-today' : ''}"
-             ${isToday && !isRep ? `onclick="setRepEmotion('${date}','${s.emotion}',${s.clientTs || s.id || 0})"` : ''}>
-          <div class="sc-top">
-            <span class="sc-emo">${B_ICON[s.emotion] || '○'}</span>
-            <span class="sc-text">${s.text || ''}</span>
-            ${timeStr ? `<span class="sc-time">${timeStr}</span>` : ''}
-            ${isRep  ? '<span class="sc-rep-badge">代表心情</span>' : ''}
-            ${!isToday ? '<span class="sc-lock-icon">🔒</span>' : ''}
-          </div>
-          <div class="sc-meta">${B_LABEL[s.emotion] || ''}${mins > 0 ? ' · ' + mins + ' 分鐘' : ''}</div>
-          ${isToday && !isRep ? '<div class="sc-hint">點此設為今日代表心情</div>' : ''}
-        </div>`;
-    }).join('');
-
-    return `
-      <div class="day-section">
-        <div class="day-label">
-          ${dateLabel}
-          ${!isToday ? '<span class="day-lock-tag">已鎖定</span>' : ''}
-        </div>
-        ${cards}
-      </div>`;
-  }).join('');
-}
-
-// ── 週 看板 ──
-function renderWeekBoard() {
-  const today    = todayKey();
-  const dayNames = ['日','一','二','三','四','五','六'];
-  const days     = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 86400000);
-    days.push(d.toISOString().slice(0, 10));
-  }
-  return '<div class="week-grid">' + days.map(date => {
-    const rep     = boardRepEmotions[date];
-    const emo     = rep ? (typeof rep === 'object' ? rep.emotion : rep) : null;
-    const isToday = date === today;
-    const dow     = new Date(date + 'T12:00:00').getDay();
-    const dayNum  = date.slice(8);
-    return `
-      <div class="week-cell${isToday ? ' today-cell' : ''}">
-        <div class="wc-name">${dayNames[dow]}</div>
-        <div class="${emo ? 'wc-icon' : 'wc-empty'}">${emo ? (B_ICON[emo] || '·') : '·'}</div>
-        <div class="wc-date">${parseInt(dayNum)}</div>
-      </div>`;
-  }).join('') + '</div>';
-}
-
-// ── 月 看板 ──
-function renderMonthBoard() {
-  const today    = todayKey();
-  const now      = new Date();
-  const year     = now.getFullYear();
-  const month    = now.getMonth();
-  const firstDow = new Date(year, month, 1).getDay();
-  const lastDay  = new Date(year, month + 1, 0).getDate();
-  const dayNames = ['日','一','二','三','四','五','六'];
-
-  let html = '<div class="month-grid">';
-  html += dayNames.map(d => `<div class="mc-header">${d}</div>`).join('');
-  for (let i = 0; i < firstDow; i++) html += '<div class="mc-empty-cell"></div>';
-  for (let day = 1; day <= lastDay; day++) {
-    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-    const rep     = boardRepEmotions[dateStr];
-    const emo     = rep ? (typeof rep === 'object' ? rep.emotion : rep) : null;
-    const isToday  = dateStr === today;
-    const isFuture = dateStr > today;
-    html += `
-      <div class="mc-cell${isToday ? ' mc-today' : ''}${isFuture ? ' mc-future' : ''}">
-        <div class="mc-num">${day}</div>
-        <div class="mc-emo">${emo && !isFuture ? (B_ICON[emo] || '') : ''}</div>
-      </div>`;
-  }
-  html += '</div>';
-  return html;
-}
-
-// ── 設定代表心情（今天限定） ──
-function setRepEmotion(date, emotion, clientTs) {
-  if (date !== todayKey()) return;
-  const val = { emotion, clientTs: clientTs || 0 };
-  boardRepEmotions[date] = val;
-  if (fbReady) {
-    db.ref('users/' + fbUser.uid + '/repEmotions/' + date).set(val).catch(() => {});
-  }
-  renderBoard();
-  showToast('已設定為今日代表心情 ✦');
-}
-// ══════════════════════════════
-// 語料庫 CORPUS
-// ══════════════════════════════
-const CORPUS = [
-  { id:'s01', text:'靜', cat:'single', label:'單字', diff:1, mood:['all','anxious','tired'] },
-  { id:'s02', text:'心', cat:'single', label:'單字', diff:1, mood:['all','anxious','tired'] },
-  { id:'s03', text:'忍', cat:'single', label:'單字', diff:1, mood:['all','anxious'] },
-  { id:'s04', text:'安', cat:'single', label:'單字', diff:1, mood:['all','tired'] },
-  { id:'s05', text:'和', cat:'single', label:'單字', diff:1, mood:['all'] },
-  { id:'s06', text:'善', cat:'single', label:'單字', diff:1, mood:['all','happy'] },
-  { id:'s07', text:'慢', cat:'single', label:'單字', diff:1, mood:['all','anxious'] },
-  { id:'s08', text:'緣', cat:'single', label:'單字', diff:1, mood:['all'] },
-  { id:'h01', text:'吾心安處是吾鄉', cat:'hakka', label:'客家諺語', diff:2, mood:['all','calm','happy'] },
-  { id:'h02', text:'細水長流，細食長久', cat:'hakka', label:'客家諺語', diff:2, mood:['all','calm'] },
-  { id:'h03', text:'寧賣祖宗田，不忘祖宗言', cat:'hakka', label:'客家諺語', diff:3, mood:['all'] },
-  { id:'h04', text:'有山就有水，有客就有家', cat:'hakka', label:'客家諺語', diff:2, mood:['all','happy'] },
-  { id:'h05', text:'勤儉持家，忠厚傳世', cat:'hakka', label:'客家諺語', diff:2, mood:['all','calm'] },
-  { id:'h06', text:'山高水遠，心寬路廣', cat:'hakka', label:'客家諺語', diff:2, mood:['all','tired'] },
-  { id:'h07', text:'食得苦中苦，方為人上人', cat:'hakka', label:'客家諺語', diff:3, mood:['all'] },
-  { id:'h08', text:'做人著忠厚，做事著勤力', cat:'hakka', label:'客家諺語', diff:2, mood:['all'] },
-  { id:'m01', text:'油桐花開，白雪滿山', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','happy','calm'] },
-  { id:'m02', text:'南庄山色，四時如畫', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','calm'] },
-  { id:'m03', text:'大湖草莓紅，農家笑顏開', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','happy'] },
-  { id:'m04', text:'獅潭仙山雲霧繞', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all'] },
-  { id:'m05', text:'通霄海浪聲，伴我夜讀書', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','calm'] },
-  { id:'m06', text:'三義木雕情，刻盡山河秀', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all'] },
-  { id:'m07', text:'苑裡藺草香，編織歲月情', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','calm'] },
-  { id:'m08', text:'泰安溫泉暖，洗去一身疲', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','tired'] },
-  { id:'w01', text:'知足者常樂，能忍者自安', cat:'wisdom', label:'處世智慧', diff:3, mood:['all','anxious'] },
-  { id:'w02', text:'靜以修身，儉以養德', cat:'wisdom', label:'處世智慧', diff:2, mood:['all','calm'] },
-  { id:'w03', text:'寵辱不驚，閒看庭前花開花落', cat:'wisdom', label:'處世智慧', diff:3, mood:['all'] },
-  { id:'w04', text:'上善若水，水善利萬物而不爭', cat:'wisdom', label:'處世智慧', diff:3, mood:['all','calm'] },
-  { id:'w05', text:'路遙知馬力，日久見人心', cat:'wisdom', label:'處世智慧', diff:2, mood:['all'] },
-  { id:'w06', text:'千里之行，始於足下', cat:'wisdom', label:'處世智慧', diff:2, mood:['all','tired'] },
-  { id:'w07', text:'學而不思則罔，思而不學則殆', cat:'wisdom', label:'處世智慧', diff:3, mood:['all'] },
-  { id:'n01', text:'春風又綠江南岸', cat:'nature', label:'自然意象', diff:2, mood:['all','happy'] },
-  { id:'n02', text:'明月松間照，清泉石上流', cat:'nature', label:'自然意象', diff:2, mood:['all','calm'] },
-  { id:'n03', text:'竹外桃花三兩枝', cat:'nature', label:'自然意象', diff:2, mood:['all','happy'] },
-  { id:'n04', text:'山光悅鳥性，潭影空人心', cat:'nature', label:'自然意象', diff:2, mood:['all','anxious'] },
-  { id:'n05', text:'採菊東籬下，悠然見南山', cat:'nature', label:'自然意象', diff:2, mood:['all','tired'] },
-  { id:'n06', text:'天街小雨潤如酥', cat:'nature', label:'自然意象', diff:2, mood:['all','calm'] },
-  { id:'n07', text:'荷風送香氣，竹露滴清響', cat:'nature', label:'自然意象', diff:2, mood:['all','calm'] },
-  { id:'q01', text:'阿彌陀佛', cat:'sutra', label:'靜心經句', diff:1, mood:['all','anxious','tired'] },
-  { id:'q02', text:'南無觀世音菩薩', cat:'sutra', label:'靜心經句', diff:2, mood:['all','anxious'] },
-  { id:'q03', text:'心無掛礙，無掛礙故', cat:'sutra', label:'靜心經句', diff:2, mood:['all','anxious'] },
-  { id:'q04', text:'色即是空，空即是色', cat:'sutra', label:'靜心經句', diff:2, mood:['all'] },
-  { id:'q05', text:'放下屠刀，立地成佛', cat:'sutra', label:'靜心經句', diff:2, mood:['all'] },
-  { id:'q06', text:'萬法歸一，一歸何處', cat:'sutra', label:'靜心經句', diff:2, mood:['all','calm'] },
-  { id:'q07', text:'平常心是道', cat:'sutra', label:'靜心經句', diff:1, mood:['all','anxious'] },
-];
-
-const HAKKA_SPECIAL = [
-  { text:'㐁舌',    romaji:'le5',   meaning:'舌頭' },
-  { text:'㓾人',    romaji:'cii5',  meaning:'那個人' },
-  { text:'㓾頭',    romaji:'cii5',  meaning:'那頭' },
-  { text:'㓾雞鴨',  romaji:'cii5',  meaning:'那雞鴨' },
-  { text:'㓾豬个',  romaji:'cii5',  meaning:'那頭豬' },
-  { text:'㔇草',    romaji:'pad4',  meaning:'割草' },
-  { text:'㜮斗',    romaji:'lam1',  meaning:'一斗' },
-  { text:'㜮狗屎',  romaji:'lam1',  meaning:'一坨狗屎' },
-  { text:'㝗㝩',    romaji:'long1', meaning:'空洞' },
-  { text:'㧡擔',    romaji:'kai1',  meaning:'挑擔' },
-  { text:'㧡米',    romaji:'kai1',  meaning:'挑米' },
-  { text:'㧡水',    romaji:'kai1',  meaning:'挑水' },
-  { text:'㧡點心',  romaji:'kai1',  meaning:'帶點心' },
-  { text:'㧡東西',  romaji:'kai1',  meaning:'帶東西' },
-  { text:'㧡石頭',  romaji:'kai1',  meaning:'搬石頭' },
-  { text:'㪐毛',    romaji:'lud4',  meaning:'脫毛' },
-  { text:'㪐皮',    romaji:'lud4',  meaning:'剝皮' },
-  { text:'㸐人',    romaji:'nad4',  meaning:'那個人' },
-  { text:'䀯等',    romaji:'pu3',   meaning:'等待' },
-  { text:'䌈頸',    romaji:'tag4',  meaning:'脖子' },
-  { text:'䟘床',    romaji:'hong3', meaning:'床鋪' },
-  { text:'䟘起來',  romaji:'hong3', meaning:'起床' },
-  { text:'𠊎',      romaji:'ngai5', meaning:'我（客語第一人稱）' },
-  { text:'𠊎个',    romaji:'ngai5', meaning:'我的' },
-  { text:'𠊎愛你',  romaji:'ngai5', meaning:'我愛你（客語）' },
-  { text:'𠊎係客家人', romaji:'ngai5', meaning:'我是客家人' },
-  { text:'𪖐',      romaji:'ngiu3', meaning:'牛（客語）' },
-  { text:'𢫦',      romaji:'mag8',  meaning:'抹（客語）' },
-  { text:'𢯭',      romaji:'ten3',  meaning:'伸展' },
-  { text:'𤊶',      romaji:'lad4',  meaning:'辣' },
-];
-
-// ── 全域狀態 ──
-let currentScreen    = 'screen-welcome';
-let selectedTask     = '靜';
-let selectedMood     = null;
-let currentColor     = '#2a1f14';
-let maxWidth         = 6;
-let currentGrid      = 'rice';
-let currentFilter    = 'all';
-let selectedCorpusId = null;
-let guideOpacity     = 0.18;
-let hakkaFontLoaded  = false;
-let cellSize         = 220;
-let lastResult       = null; // 保存最近一次分析結果，供 showFeedback 使用
-
-let sessionData = {
-  strokes:[], pauseDurations:[], pressureValues:[], totalTime:0, strokeCount:0,
-  rawPoints:[], charBounds:{}, tiltXValues:[], tiltYValues:[], baselineAngles:[],
-};
-let isDrawing=false, lastX=0, lastY=0, lastWidth=2;
-let undoStack=[], timerInterval=null, timerSeconds=0;
-let lastStrokeEnd=null, sessionStart=null, strokeFirstPt=null;
-const canvasPointers = new Set();
-
-// ── 語料庫渲染 ──
-function diffDots(n) {
-  let h=''; for(let i=1;i<=3;i++) h+=`<div class="d${i>n?' e':''}"></div>`; return h;
-}
-function renderCorpus(cat) {
-  const mood = selectedMood||'all';
-  const grid = document.getElementById('corpus-grid');
-  if (cat==='hakka-special') {
-    grid.innerHTML = HAKKA_SPECIAL.map((item,i)=>`
-      <div class="corpus-card${selectedTask===item.text?' selected':''}" data-id="hk-${i}" data-text="${item.text}" onclick="selectCorpusCard(this)">
-        <div class="cc-cat"><span>✦</span>客語特殊字${!hakkaFontLoaded?'<span style="color:rgba(139,44,44,0.6);font-size:9px">需載入字型</span>':''}</div>
-        <div class="cc-text" style="font-family:'HanaMinB','HanaMinA','Noto Serif TC',serif">${item.text}</div>
-        <div class="cc-romaji">${item.romaji}　${item.meaning}</div>
-        <div class="cc-diff">${diffDots(1)}</div>
-      </div>`).join('');
-    if(!hakkaFontLoaded) loadHanaFonts(); return;
-  }
-  let items=CORPUS.filter(c=>{
-    const catOk=cat==='all'||c.cat===cat;
-    const moodOk=mood==='all'||c.mood.includes('all')||c.mood.includes(mood);
-    return catOk&&moodOk;
-  });
-  if(!items.length) items=CORPUS.filter(c=>cat==='all'||c.cat===cat);
-  grid.innerHTML=items.map(item=>`
-    <div class="corpus-card${selectedCorpusId===item.id?' selected':''}" data-id="${item.id}" data-text="${item.text}" onclick="selectCorpusCard(this)">
-      <div class="cc-cat"><span>${catEmoji(item.cat)}</span>${item.label}</div>
-      <div class="cc-text">${item.text}</div>
-      <div class="cc-diff">${diffDots(item.diff)}</div>
-    </div>`).join('');
-}
-function catEmoji(cat){ return {single:'✦',hakka:'🌿',miaoli:'⛰',wisdom:'📜',nature:'🍃',sutra:'🪷'}[cat]||'✦'; }
-function filterCorpus(cat,el){
-  currentFilter=cat;
-  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active'); selectedCorpusId=null; renderCorpus(cat);
-}
-function selectCorpusCard(el){
-  selectedCorpusId=el.dataset.id; selectedTask=el.dataset.text;
-  document.querySelectorAll('.corpus-card').forEach(c=>c.classList.remove('selected'));
-  el.classList.add('selected'); document.getElementById('custom-text').value='';
-}
-function getTodayPick(){ const day=new Date().getDate(); return CORPUS[day%CORPUS.length]; }
-function pickToday(){
-  const item=getTodayPick(); selectedTask=item.text; selectedCorpusId=item.id;
-  currentFilter=item.cat;
-  document.querySelectorAll('.filter-tab').forEach(t=>t.classList.toggle('active',t.dataset.cat===item.cat));
-  renderCorpus(item.cat); showToast(`已選擇：${item.text} ✦`);
-}
-function initTodayPick(){ document.getElementById('today-pick-text').textContent=getTodayPick().text; }
-
-// ── 導航 ──
-function goTo(id){
-  document.getElementById(currentScreen).classList.add('hidden');
-  document.getElementById(id).classList.remove('hidden');
-  currentScreen=id;
-  if(id==='screen-task'){ initTodayPick(); renderCorpus(currentFilter); initSeasonBanner(); }
-  if(id==='screen-write') initWriting();
-  if(id==='screen-feedback') showFeedback();
-  if(id==='screen-journey') renderJourneyScreen();
-  if(id!=='screen-write') stopTimer();
-  document.getElementById('grid-picker').classList.remove('open');
-  document.getElementById('color-picker-panel').classList.remove('open');
-}
-
-// ── 心情選擇 ──
-function selectMood(el){
-  document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
-  el.classList.add('selected'); selectedMood=el.dataset.mood;
-  renderCorpus(currentFilter);
-  if(selectedMood==='anxious'||selectedMood==='tired') showToast('建議從簡單的單字開始，慢慢來 🍃');
-}
-function startWriting(){
-  const custom=document.getElementById('custom-text').value.trim();
-  if(custom){selectedTask=custom; selectedCorpusId=null;}
-  if(!selectedTask){showToast('請先選擇或輸入書寫內容 ✦'); return;}
-  goTo('screen-write');
-}
-
-// ── 畫布 ──
-const gCanvas=()=>document.getElementById('grid-canvas');
-const guCanvas=()=>document.getElementById('guide-canvas');
-const dCanvas=()=>document.getElementById('draw-canvas');
-const gCtx=()=>gCanvas().getContext('2d');
-const guCtx=()=>guCanvas().getContext('2d');
-const dCtx=()=>dCanvas().getContext('2d');
-let fontALoaded=false, fontBLoaded=false;
-
-async function loadHanaFonts(){
-  const statusEl=document.getElementById('font-status');
-  try {
-    statusEl.textContent='客語字型載入中…'; statusEl.style.display='block';
-    const fontA=new FontFace('HanaMinA',"url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff2') format('woff2'),url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinA.woff') format('woff')");
-    const fontB=new FontFace('HanaMinB',"url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff2') format('woff2'),url('https://cdn.jsdelivr.net/gh/max32002/max-hana@1.1/webfont/HanaMinB.woff') format('woff')");
-    await fontA.load(); document.fonts.add(fontA); fontALoaded=true;
-    statusEl.textContent='載入 B 區字型…';
-    await fontB.load(); document.fonts.add(fontB); fontBLoaded=true;
-    hakkaFontLoaded=true; statusEl.textContent='✓ 客語字型已就緒';
-    setTimeout(()=>{statusEl.style.display='none';},2000);
-    if(currentScreen==='screen-write') drawGuideChars();
-  } catch(err){ statusEl.textContent='字型載入失敗'; setTimeout(()=>{statusEl.style.display='none';},3000); }
-}
-function fontForChar(ch){ const cp=ch.codePointAt(0); if(cp>=0x20000) return "'HanaMinB','Noto Serif TC',serif"; if(cp>=0x3400) return "'HanaMinA','Noto Serif TC',serif"; return "'Noto Serif TC',serif"; }
-function guideFont(text,sizePx){ const hasSpecial=[...text].some(c=>c.codePointAt(0)<0x4E00||c.codePointAt(0)>0x9FFF); return hasSpecial?`${sizePx}px 'HanaMinB','HanaMinA','Noto Serif TC',serif`:`${sizePx}px 'Noto Serif TC',serif`; }
-
-function initWriting(){
-  document.getElementById('write-prompt-text').textContent=selectedTask;
-  sessionData={strokes:[],pauseDurations:[],pressureValues:[],totalTime:0,strokeCount:0,rawPoints:[],charBounds:{},tiltXValues:[],tiltYValues:[],baselineAngles:[]};
-  undoStack=[]; timerSeconds=0; strokeFirstPt=null; lastStrokeEnd=null;
-  canvasPointers.clear(); updateTimer(); sessionStart=Date.now();
-  resizeCanvases(); startTimer();
-  const guide=document.getElementById('breath-guide');
-  if(selectedMood==='anxious'){guide.classList.add('show'); setTimeout(()=>guide.classList.remove('show'),8000);}
-  else guide.classList.remove('show');
-  const hasSpecial=[...selectedTask].some(c=>c.codePointAt(0)<0x4E00||c.codePointAt(0)>0x9FFF);
-  if(hasSpecial&&!hakkaFontLoaded) loadHanaFonts();
-}
-function resizeCanvases(){
-  const area=document.getElementById('canvas-area'); const W=area.clientWidth; const H=area.clientHeight; const dpr=window.devicePixelRatio||1;
-  [gCanvas(),guCanvas(),dCanvas()].forEach(c=>{c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';});
-  gCtx().scale(dpr,dpr); guCtx().scale(dpr,dpr); dCtx().scale(dpr,dpr);
-  drawGrid(W,H); drawGuideChars();
-}
-function setGuideOpacity(val){ guideOpacity=val/100; drawGuideChars(); }
-function setCellSize(val){ cellSize=val; const area=document.getElementById('canvas-area'); drawGrid(area.clientWidth,area.clientHeight); }
-function drawGuideChars(){
-  const area=document.getElementById('canvas-area'); const W=area.clientWidth; const H=area.clientHeight;
-  const ctx=guCtx(); ctx.clearRect(0,0,W,H);
-  if(guideOpacity<=0||!selectedTask) return;
-  const chars=[...selectedTask]; const n=chars.length; const cell=cellSize;
-  const totalW=n*cell; const scale=totalW>W*0.95?(W*0.95)/totalW:1;
-  const drawCell=cell*scale; const drawW=n*drawCell; const startX=(W-drawW)/2; const startY=(H-drawCell)/2;
-  ctx.globalAlpha=guideOpacity; ctx.fillStyle='#2a1f14'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  chars.forEach((ch,i)=>{ const cx=startX+i*drawCell+drawCell/2; const cy=startY+drawCell/2; ctx.font=guideFont(ch,drawCell*0.82); ctx.fillText(ch,cx,cy); });
-  ctx.globalAlpha=1;
-  const badge=document.getElementById('guide-badge'); if(badge) badge.style.opacity=guideOpacity>0?'1':'0';
-  const hasSpecial=chars.some(c=>c.codePointAt(0)<0x4E00||c.codePointAt(0)>0x9FFF);
-  if(hasSpecial&&!hakkaFontLoaded) loadHanaFonts();
-}
-function drawGrid(W,H){
-  const ctx=gCtx(); ctx.clearRect(0,0,W,H); ctx.fillStyle='#f8f3eb'; ctx.fillRect(0,0,W,H);
-  for(let i=0;i<4000;i++){const x=Math.random()*W;const y=Math.random()*H;ctx.fillStyle=`rgba(155,122,58,${Math.random()*0.025})`;ctx.fillRect(x,y,1,1);}
-  if(currentGrid==='none'){drawGuideChars();return;}
-  const cell=cellSize; ctx.strokeStyle='rgba(155,122,58,0.22)'; ctx.lineWidth=0.8;
-  if(currentGrid==='rice'||currentGrid==='field'){
-    for(let x=0;x<=W;x+=cell){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for(let y=0;y<=H;y+=cell){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    ctx.strokeStyle='rgba(155,122,58,0.12)'; ctx.setLineDash([3,4]);
-    for(let x=0;x<=W;x+=cell){for(let y=0;y<=H;y+=cell){const cx=x+cell/2,cy=y+cell/2;ctx.beginPath();ctx.moveTo(x,cy);ctx.lineTo(x+cell,cy);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,y);ctx.lineTo(cx,y+cell);ctx.stroke();if(currentGrid==='rice'){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+cell,y+cell);ctx.stroke();ctx.beginPath();ctx.moveTo(x+cell,y);ctx.lineTo(x,y+cell);ctx.stroke();}}}
-    ctx.setLineDash([]);
-  } else if(currentGrid==='line'){
-    const lh=60; ctx.strokeStyle='rgba(155,122,58,0.2)';
-    for(let y=lh;y<=H;y+=lh){ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(W-30,y);ctx.stroke();}
-  }
-  drawGuideChars();
-}
-
-// ── 繪圖事件 ──
-function getPos(e){ const rect=dCanvas().getBoundingClientRect(); return{x:e.clientX-rect.left,y:e.clientY-rect.top}; }
-function getPressureWidth(e){ let p=0.5; if(e.pointerType==='pen'&&e.pressure>0)p=e.pressure; else if(e.pointerType==='touch'&&e.pressure>0)p=e.pressure; sessionData.pressureValues.push(p); return Math.max(1,p*maxWidth); }
-function recordPoint(e,pos){
-  const now=Date.now(); const p=(e.pointerType==='pen'&&e.pressure>0)?e.pressure:(e.pointerType==='touch'&&e.pressure>0)?e.pressure:0.5;
-  const tiltX=e.tiltX||0; const tiltY=e.tiltY||0; const ref=strokeFirstPt||pos;
-  const dx=pos.x-ref.x; const dy=pos.y-ref.y; const angle=Math.round(Math.atan2(dy,dx+0.1)*(180/Math.PI)*100)/100;
-  sessionData.rawPoints.push({x:Math.round(pos.x),y:Math.round(pos.y),pressure:Math.round(p*1023),pressureNorm:p,tiltX,tiltY,tiltMag:Math.round(Math.sqrt(tiltX*tiltX+tiltY*tiltY)*100)/100,baselineAngle:angle,charId:0,strokeId:sessionData.strokeCount,ts:now});
-  sessionData.tiltXValues.push(tiltX); sessionData.tiltYValues.push(tiltY); sessionData.baselineAngles.push(angle);
-}
-function onPointerDown(e){
-  e.preventDefault(); if(e.pointerType==='touch') return;
-  saveUndo(); isDrawing=true;
-  const now=Date.now(); const pos=getPos(e);
-  if(lastStrokeEnd!==null) sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
-  sessionData.strokeCount++; strokeFirstPt=pos; lastX=pos.x; lastY=pos.y; lastWidth=getPressureWidth(e); recordPoint(e,pos);
-  const ctx=dCtx(); ctx.beginPath(); ctx.arc(lastX,lastY,lastWidth/2,0,Math.PI*2); ctx.fillStyle=currentColor; ctx.fill();
-  updatePressureHUD(e);
-}
-function onPointerMove(e){
-  e.preventDefault(); updatePressureHUD(e); if(!isDrawing) return; if(e.pointerType==='touch') return;
-  const events=e.getCoalescedEvents?e.getCoalescedEvents():[e]; const ctx=dCtx();
-  for(const ev of events){
-    const pos=getPos(ev); const w=getPressureWidth(ev); const avg=(lastWidth+w)/2;
-    ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(pos.x,pos.y); ctx.lineWidth=avg; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle=currentColor; ctx.stroke();
-    recordPoint(ev,pos); lastX=pos.x; lastY=pos.y; lastWidth=w;
-  }
-}
-function onPointerUp(e){ if(e.pointerType==='touch') return; isDrawing=false; lastStrokeEnd=Date.now(); updatePressureHUD(e,true); }
-['pointerdown','pointermove','pointerup','pointerout','pointercancel'].forEach(evt=>{
-  document.addEventListener(evt,(e)=>{
-    const dc=dCanvas(); if(!dc||currentScreen!=='screen-write') return;
-    if(evt==='pointerdown'){
-      e.preventDefault(); const ca=document.getElementById('canvas-area'); if(!ca||!ca.contains(e.target)) return;
-      canvasPointers.add(e.pointerId); onPointerDown(e);
-    } else if(evt==='pointermove'){
-      if(!canvasPointers.has(e.pointerId)) return; onPointerMove(e);
-    } else { if(!canvasPointers.has(e.pointerId)) return; canvasPointers.delete(e.pointerId); onPointerUp(e); }
-  },{passive:false});
-});
-document.addEventListener('touchstart', e=>{
-  if(currentScreen==='screen-write'){
-    const ca=document.getElementById('canvas-area');
-    if(ca&&ca.contains(e.target)) e.preventDefault();
-  }
-},{passive:false});
-document.addEventListener('touchmove',  e=>{
-  if(currentScreen==='screen-write'){
-    const ca=document.getElementById('canvas-area');
-    if(ca&&ca.contains(e.target)) e.preventDefault();
-  }
-},{passive:false});
-document.addEventListener('touchend',   e=>{
-  if(currentScreen==='screen-write'){
-    const ca=document.getElementById('canvas-area');
-    if(ca&&ca.contains(e.target)) e.preventDefault();
-  }
-},{passive:false});
-function updatePressureHUD(e,released){
-  let p=0; if(!released){if(e.pointerType==='pen')p=e.pressure;else if(e.pointerType==='touch')p=e.pressure>0?e.pressure:(isDrawing?0.4:0);else p=isDrawing?0.5:0;}
-  const fill=document.getElementById('pressure-fill'); if(fill) fill.style.width=(p*100)+'%';
-}
-
-// ── Undo/Clear ──
-function saveUndo(){ const dc=dCanvas(); if(!dc) return; undoStack.push(dCtx().getImageData(0,0,dc.width,dc.height)); if(undoStack.length>25) undoStack.shift(); }
-function undo(){ if(!undoStack.length) return; dCtx().putImageData(undoStack.pop(),0,0); }
-function clearCanvas(){ saveUndo(); const dc=dCanvas(); dCtx().clearRect(0,0,dc.width,dc.height); }
-
-// ── 計時器 ──
-function startTimer(){ stopTimer(); timerInterval=setInterval(()=>{timerSeconds++;updateTimer();sessionData.totalTime=timerSeconds;},1000); }
-function stopTimer(){ if(timerInterval){clearInterval(timerInterval);timerInterval=null;} }
-function updateTimer(){ const m=String(Math.floor(timerSeconds/60)).padStart(2,'0'); const s=String(timerSeconds%60).padStart(2,'0'); const tw=document.getElementById('timer-wrap'); if(tw) tw.textContent=`${m}:${s}`; }
-
-// ── 格線/顏色切換 ──
-function toggleGridPicker(){ document.getElementById('color-picker-panel').classList.remove('open'); document.getElementById('grid-picker').classList.toggle('open'); }
-function toggleColorPanel(){ document.getElementById('grid-picker').classList.remove('open'); document.getElementById('color-picker-panel').classList.toggle('open'); }
-function setGrid(name,el){ currentGrid=name; document.querySelectorAll('.grid-opt').forEach(o=>o.classList.remove('active')); el.classList.add('active'); document.getElementById('grid-picker').classList.remove('open'); const area=document.getElementById('canvas-area'); drawGrid(area.clientWidth,area.clientHeight); }
-function setColor(el){ document.querySelectorAll('.cp-swatch').forEach(s=>s.classList.remove('active')); el.classList.add('active'); currentColor=el.dataset.color; }
-
-// ── 字元分割 ──
-function segmentChars(){
-  const rp=sessionData.rawPoints; if(!rp.length) return;
-  const allChars=[...(selectedTask||'')]; if(!allChars.length) return;
-  const area=document.getElementById('canvas-area'); const W=area.clientWidth; const H=area.clientHeight;
-  const n=allChars.length; const cell=cellSize; const totalW=n*cell; const scale=totalW>W*0.95?(W*0.95)/totalW:1;
-  const drawCell=cell*scale; const drawW=n*drawCell; const startX=(W-drawW)/2;
-  const charCenters=allChars.map((_,i)=>({charId:i+1,cx:startX+i*drawCell+drawCell/2}));
-  const strokeXCtr={};
-  for(const pt of rp){if(!strokeXCtr[pt.strokeId])strokeXCtr[pt.strokeId]={sum:0,count:0};strokeXCtr[pt.strokeId].sum+=pt.x;strokeXCtr[pt.strokeId].count+=1;}
-  const strokeToChar={};
-  for(const[strokeId,v]of Object.entries(strokeXCtr)){const xCtr=v.sum/v.count;let nearest=charCenters[0];let minDist=Math.abs(xCtr-charCenters[0].cx);for(const c of charCenters){const d=Math.abs(xCtr-c.cx);if(d<minDist){minDist=d;nearest=c;}}strokeToChar[strokeId]=nearest.charId;}
-  for(const pt of rp) pt.charId=strokeToChar[pt.strokeId]??1;
-  sessionData.charBounds={};
-  for(const pt of rp){if(!sessionData.charBounds[pt.charId])sessionData.charBounds[pt.charId]={minX:pt.x,maxX:pt.x,minY:pt.y,maxY:pt.y,firstX:pt.x,firstY:pt.y};const b=sessionData.charBounds[pt.charId];b.minX=Math.min(b.minX,pt.x);b.maxX=Math.max(b.maxX,pt.x);b.minY=Math.min(b.minY,pt.y);b.maxY=Math.max(b.maxY,pt.y);}
-}
-
-// ── AI 情緒分析 ──
-function analyzeWriting(){
-  const pv=sessionData.pressureValues; const pd=sessionData.pauseDurations; const rp=sessionData.rawPoints;
-  const avgPressure=pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0.5;
-  const avgPause=pd.length?pd.reduce((a,b)=>a+b,0)/pd.length:0;
-  const pressureVariance=pv.length>1?Math.sqrt(pv.reduce((acc,v)=>acc+Math.pow(v-avgPressure,2),0)/pv.length):0;
-  const avgTiltX=sessionData.tiltXValues.length?sessionData.tiltXValues.reduce((a,b)=>a+b,0)/sessionData.tiltXValues.length:0;
-  const avgTiltY=sessionData.tiltYValues.length?sessionData.tiltYValues.reduce((a,b)=>a+b,0)/sessionData.tiltYValues.length:0;
-  const avgTiltMag=rp.length?rp.reduce((a,b)=>a+b.tiltMag,0)/rp.length:0;
-  const ba=sessionData.baselineAngles; const avgBaseline=ba.length?ba.reduce((a,b)=>a+b,0)/ba.length:0;
-  const baselineVariance=ba.length>1?Math.sqrt(ba.reduce((acc,v)=>acc+Math.pow(v-avgBaseline,2),0)/ba.length):0;
-  const charSizes=Object.values(sessionData.charBounds).map(b=>(b.maxX-b.minX)*(b.maxY-b.minY));
-  const avgCharSize=charSizes.length?charSizes.reduce((a,b)=>a+b,0)/charSizes.length:0;
-  const charCount=Object.keys(sessionData.charBounds).length;
-  const charIds=Object.keys(sessionData.charBounds).map(Number).sort((a,b)=>a-b);
-  const spacings=[];
-  for(let i=1;i<charIds.length;i++){const prev=sessionData.charBounds[charIds[i-1]];const curr=sessionData.charBounds[charIds[i]];const gap=curr.minX-prev.maxX;if(gap>-50)spacings.push(gap);}
-  const avgCharSpacing=spacings.length?Math.round(spacings.reduce((a,b)=>a+b,0)/spacings.length):0;
-  const writingSpeed=sessionData.totalTime>0?Math.round(rp.length/sessionData.totalTime):0;
-  let calmScore=0,focusScore=0,tenseScore=0;
-  if(avgPause>3)tenseScore+=0.3; else if(avgPause<1)focusScore+=0.3;
-  if(pressureVariance>0.25)tenseScore+=0.4; else if(pressureVariance<0.1)calmScore+=0.4;
-  if(avgPressure>0.3&&avgPressure<0.65)calmScore+=0.2;
-  if(avgTiltMag>45)tenseScore+=0.2; else if(avgTiltMag<20)calmScore+=0.15;
-  if(baselineVariance>30)tenseScore+=0.2; else if(baselineVariance<10)focusScore+=0.2;
-  if(sessionData.totalTime<30&&sessionData.strokeCount<5)tenseScore+=0.2;
-  if(selectedMood==='calm')calmScore+=0.3; if(selectedMood==='anxious')tenseScore+=0.3;
-  const total=calmScore+focusScore+tenseScore||1;
-  return {
-    calm:Math.min(1,calmScore/total),focused:Math.min(1,focusScore/total),tense:Math.min(1,tenseScore/total),
-    dominant:tenseScore>calmScore&&tenseScore>focusScore?'tense':focusScore>calmScore?'focused':'calm',
-    avgPressure,pressureVariance,avgPause,
-    avgTiltX:Math.round(avgTiltX*100)/100,avgTiltY:Math.round(avgTiltY*100)/100,avgTiltMag:Math.round(avgTiltMag*100)/100,
-    baselineVariance:Math.round(baselineVariance*100)/100,avgCharSize:Math.round(avgCharSize),charCount,avgCharSpacing,writingSpeed,
+function runPhase(label, seconds, callback) {
+  document.getElementById('bo-phase').textContent = label;
+  document.getElementById('bo-circle-text').textContent = label.replace(/ /g,'');
+  let remain = seconds;
+  document.getElementById('bo-counter').textContent = remain;
+  const tick = () => { 
+    remain--; 
+    document.getElementById('bo-counter').textContent = remain > 0 ? remain : ''; 
+    if (remain <= 0) { callback(); return; } 
+    breathCycleTimer = setTimeout(tick, 1000); 
   };
+  breathCycleTimer = setTimeout(tick, 1000);
 }
 
-// ── 完成書寫（V7 版） ──
-function finishWriting(){
-  stopTimer(); segmentChars();
-  const result=analyzeWriting(); lastResult=result;
-  const record={
-    id:Date.now(), date:new Date().toISOString().slice(0,10),
-    text:selectedTask, mood:selectedMood||'unknown', emotion:result.dominant,
-    avgPause:Math.round(result.avgPause*100)/100, pauseDurations:sessionData.pauseDurations,
-    pressureVariance:Math.round(result.pressureVariance*1000)/1000,
-    pressureValues:sessionData.pressureValues.map(p=>Math.round(p*100)/100),
-    avgTiltX:result.avgTiltX, avgTiltY:result.avgTiltY, avgTiltMag:result.avgTiltMag,
-    baselineVariance:result.baselineVariance, charCount:result.charCount, avgCharSize:result.avgCharSize,
-    charBounds:sessionData.charBounds, strokeCount:sessionData.strokeCount, totalTime:sessionData.totalTime,
-    pointCount:sessionData.rawPoints.length,
-    rawPoints:sessionData.rawPoints.length>500?sessionData.rawPoints.filter((_,i)=>i%Math.ceil(sessionData.rawPoints.length/500)===0):sessionData.rawPoints,
-  };
-  // localStorage 備份
-  try {
-    const key='writing-mindfulness-sessions'; const existing=JSON.parse(localStorage.getItem(key)||'[]');
-    existing.push(record); if(existing.length>200) existing.splice(0,existing.length-200);
-    localStorage.setItem(key,JSON.stringify(existing));
-  } catch(e){}
-  // Firebase 上傳
-  saveSessionToFirebase(record, result.dominant);
-  incrementDailyCount();
-  // Google Sheets 備份（與 V6 相同端點）
-  submitToSheets(record, result);
-  goTo('screen-feedback');
+function skipBreathOverlay() {
+  clearTimeout(breathCycleTimer); 
+  breathOverlayActive = false;
+  const overlay = document.getElementById('breath-overlay');
+  if(overlay) overlay.classList.remove('show');
 }
 
-// ── 顯示回饋（V7 版） ──
-function showFeedback(){
-  const result = lastResult || analyzeWriting();
-  const configs={
-    calm:{icon:'🍃',title:'你寫得很從容',subtitle:'筆跡穩定，節奏舒緩\n這一刻的你，與自己同在',ecIcon:'🌊',cardClass:'calm',desc:'書寫過程中，你的筆觸穩定而有節奏感。這種狀態正是身心進入放鬆的訊號，繼續保持這份平靜。',suggestion:'試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',bars:[{label:'穩定度',value:0.8+Math.random()*0.15},{label:'節奏感',value:0.7+Math.random()*0.2},{label:'放鬆感',value:0.75+Math.random()*0.2}]},
-    focused:{icon:'✨',title:'你很專注',subtitle:'筆畫有力，心念集中\n這份專注是給自己最好的禮物',ecIcon:'🌟',cardClass:'focused',desc:'書寫時你保持了高度的專注，停頓少而規律。這種「心手合一」的狀態，正是書寫靜心的核心體驗。',suggestion:'下次可以嘗試閉上眼睛深呼吸三次再開始，感受靜心前後的差異。',bars:[{label:'專注度',value:0.82+Math.random()*0.15},{label:'節奏感',value:0.65+Math.random()*0.2},{label:'穩定度',value:0.7+Math.random()*0.2}]},
-    tense:{icon:'🌱',title:'謝謝你今天的嘗試',subtitle:'偵測到一些緊繃的節奏\n沒關係，書寫本身就已是放鬆的開始',ecIcon:'🌬',cardClass:'tense',desc:'今天的書寫節奏稍微不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',suggestion:'下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',bars:[{label:'穩定度',value:0.35+Math.random()*0.25},{label:'節奏感',value:0.4+Math.random()*0.2},{label:'放鬆感',value:0.45+Math.random()*0.2}]}
-  };
-  const cfg=configs[result.dominant];
-  document.getElementById('fb-icon').textContent=cfg.icon;
-  document.getElementById('fb-title').textContent=cfg.title;
-  document.getElementById('fb-subtitle').textContent=cfg.subtitle.replace('\\n','\n');
-  document.getElementById('ec-icon').textContent=cfg.ecIcon;
-  document.getElementById('suggestion-text').textContent=cfg.suggestion;
-  document.getElementById('ec-desc').textContent=cfg.desc;
-  const ec=document.getElementById('emotion-card'); ec.className='emotion-card '+cfg.cardClass;
-  const barsEl=document.getElementById('ec-bars'); barsEl.innerHTML='';
-  cfg.bars.forEach(bar=>{
-    const row=document.createElement('div'); row.className='ec-bar-wrap';
-    row.innerHTML=`<span style="width:44px;text-align:right">${bar.label}</span><div class="ec-bar-track"><div class="ec-bar-fill" style="width:0%"></div></div>`;
-    barsEl.appendChild(row); setTimeout(()=>{row.querySelector('.ec-bar-fill').style.width=(bar.value*100)+'%';},300);
-  });
-  // V7：鼓勵卡
-  const enc=getEncouragement(result.dominant, userProfile.streak, userProfile.totalSessions);
-  document.getElementById('encourage-streak').textContent=enc.streak;
-  document.getElementById('encourage-text').textContent=enc.text;
-  // V7：心情泡泡選擇器
-  initMoodPicker();
-  // V7：啟動泡泡監聽（切換頁面時才開始顯示）
-  if(fbReady) listenMoodBubbles();
-}
+// ── 原本檔案底部的其餘 Toast 監聽、心情選取器監聽、Resize 事件等 ──
+initMoodPicker();
+if(typeof fbReady !== 'undefined' && fbReady) listenMoodBubbles();
 
 // ── Toast ──
 let toastTimer;
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800); }
+function showToast(msg){ const t=document.getElementById('toast'); if(t){ t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800); } }
 
-// ── Resize ──
 window.addEventListener('resize',()=>{ if(currentScreen==='screen-write') resizeCanvases(); });
 
-// ── 關閉浮層（點外部） ──
 document.addEventListener('pointerdown',(e)=>{
   const gp=document.getElementById('grid-picker'); const cp=document.getElementById('color-picker-panel');
-  if(!e.target.closest('#grid-picker')&&!e.target.closest('.tool-btn')) gp.classList.remove('open');
-  if(!e.target.closest('#color-picker-panel')&&!e.target.closest('.tool-btn')) cp.classList.remove('open');
+  if(gp && !e.target.closest('#grid-picker')&&!e.target.closest('.tool-btn')) gp.classList.remove('open');
+  if(cp && !e.target.closest('#color-picker-panel')&&!e.target.closest('.tool-btn')) cp.classList.remove('open');
 },true);
 
-// ── 自訂心情詞 Enter 送出 ──
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'mood-custom-input') {
     e.preventDefault();
-    submitCustomMood();
+    if(typeof submitCustomMood === 'function') submitCustomMood();
   }
 });
-// 自訂輸入框允許文字選取（覆蓋全域 selectstart 防護）
-document.addEventListener('selectstart', e => {
-  if (e.target.id === 'mood-custom-input') return;
-  e.preventDefault();
-}, {passive:false});
-
-// ── 防誤觸 ──
-document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
-document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
-
-// ── INIT ──
-const APP_VERSION = 'V7';
-initTodayPick();
-renderCorpus('all');
-initSeasonBanner();
 </script>
 </body>
 </html>
