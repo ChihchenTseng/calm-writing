@@ -125,11 +125,53 @@ html, body {
 #timer-wrap { font-family:'Noto Serif TC',serif; font-size:13px; color:rgba(248,243,235,0.5); letter-spacing:0.05em; }
 .btn-done { background:rgba(155,122,58,0.2); border:1px solid rgba(155,122,58,0.4); color:var(--gold2); border-radius:50px; padding:7px 18px; font-size:13px; cursor:pointer; transition:background 0.2s; white-space:nowrap; touch-action:manipulation; }
 .btn-done:hover { background:rgba(155,122,58,0.35); }
-#breath-guide { position:absolute; bottom:70px; left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:10px; z-index:20; pointer-events:none; -webkit-user-select:none; user-select:none; }
+
+/* 原生底部引導（焦慮前置提示保留，但移除了原本的高筆壓覆蓋） */
+#breath-guide {
+  position:absolute; bottom:70px; left:50%; transform:translateX(-50%);
+  display:none; flex-direction:column; align-items:center; gap:10px; z-index:20;
+  pointer-events:none; -webkit-user-select:none; user-select:none;
+}
 #breath-guide.show { display:flex; }
 .breath-circle { width:60px; height:60px; border-radius:50%; border:2px solid rgba(155,122,58,0.5); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--gold2); animation:breathe 4s ease-in-out infinite; }
 @keyframes breathe { 0%,100%{transform:scale(1);opacity:0.6;} 50%{transform:scale(1.4);opacity:1;} }
-.breath-text { font-size:11px; color:var(--gold); letter-spacing:0.1em; }
+.breath-text { font-size:11px; color:var(--gold); letter-spacing:0.1em; text-align: center; }
+
+/* ═══ 全螢幕沉浸式呼引導層 (NEW) ═══ */
+#screen-breath-full {
+  position: fixed; inset: 0; z-index: 300;
+  background: var(--ink); /* 採用經典沉穩暗墨色 */
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  opacity: 0; pointer-events: none; transform: scale(1.02);
+}
+#screen-breath-full.show {
+  opacity: 1; pointer-events: auto; transform: scale(1);
+}
+.bf-container { text-align: center; max-width: 400px; padding: 24px; }
+.bf-circle-wrap {
+  width: 160px; height: 160px; margin: 0 auto 40px;
+  border-radius: 50%; border: 3px solid var(--gold2);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 30px rgba(196,163,90,0.25);
+  animation: bf-breathe-anim 5s ease-in-out infinite;
+}
+.bf-circle-text {
+  font-family: 'Noto Serif TC', serif; font-size: 24px;
+  color: var(--cream); letter-spacing: 0.1em;
+}
+.bf-title {
+  font-family: 'Noto Serif TC', serif; font-size: 20px;
+  color: var(--cream); letter-spacing: 0.15em; margin-bottom: 12px;
+}
+.bf-sub {
+  font-size: 13px; color: var(--gold2);
+  line-height: 1.8; letter-spacing: 0.08em;
+}
+@keyframes bf-breathe-anim {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(196,163,90,0.15); }
+  50% { transform: scale(1.35); box-shadow: 0 0 50px rgba(196,163,90,0.45); }
+}
 
 /* FEEDBACK */
 #screen-feedback { background:radial-gradient(ellipse at 50% 30%,rgba(107,124,94,0.1) 0%,transparent 60%),var(--cream); overflow-y:auto; justify-content:flex-start; padding:0; }
@@ -371,6 +413,7 @@ html, body {
 .badge-name { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--ink); }
 .badge-desc { font-size:11px; color:rgba(42,31,20,0.5); line-height:1.5; }
 
+
 /* 字帖今日亮點 */
 .corpus-card { position:relative; }
 .today-glow {
@@ -381,42 +424,13 @@ html, body {
   animation:glow-pulse 2s ease-in-out infinite;
 }
 @keyframes glow-pulse { 0%,100%{opacity:0.6;transform:scale(1);} 50%{opacity:1;transform:scale(1.4);} }
-
-/* ══ 全螢幕呼吸模組 ══ */
-#breath-overlay {
-  position: fixed; inset: 0; z-index: 400;
-  background: radial-gradient(ellipse at 30% 20%, rgba(20,30,60,0.98) 0%, rgba(5,10,25,0.99) 100%);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.8s ease;
-}
-#breath-overlay.show { opacity: 1; pointer-events: auto; }
-#bo-stars { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.bo-star { position: absolute; border-radius: 50%; background: white; animation: bo-twinkle ease-in-out infinite; }
-@keyframes bo-twinkle { 0%,100%{opacity:0.05;transform:scale(1);} 50%{opacity:0.5;transform:scale(1.5);} }
-.bo-title { position:relative;z-index:1; font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.45em; color:rgba(160,185,255,0.45); margin-bottom:56px; }
-.bo-ring-wrap { position:relative;z-index:1; width:240px; height:240px; display:flex; align-items:center; justify-content:center; margin-bottom:44px; }
-.bo-ring-outer { position:absolute;inset:0;border-radius:50%; border:1px solid rgba(120,155,255,0.2); animation:bo-expand 8s ease-in-out infinite; }
-.bo-ring-mid { position:absolute;inset:24px;border-radius:50%; border:1px solid rgba(140,170,255,0.15); animation:bo-expand 8s ease-in-out infinite 0.3s; }
-.bo-circle { width:110px;height:110px;border-radius:50%; background:radial-gradient(ellipse at 38% 32%,rgba(100,140,255,0.4),rgba(60,90,210,0.2) 50%,rgba(30,50,150,0.1)); border:1.5px solid rgba(140,175,255,0.55); box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); display:flex;align-items:center;justify-content:center; animation:bo-breathe 8s ease-in-out infinite; }
-.bo-circle-text { font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:0.2em; color:rgba(200,218,255,0.9); text-align:center; user-select:none; }
-@keyframes bo-breathe {
-  0%   { transform:scale(1);   box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); }
-  40%  { transform:scale(1.75);box-shadow:0 0 90px rgba(80,120,255,0.5),0 0 160px rgba(80,120,255,0.2),inset 0 0 60px rgba(100,150,255,0.25); }
-  50%  { transform:scale(1.75);box-shadow:0 0 90px rgba(80,120,255,0.5),0 0 160px rgba(80,120,255,0.2),inset 0 0 60px rgba(100,150,255,0.25); }
-  100% { transform:scale(1);   box-shadow:0 0 50px rgba(80,120,255,0.3),0 0 100px rgba(80,120,255,0.1),inset 0 0 40px rgba(100,150,255,0.15); }
-}
-@keyframes bo-expand { 0%,100%{transform:scale(1);opacity:0.5;} 40%,50%{transform:scale(1.2);opacity:1;} }
-.bo-phase { position:relative;z-index:1; font-size:12px;letter-spacing:0.3em; color:rgba(150,180,255,0.55); margin-bottom:10px;min-height:18px; font-family:'Noto Serif TC',serif; }
-.bo-counter { position:relative;z-index:1; font-family:'Noto Serif TC',serif; font-size:48px; color:rgba(170,200,255,0.35); margin-bottom:36px; letter-spacing:0.05em; line-height:1; }
-.bo-progress { position:relative;z-index:1; display:flex;gap:10px;margin-bottom:44px; }
-.bo-dot { width:7px;height:7px;border-radius:50%; background:rgba(120,155,255,0.18); transition:background 0.6s,transform 0.4s; }
-.bo-dot.done { background:rgba(150,185,255,0.75); transform:scale(1.4); }
-.bo-skip { position:relative;z-index:1; background:transparent; border:1px solid rgba(120,155,255,0.22); color:rgba(150,180,255,0.45); border-radius:50px;padding:11px 32px; font-size:13px;letter-spacing:0.18em; cursor:pointer;transition:all 0.25s; font-family:'Noto Serif TC',serif; }
-.bo-skip:hover { border-color:rgba(150,185,255,0.5); color:rgba(190,215,255,0.8); background:rgba(100,140,255,0.07); }
 </style>
 </head>
+
+
+</html>
 <body>
+<!-- WELCOME SCREEN -->
 <div class="screen" id="screen-welcome">
   <div class="welcome-deco">靜</div>
   <div class="welcome-inner">
@@ -450,6 +464,7 @@ html, body {
   </div>
 </div>
 
+<!-- TASK SCREEN -->
 <div class="screen hidden" id="screen-task">
   <div class="task-header">
     <button class="back-btn" onclick="goTo('screen-welcome')">←</button>
@@ -459,6 +474,7 @@ html, body {
     </div>
   </div>
   <div class="task-body" id="task-body-scroll">
+    <!-- 節氣橫幅 -->
     <div class="season-banner" id="season-banner">
       <div class="season-icon" id="season-icon">✦</div>
       <div class="season-info">
@@ -466,9 +482,11 @@ html, body {
         <div class="season-tip" id="season-tip">靜下心來，感受此刻</div>
       </div>
     </div>
+    <!-- 今日共同書寫 -->
     <div class="daily-count-wrap" onclick="showBubbleRoom()">
       🌿 今天已有 <strong><span class="daily-count-val">0</span></strong> 位夥伴在書寫靜心 &nbsp;›
     </div>
+    <!-- 心情確認 -->
     <div class="mood-check">
       <h3>現在的你，感覺如何？</h3>
       <div class="mood-options">
@@ -478,12 +496,14 @@ html, body {
         <div class="mood-btn" data-mood="happy" onclick="selectMood(this)"><span class="emoji">🙂</span>愉快</div>
       </div>
     </div>
+    <!-- 今日推薦 -->
     <div class="section-title">今日推薦</div>
     <div class="today-pick" id="today-pick-banner" onclick="pickToday()">
       <div class="tp-badge">✦ 今日精選</div>
       <div class="tp-text" id="today-pick-text">載入中…</div>
       <div class="tp-arrow">›</div>
     </div>
+    <!-- 語料庫 -->
     <div class="section-title">語料庫</div>
     <div class="filter-tabs" id="filter-tabs">
       <button class="filter-tab active" data-cat="all" onclick="filterCorpus('all',this)">全部</button>
@@ -496,6 +516,7 @@ html, body {
       <button class="filter-tab" data-cat="sutra" onclick="filterCorpus('sutra',this)">靜心經句</button>
     </div>
     <div class="corpus-grid" id="corpus-grid"></div>
+    <!-- 自由書寫 -->
     <div class="section-title">自由書寫</div>
     <div class="custom-input-wrap">
       <div class="ec-label" style="margin-bottom:8px;">輸入任何你想寫的文字（名字、歌詞、經文…）</div>
@@ -507,6 +528,7 @@ html, body {
   </div>
 </div>
 
+<!-- WRITING SCREEN -->
 <div class="screen hidden" id="screen-write">
   <div id="write-top">
     <button class="back-btn" onclick="goTo('screen-task')">←</button>
@@ -565,15 +587,29 @@ html, body {
   </div>
 </div>
 
+<!-- ═══ 全螢幕沉浸式呼引導層 (NEW) ═══ -->
+<div id="screen-breath-full">
+  <div class="bf-container">
+    <div class="bf-circle-wrap">
+      <div class="bf-circle-text">吐氣⋯</div>
+    </div>
+    <div class="bf-title">心思稍微急躁了</div>
+    <div class="bf-sub">偵測到落筆較重，讓我們暫停一會兒。<br>試著放下肩膀的力道，吐出胸口的緊繃⋯</div>
+  </div>
+</div>
+
+<!-- FEEDBACK SCREEN -->
 <div class="screen hidden" id="screen-feedback">
   <div class="feedback-body">
     <div class="feedback-icon" id="fb-icon">🍃</div>
     <div class="feedback-title" id="fb-title">你今天寫得很好</div>
     <div class="feedback-subtitle" id="fb-subtitle">書寫過程穩定而專注<br>這一刻，你給了自己一份禮物</div>
+    <!-- 鼓勵卡（V7 新增） -->
     <div class="encourage-card" id="encourage-card">
       <div class="encourage-streak" id="encourage-streak"></div>
       <div class="encourage-text" id="encourage-text">謝謝你今天選擇了書寫靜心 🌱</div>
     </div>
+    <!-- 情緒感知 -->
     <div class="emotion-card" id="emotion-card">
       <div class="ec-label">書寫狀態感知</div>
       <div class="ec-visual">
@@ -582,13 +618,16 @@ html, body {
       </div>
       <div class="ec-desc" id="ec-desc"></div>
     </div>
+    <!-- 建議卡 -->
     <div class="suggestion-card" id="suggestion-card">
       <h4>✦ 給你的小提醒</h4>
       <p id="suggestion-text"></p>
     </div>
+    <!-- 今日社群數字（V7 新增） -->
     <div class="daily-count-wrap" style="justify-content:center;" onclick="showBubbleRoom()">
       🌿 今天和你一起書寫的夥伴：<strong><span class="daily-count-val">0</span></strong> 位 &nbsp;›
     </div>
+    <!-- 心情泡泡投票（V7 新增） -->
     <div class="mood-pick-section">
       <h4>🫧 此刻你的心情是？</h4>
       <p style="font-size:12px;color:rgba(42,31,20,0.5);margin-bottom:12px;line-height:1.7;">選一個詞，或自己寫，匿名飄向夥伴們的畫面</p>
@@ -606,6 +645,7 @@ html, body {
   </div>
 </div>
 
+<!-- JOURNEY SCREEN（V7 新增） -->
 <div class="screen hidden" id="screen-journey">
   <div class="journey-header">
     <button class="back-btn" onclick="goTo('screen-welcome')">←</button>
@@ -615,6 +655,7 @@ html, body {
     </div>
   </div>
   <div class="journey-body">
+    <!-- 統計數字 -->
     <div class="section-title">書寫統計</div>
     <div class="stats-row">
       <div class="stat-box">
@@ -632,6 +673,7 @@ html, body {
         <div class="stat-label">今日時間</div>
       </div>
     </div>
+    <!-- 心情看板 -->
     <div class="section-title">心情看板</div>
     <div class="board-wrap">
       <div class="board-tabs">
@@ -641,31 +683,20 @@ html, body {
       </div>
       <div id="board-content"><div class="board-empty">載入中…</div></div>
     </div>
+    <!-- 徽章 -->
     <div class="section-title">成長徽章</div>
     <div class="badges-grid" id="j-badges"></div>
   </div>
 </div>
 
-<div id="breath-overlay">
-  <div id="bo-stars"></div>
-  <div class="bo-title">· 先 讓 呼 吸 安 定 ·</div>
-  <div class="bo-ring-wrap">
-    <div class="bo-ring-outer"></div>
-    <div class="bo-ring-mid"></div>
-    <div class="bo-circle">
-      <div class="bo-circle-text" id="bo-circle-text">吸氣</div>
-    </div>
-  </div>
-  <div class="bo-phase" id="bo-phase">跟著圓圈的節奏呼吸</div>
-  <div class="bo-counter" id="bo-counter">4</div>
-  <div class="bo-progress" id="bo-progress"></div>
-  <button class="bo-skip" onclick="skipBreathOverlay()">我準備好了，開始書寫 →</button>
-</div>
 
+<!-- 心情泡泡層 -->
 <div id="bubble-layer"></div>
 
+<!-- 泡泡房間浮層 -->
 <div id="bubble-room" class="hidden">
   <div id="br-stars"></div>
+  <!-- 背景光暈 -->
   <div class="br-orb" style="width:320px;height:320px;left:-80px;top:30%;background:rgba(100,60,200,0.18);animation-duration:8s;"></div>
   <div class="br-orb" style="width:260px;height:260px;right:-60px;top:15%;background:rgba(40,100,180,0.15);animation-duration:11s;animation-delay:3s;"></div>
   <div class="br-orb" style="width:200px;height:200px;left:30%;bottom:-40px;background:rgba(160,80,200,0.12);animation-duration:9s;animation-delay:1.5s;"></div>
@@ -677,7 +708,9 @@ html, body {
   </div>
   <div id="br-stage"></div>
 </div>
+<!-- 字型狀態 -->
 <div id="font-status"></div>
+<!-- Toast -->
 <div id="toast"></div>
 <script>
 // ══════════════════════════════
@@ -724,7 +757,6 @@ function setupPresence() {
       presRef.set({ ts: firebase.database.ServerValue.TIMESTAMP });
     }
   });
-  // 即時監聽總人數（扣掉自己）
   db.ref('presence').on('value', snap => {
     const total = snap.numChildren();
     const others = Math.max(0, total - 1);
@@ -1101,7 +1133,7 @@ function notifyNewBadges(old, cur, streak) {
   if (!old.streak3    && cur.streak3)    msgs.push(`🌿 獲得「三日堅持」徽章！你已連續練習 ${streak} 天`);
   if (!old.streak7    && cur.streak7)    msgs.push('🌳 獲得「七日修行」徽章！一週的堅持了不起');
   if (!old.sessions10 && cur.sessions10) msgs.push('⭐ 獲得「十次書寫」徽章！');
-  if (!old.sessions30 && cur.sessions30) msgs.push('🌸 獲得「書寫達人」徽章！');
+  if (!old.sessions30 && cur.sessions30) msgs.push('🌸 獲得「書寫達人</badge>」徽章！');
   if (!old.calm5      && cur.calm5)      msgs.push('🍃 獲得「靜心達人」徽章！');
   if (msgs.length) setTimeout(() => showToast(msgs[0]), 1800);
 }
@@ -1130,7 +1162,7 @@ function getEncouragement(emotion, streak, total) {
       '不需要追求完美，每一次練習都有其意義。\n明天的你，會因為今天動筆而感謝自己的。',
     ]
   };
-  if (streak >= 7) return { streak: streakLabel, text: `連續七天以上的書寫，你的心正在悄悄改變 🌳\n意 ${streak} 天的每日練習，是你給自己最美麗的禮物。` };
+  if (streak >= 7) return { streak: streakLabel, text: `連續七天以上的書寫，你的心正在悄悄改變 🌳\n這 ${streak} 天的每日練習，是你給自己最美麗的禮物。` };
   if (streak >= 3) return { streak: streakLabel, text: `已經連續 ${streak} 天了，這份堅持在滋養你 🌿\n你正在建立一個美好的習慣，繼續走。` };
   const pool = pools[emotion] || pools.calm;
   return { streak: streakLabel, text: pool[Math.floor(Math.random() * pool.length)] };
@@ -1157,7 +1189,7 @@ const SOLAR_TERMS = [
   { name:'立秋', m:8,  d1:7,  d2:22, icon:'🍂', tip:'秋意初至，書寫讓心跟著沉靜下來。',          cat:'wisdom'  },
   { name:'處暑', m:8,  d1:23, d2:31, icon:'🌤', tip:'暑氣漸消，是整理心情的好時節。',            cat:'nature'  },
   { name:'白露', m:9,  d1:7,  d2:22, icon:'🌿', tip:'露水清澈，讓筆觸也帶著這份純淨。',          cat:'nature'  },
-  { name:'秋分', m:9,  d1:23, d2:30, icon:'🍁', tip:'秋色正好，苗栗的山野換上了金黃。',          cat:'miaoli'  },
+  { name:'秋分', m:9,  d1:23, d2:30, copy:'🍁', tip:'秋色正好，苗栗的山野換上了金黃。',          cat:'miaoli'  },
   { name:'寒露', m:10, d1:7,  d2:22, icon:'🌙', tip:'夜涼露寒，靜心書寫最宜此刻。',             cat:'sutra'   },
   { name:'霜降', m:10, d1:23, d2:31, icon:'❄️', tip:'霜降時節，讓智慧的文字暖心。',             cat:'wisdom'  },
   { name:'立冬', m:11, d1:6,  d2:21, icon:'🍂', tip:'冬日啟程，靜字是最好的暖爐。',             cat:'single'  },
@@ -1205,8 +1237,6 @@ function renderJourneyScreen() {
 let boardTab         = 'day';
 let boardSessions    = [];
 let boardRepEmotions = {};
-const B_ICON  = { calm:'🍃', focused:'✨', tense:'🌱' };
-const B_LABEL = { calm:'平靜', focused:'專注', tense:'調整中' };
 
 function renderJourneyUI(stats, sessions, repEmotions) {
   const streak  = stats.streak || 0;
@@ -1467,6 +1497,7 @@ const HAKKA_SPECIAL = [
   { text:'𤊶',      romaji:'lad4',  meaning:'辣' },
 ];
 
+// ── 全域狀態 ──
 let currentScreen    = 'screen-welcome';
 let selectedTask     = '靜';
 let selectedMood     = null;
@@ -1489,6 +1520,7 @@ let undoStack=[], timerInterval=null, timerSeconds=0;
 let lastStrokeEnd=null, sessionStart=null, strokeFirstPt=null;
 const canvasPointers = new Set();
 
+// ── 語料庫渲染 ──
 function diffDots(n) {
   let h=''; for(let i=1;i<=3;i++) h+=`<div class="d${i>n?' e':''}"></div>`; return h;
 }
@@ -1538,6 +1570,7 @@ function pickToday(){
 }
 function initTodayPick(){ document.getElementById('today-pick-text').textContent=getTodayPick().text; }
 
+// ── 導航 ──
 function goTo(id){
   document.getElementById(currentScreen).classList.add('hidden');
   document.getElementById(id).classList.remove('hidden');
@@ -1551,6 +1584,7 @@ function goTo(id){
   document.getElementById('color-picker-panel').classList.remove('open');
 }
 
+// ── 心情選擇 ──
 function selectMood(el){
   document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected'); selectedMood=el.dataset.mood;
@@ -1564,6 +1598,7 @@ function startWriting(){
   goTo('screen-write');
 }
 
+// ── 畫布 ──
 const gCanvas=()=>document.getElementById('grid-canvas');
 const guCanvas=()=>document.getElementById('guide-canvas');
 const dCanvas=()=>document.getElementById('draw-canvas');
@@ -1589,20 +1624,28 @@ async function loadHanaFonts(){
 function fontForChar(ch){ const cp=ch.codePointAt(0); if(cp>=0x20000) return "'HanaMinB','Noto Serif TC',serif"; if(cp>=0x3400) return "'HanaMinA','Noto Serif TC',serif"; return "'Noto Serif TC',serif"; }
 function guideFont(text,sizePx){ const hasSpecial=[...text].some(c=>c.codePointAt(0)<0x4E00||c.codePointAt(0)>0x9FFF); return hasSpecial?`${sizePx}px 'HanaMinB','HanaMinA','Noto Serif TC',serif`:`${sizePx}px 'Noto Serif TC',serif`; }
 
-function initWriting(){
+function initWriting() {
   document.getElementById('write-prompt-text').textContent=selectedTask;
   sessionData={strokes:[],pauseDurations:[],pressureValues:[],totalTime:0,strokeCount:0,rawPoints:[],charBounds:{},tiltXValues:[],tiltYValues:[],baselineAngles:[]};
   undoStack=[]; timerSeconds=0; strokeFirstPt=null; lastStrokeEnd=null;
   canvasPointers.clear(); updateTimer(); sessionStart=Date.now();
   resizeCanvases(); startTimer();
+  
+  // 徹底關閉並重置全螢幕呼引導鎖定
+  isBreathTriggeredByPressure = false;
+  const fullGuide = document.getElementById('screen-breath-full');
+  if (fullGuide) fullGuide.classList.remove('show');
+  if (highPressureBreathTimer) clearTimeout(highPressureBreathTimer);
+  
   const guide=document.getElementById('breath-guide');
-  if(selectedMood==='anxious'){guide.classList.add('show'); setTimeout(()=>guide.classList.remove('show'),8000);}
-  else guide.classList.remove('show');
+  if(selectedMood==='anxious'){
+    if(guide) guide.classList.add('show'); 
+    setTimeout(()=> { if(!isBreathTriggeredByPressure && guide) guide.classList.remove('show'); }, 8000);
+  } else {
+    if(guide) guide.classList.remove('show');
+  }
   const hasSpecial=[...selectedTask].some(c=>c.codePointAt(0)<0x4E00||c.codePointAt(0)>0x9FFF);
   if(hasSpecial&&!hakkaFontLoaded) loadHanaFonts();
-
-  breathTriggeredThisSession = false;
-  highPressureCount = 0;
 }
 function resizeCanvases(){
   const area=document.getElementById('canvas-area'); const W=area.clientWidth; const H=area.clientHeight; const dpr=window.devicePixelRatio||1;
@@ -1644,6 +1687,60 @@ function drawGrid(W,H){
   drawGuideChars();
 }
 
+// ── 繪圖事件 & 全螢幕沉浸式呼引導核心判斷 ──
+let highPressureBreathTimer = null;
+let isBreathTriggeredByPressure = false;
+
+function checkPressureAndTriggerBreath(pressureNorm, ev) {
+  let finalPressure = pressureNorm;
+
+  // 雙軌兼顧：滑鼠及手指畫圖狀態下直接模擬觸發，以便順利進行功能檢驗
+  if (ev && (ev.pointerType === 'touch' || ev.pointerType === 'mouse')) {
+    if (isDrawing) {
+      finalPressure = 0.65; 
+    }
+  }
+
+  // 觸發標準：滿足大於等於 60% 門檻
+  if (finalPressure >= 0.6) {
+    if (isBreathTriggeredByPressure) return; 
+    
+    const fullGuide = document.getElementById('screen-breath-full');
+    const innerCircleText = fullGuide ? fullGuide.querySelector('.bf-circle-text') : null;
+    
+    if (fullGuide) {
+      isBreathTriggeredByPressure = true;
+      isDrawing = false; // 強制中斷畫布描寫狀態
+      
+      // 停止練習秒數計時，避免在全螢幕引導期間干擾成果時間數據
+      stopTimer();
+      
+      // 溫柔彈出全螢幕
+      fullGuide.classList.add('show');
+      
+      // 沉浸引導期間做一個文字動態變化提示
+      if (innerCircleText) innerCircleText.textContent = '吸氣⋯';
+      setTimeout(() => {
+        if (innerCircleText && isBreathTriggeredByPressure) innerCircleText.textContent = '慢吐氣⋯';
+      }, 2500);
+
+      // 5 秒鐘沉浸深呼吸引導完畢後，溫柔淡出，還原主畫面
+      clearTimeout(highPressureBreathTimer);
+      highPressureBreathTimer = setTimeout(() => {
+        fullGuide.style.opacity = '0';
+        setTimeout(() => {
+          fullGuide.classList.remove('show');
+          fullGuide.style.opacity = '1'; // 恢復透明度設定
+          isBreathTriggeredByPressure = false; 
+          
+          // 重新開啟畫布計時器，流暢對接剩餘書寫
+          startTimer();
+        }, 600); // 配合 CSS opacity 轉場時間
+      }, 5000);
+    }
+  }
+}
+
 function getPos(e){ const rect=dCanvas().getBoundingClientRect(); return{x:e.clientX-rect.left,y:e.clientY-rect.top}; }
 function getPressureWidth(e){ let p=0.5; if(e.pointerType==='pen'&&e.pressure>0)p=e.pressure; else if(e.pointerType==='touch'&&e.pressure>0)p=e.pressure; sessionData.pressureValues.push(p); return Math.max(1,p*maxWidth); }
 function recordPoint(e,pos){
@@ -1659,7 +1756,13 @@ function onPointerDown(e){
   const now=Date.now(); const pos=getPos(e);
   if(lastStrokeEnd!==null) sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
   sessionData.strokeCount++; strokeFirstPt=pos; lastX=pos.x; lastY=pos.y; lastWidth=getPressureWidth(e); recordPoint(e,pos);
-  const ctx=dCtx(); ctx.beginPath(); ctx.arc(lastX,lastY,lastWidth/2,0,Math.PI*2); ctx.fillStyle=currentColor; ctx.fill();
+  
+  const pNorm = (e.pointerType==='pen'||e.pointerType==='touch') && e.pressure>0 ? e.pressure : 0.5;
+  checkPressureAndTriggerBreath(pNorm, e);
+
+  if (!isBreathTriggeredByPressure) {
+    const ctx=dCtx(); ctx.beginPath(); ctx.arc(lastX,lastY,lastWidth/2,0,Math.PI*2); ctx.fillStyle=currentColor; ctx.fill();
+  }
   updatePressureHUD(e);
 }
 function onPointerMove(e){
@@ -1667,6 +1770,12 @@ function onPointerMove(e){
   const events=e.getCoalescedEvents?e.getCoalescedEvents():[e]; const ctx=dCtx();
   for(const ev of events){
     const pos=getPos(ev); const w=getPressureWidth(ev); const avg=(lastWidth+w)/2;
+    
+    const pNorm = (ev.pointerType==='pen'||ev.pointerType==='touch') && ev.pressure>0 ? ev.pressure : 0.5;
+    checkPressureAndTriggerBreath(pNorm, ev);
+
+    if (isBreathTriggeredByPressure) break; // 若引導頁已經開啟，則即刻停止繪製點群
+
     ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(pos.x,pos.y); ctx.lineWidth=avg; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle=currentColor; ctx.stroke();
     recordPoint(ev,pos); lastX=pos.x; lastY=pos.y; lastWidth=w;
   }
@@ -1675,6 +1784,7 @@ function onPointerUp(e){ if(e.pointerType==='touch') return; isDrawing=false; la
 ['pointerdown','pointermove','pointerup','pointerout','pointercancel'].forEach(evt=>{
   document.addEventListener(evt,(e)=>{
     const dc=dCanvas(); if(!dc||currentScreen!=='screen-write') return;
+    if (isBreathTriggeredByPressure) return; // 全螢幕引導頁期間全面阻斷畫布滑動
     if(evt==='pointerdown'){
       e.preventDefault(); const ca=document.getElementById('canvas-area'); if(!ca||!ca.contains(e.target)) return;
       canvasPointers.add(e.pointerId); onPointerDown(e);
@@ -1704,23 +1814,25 @@ document.addEventListener('touchend',   e=>{
 function updatePressureHUD(e,released){
   let p=0; if(!released){if(e.pointerType==='pen')p=e.pressure;else if(e.pointerType==='touch')p=e.pressure>0?e.pressure:(isDrawing?0.4:0);else p=isDrawing?0.5:0;}
   const fill=document.getElementById('pressure-fill'); if(fill) fill.style.width=(p*100)+'%';
-  
-  if (!released && isDrawing) checkPressureTrigger(p);
 }
 
+// ── Undo/Clear ──
 function saveUndo(){ const dc=dCanvas(); if(!dc) return; undoStack.push(dCtx().getImageData(0,0,dc.width,dc.height)); if(undoStack.length>25) undoStack.shift(); }
 function undo(){ if(!undoStack.length) return; dCtx().putImageData(undoStack.pop(),0,0); }
 function clearCanvas(){ saveUndo(); const dc=dCanvas(); dCtx().clearRect(0,0,dc.width,dc.height); }
 
+// ── 計時器 ──
 function startTimer(){ stopTimer(); timerInterval=setInterval(()=>{timerSeconds++;updateTimer();sessionData.totalTime=timerSeconds;},1000); }
 function stopTimer(){ if(timerInterval){clearInterval(timerInterval);timerInterval=null;} }
 function updateTimer(){ const m=String(Math.floor(timerSeconds/60)).padStart(2,'0'); const s=String(timerSeconds%60).padStart(2,'0'); const tw=document.getElementById('timer-wrap'); if(tw) tw.textContent=`${m}:${s}`; }
 
+// ── 格線/顏色切換 ──
 function toggleGridPicker(){ document.getElementById('color-picker-panel').classList.remove('open'); document.getElementById('grid-picker').classList.toggle('open'); }
 function toggleColorPanel(){ document.getElementById('grid-picker').classList.remove('open'); document.getElementById('color-picker-panel').classList.toggle('open'); }
 function setGrid(name,el){ currentGrid=name; document.querySelectorAll('.grid-opt').forEach(o=>o.classList.remove('active')); el.classList.add('active'); document.getElementById('grid-picker').classList.remove('open'); const area=document.getElementById('canvas-area'); drawGrid(area.clientWidth,area.clientHeight); }
 function setColor(el){ document.querySelectorAll('.cp-swatch').forEach(s=>s.classList.remove('active')); el.classList.add('active'); currentColor=el.dataset.color; }
 
+// ── 字元分割 ──
 function segmentChars(){
   const rp=sessionData.rawPoints; if(!rp.length) return;
   const allChars=[...(selectedTask||'')]; if(!allChars.length) return;
@@ -1737,6 +1849,7 @@ function segmentChars(){
   for(const pt of rp){if(!sessionData.charBounds[pt.charId])sessionData.charBounds[pt.charId]={minX:pt.x,maxX:pt.x,minY:pt.y,maxY:pt.y,firstX:pt.x,firstY:pt.y};const b=sessionData.charBounds[pt.charId];b.minX=Math.min(b.minX,pt.x);b.maxX=Math.max(b.maxX,pt.x);b.minY=Math.min(b.minY,pt.y);b.maxY=Math.max(b.maxY,pt.y);}
 }
 
+// ── AI 情緒分析 ──
 function analyzeWriting(){
   const pv=sessionData.pressureValues; const pd=sessionData.pauseDurations; const rp=sessionData.rawPoints;
   const avgPressure=pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0.5;
@@ -1773,9 +1886,8 @@ function analyzeWriting(){
   };
 }
 
+// ── 完成書寫 ──
 function finishWriting(){
-  skipBreathOverlay();
-
   stopTimer(); segmentChars();
   const result=analyzeWriting(); lastResult=result;
   const record={
@@ -1801,6 +1913,7 @@ function finishWriting(){
   goTo('screen-feedback');
 }
 
+// ── 顯示回饋 ──
 function showFeedback(){
   const result = lastResult || analyzeWriting();
   const configs={
@@ -1829,17 +1942,21 @@ function showFeedback(){
   if(fbReady) listenMoodBubbles();
 }
 
+// ── Toast ──
 let toastTimer;
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800); }
 
+// ── Resize ──
 window.addEventListener('resize',()=>{ if(currentScreen==='screen-write') resizeCanvases(); });
 
+// ── 關閉浮層（點外部） ──
 document.addEventListener('pointerdown',(e)=>{
   const gp=document.getElementById('grid-picker'); const cp=document.getElementById('color-picker-panel');
   if(!e.target.closest('#grid-picker')&&!e.target.closest('.tool-btn')) gp.classList.remove('open');
   if(!e.target.closest('#color-picker-panel')&&!e.target.closest('.tool-btn')) cp.classList.remove('open');
 },true);
 
+// ── 自訂心情詞 Enter 送出 ──
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'mood-custom-input') {
     e.preventDefault();
@@ -1854,83 +1971,7 @@ document.addEventListener('selectstart', e => {
 document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
 document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
 
-
-// ══ 全螢幕呼吸模組核心邏輯 ══
-let breathOverlayActive = false, breathCycleTimer = null, breathCycles = 0;
-let breathTriggeredThisSession = false, highPressureCount = 0;
-const HIGH_PRESSURE_THRESHOLD = 0.75, HIGH_PRESSURE_STREAK = 15, BREATH_TOTAL_CYCLES = 4;
-
-function initBoStars() {
-  const c = document.getElementById('bo-stars'); 
-  if(!c) return;
-  c.innerHTML = '';
-  for (let i = 0; i < 60; i++) {
-    const s = document.createElement('div'); s.className = 'bo-star';
-    const sz = 0.5 + Math.random() * 2;
-    s.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
-    c.appendChild(s);
-  }
-}
-
-function checkPressureTrigger(pressure) {
-  if (breathTriggeredThisSession || breathOverlayActive) return;
-  if (pressure >= HIGH_PRESSURE_THRESHOLD) {
-    highPressureCount++;
-    if (highPressureCount >= HIGH_PRESSURE_STREAK) triggerBreathOverlay();
-  } else {
-    highPressureCount = Math.max(0, highPressureCount - 2);
-  }
-}
-
-function triggerBreathOverlay() {
-  breathTriggeredThisSession = true; 
-  breathOverlayActive = true; 
-  highPressureCount = 0;
-  isDrawing = false; 
-  if(typeof canvasPointers !== 'undefined' && canvasPointers.clear) canvasPointers.clear(); 
-  breathCycles = 0;
-  
-  initBoStars();
-  document.getElementById('bo-progress').innerHTML = Array.from({length:BREATH_TOTAL_CYCLES},()=>'<div class="bo-dot"></div>').join('');
-  document.getElementById('breath-overlay').classList.add('show');
-  startBreathCycle();
-}
-
-function startBreathCycle() {
-  clearTimeout(breathCycleTimer);
-  runPhase('吸 氣', 4, () => runPhase('屏 息', 2, () => runPhase('吐 氣', 4, () => {
-    breathCycles++;
-    const dots = document.querySelectorAll('#bo-progress .bo-dot');
-    if (dots[breathCycles-1]) dots[breathCycles-1].classList.add('done');
-    if (breathCycles >= BREATH_TOTAL_CYCLES) {
-      document.getElementById('bo-phase').textContent = '你已平靜下來 ✦';
-      document.getElementById('bo-counter').textContent = '';
-      setTimeout(skipBreathOverlay, 1200);
-    } else { startBreathCycle(); }
-  })));
-}
-
-function runPhase(label, seconds, callback) {
-  document.getElementById('bo-phase').textContent = label;
-  document.getElementById('bo-circle-text').textContent = label.replace(/ /g,'');
-  let remain = seconds;
-  document.getElementById('bo-counter').textContent = remain;
-  const tick = () => { 
-    remain--; 
-    document.getElementById('bo-counter').textContent = remain > 0 ? remain : ''; 
-    if (remain <= 0) { callback(); return; } 
-    breathCycleTimer = setTimeout(tick, 1000); 
-  };
-  breathCycleTimer = setTimeout(tick, 1000);
-}
-
-function skipBreathOverlay() {
-  clearTimeout(breathCycleTimer); 
-  breathOverlayActive = false;
-  const overlay = document.getElementById('breath-overlay');
-  if(overlay) overlay.classList.remove('show');
-}
-
+// ── INIT ──
 const APP_VERSION = 'V7';
 initTodayPick();
 renderCorpus('all');
