@@ -165,19 +165,29 @@ html, body {
   align-items:center;
   justify-content:center;
   margin:0 auto 24px;
-  transition:transform 1s ease;
   background:rgba(255,255,255,0.05);
 }
-/* 核心修改：吸氣從小變大（1.18），吐氣從大變小（0.9） */
+
+/* 終極修正：直接使用 CSS Keyframes 動態精確控制縮放過程[cite: 1] */
 .breathing-circle.expand{
-  transform:scale(1.18);
+  animation: inhale-animation 4s linear forwards;
 }
 .breathing-circle.hold{
-  transform:scale(1.18);
+  transform: scale(1.18);
 }
 .breathing-circle.release{
-  transform:scale(0.9);
+  animation: exhale-animation 8s linear forwards;
 }
+
+@keyframes inhale-animation {
+  from { transform: scale(1.0); }
+  to { transform: scale(1.18); }
+}
+@keyframes exhale-animation {
+  from { transform: scale(1.18); }
+  to { transform: scale(0.9); }
+}
+
 #breathing-phase{
   font-size:30px;
   font-family:'Noto Serif TC',serif;
@@ -652,7 +662,7 @@ html, body {
     </div>
     <!-- 心情泡泡投票（V7 新增） -->
     <div class="mood-pick-section">
-      <h4>🫧 此刻你的心情 es？</h4>
+      <h4>🫧 此刻你的心情 is？</h4>
       <p style="font-size:12px;color:rgba(42,31,20,0.5);margin-bottom:12px;line-height:1.7;">選一個詞，或自己寫，匿名飄向夥伴們的畫面</p>
       <div class="mood-pick-grid" id="mood-pick-grid"></div>
       <div class="mood-custom-row">
@@ -1161,7 +1171,7 @@ function notifyNewBadges(old, cur, streak) {
   if (!old.streak7    && cur.streak7)    msgs.push('🌳 獲得「七日修行」徽章！一週的堅持了不起');
   if (!old.sessions10 && cur.sessions10) msgs.push('⭐ 獲得「十次書寫」徽章！');
   if (!old.sessions30 && cur.sessions30) msgs.push('🌸 獲得「書寫達人’」徽章！');
-  if (!old.calm5      && cur.calm5)      msgs.push('🍃 獲得「靜心達人」徽章！');
+  if (!old.calm5      && cur.calm5)      msgs.push('🍃 獲得「靜心達人’」徽章！');
   if (msgs.length) setTimeout(() => showToast(msgs[0]), 1800);
 }
 
@@ -1181,7 +1191,7 @@ function getEncouragement(emotion, streak, total) {
     ],
     focused: [
       '你今天非常專注，心手合一的感覺是一份禮物 ✨\n這種在場感，正是書寫靜心的核心體驗。',
-      '這份專注是內在清明的訊號。\n每次書寫，你都在為自己的心創造一個安靜的角落。',
+      '這份專注 es 內在清明的訊號。\n每次書寫，你都在為自己的心創造一個安靜的角落。',
     ],
     tense: [
       '謝謝你今天還是動筆了，這本身就很勇敢 🌱\n不管今天的狀態如何，你選擇了書寫，這重要。',
@@ -1490,7 +1500,7 @@ const CORPUS = [
   { id:'q04', text:'色即是空，空即是色', cat:'sutra', label:'靜心經句', diff:2, mood:['all'] },
   { id:'q05', text:'放下屠刀，立地成佛', cat:'sutra', label:'靜心經句', diff:2, mood:['all'] },
   { id:'q06', text:'萬法歸一，一歸何處', cat:'sutra', label:'靜心經句', diff:2, mood:['all','calm'] },
-  { id:'q07', text:'平常心 es 道', cat:'sutra', label:'靜心經句', diff:1, mood:['all','anxious'] },
+  { id:'q07', text:'平常心是道', cat:'sutra', label:'靜心經句', diff:1, mood:['all','anxious'] },
 ];
 
 const HAKKA_SPECIAL = [
@@ -1797,10 +1807,10 @@ async function startBreathingGuide(){
     }
   }
 
-  /* 4-7-8 呼吸執行流程 (嚴格修正縮放規律) */
-  await runPhase('吸氣', 4, 'expand');   // 球從小變大 (scale 由 1 放大至 1.18)
-  await runPhase('閉氣', 7, 'hold');     // 球維持大狀態 (保持 scale 1.18)
-  await runPhase('吐氣', 8, 'release');  // 球從大變小 (scale 縮小至 0.9)
+  /* 4-7-8 呼吸執行流程 */
+  await runPhase('吸氣', 4, 'expand');   // 呼叫吸氣：觸發 CSS 動畫，球從小漸漸變大[cite: 1]
+  await runPhase('閉氣', 7, 'hold');     // 呼叫閉氣：維持在最大狀態[cite: 1]
+  await runPhase('吐氣', 8, 'release');  // 呼叫吐氣：觸發 CSS 動畫，球從大漸漸變小[cite: 1]
 
   overlay.classList.remove('show');
   circle.className = 'breathing-circle';
@@ -1829,7 +1839,7 @@ function segmentChars(){
   const allChars=[...(selectedTask||'')]; if(!allChars.length) return;
   const area=document.getElementById('canvas-area'); const W=area.clientWidth; const H=area.clientHeight;
   const n=allChars.length; const cell=cellSize; const totalW=n*cell; const scale=totalW>W*0.95?(W*0.95)/totalW:1;
-  const drawCell=cell*scale; const drawW=n*drawCell; const startX=(W-drawW)/2;
+  const drawCell=cell*scale; const drawW=n*drawCell; const startX=(W-drawW)/2; const startY=(H-drawCell)/2;
   const charCenters=allChars.map((_,i)=>({charId:i+1,cx:startX+i*drawCell+drawCell/2}));
   const strokeXCtr={};
   for(const pt of rp){if(!strokeXCtr[pt.strokeId])strokeXCtr[pt.strokeId]={sum:0,count:0};strokeXCtr[pt.strokeId].sum+=pt.x;strokeXCtr[pt.strokeId].count+=1;}
