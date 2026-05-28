@@ -168,6 +168,7 @@ html, body {
   transition:transform 1s ease;
   background:rgba(255,255,255,0.05);
 }
+/* 核心修改：吸氣時球從小變大（1.18），吐氣時球從大變小（0.9） */
 .breathing-circle.expand{
   transform:scale(1.18);
 }
@@ -1173,9 +1174,9 @@ function getEncouragement(emotion, streak, total) {
   const streakLabel = streak > 1 ? `✦ 連續第 ${streak} 天書寫靜心` : '';
   const pools = {
     calm: [
-      '今天的你很平靜，這份寧靜是真實的力量 🍃\n繼續讓書寫成為你每日回家的方式。',
+      '今天的力很平靜，這份寧靜是真實的力量 🍃\n繼續讓書寫成為你每日回家的方式。',
       '書寫帶你回到了當下，這很難得。\n平靜不是沒有風浪，而是風浪中那份穩定。',
-      '你今天的筆觸告訴我，你正在好好照顧自己 🌊\n這份對自己的溫柔，請繼續保有。',
+      '你今天的筆跡告訴我，你正在好好照顧自己 🌊\n這份對自己的溫柔，請繼續保有。',
     ],
     focused: [
       '你今天非常專注，心手合一的感覺是一份禮物 ✨\n這種在場感，正是書寫靜心的核心體驗。',
@@ -1709,7 +1710,7 @@ function recordPoint(e,pos){
 }
 function onPointerDown(e){
   e.preventDefault(); if(e.pointerType==='touch') return;
-  if(breathingGuideActive) return; // 呼引模組開啟時禁止落筆書寫
+  if(breathingGuideActive) return; 
   saveUndo(); isDrawing=true;
   const now=Date.now(); const pos=getPos(e);
   if(lastStrokeEnd!==null) sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
@@ -1741,10 +1742,9 @@ function onPointerUp(e){ if(e.pointerType==='touch') return; isDrawing=false; la
   },{passive:false});
 });
 
-// ── 筆壓 HUD 與 4-7-8 呼吸核心觸發邏輯 ──
 function updatePressureHUD(e, released){
   let p = 0;
-  let isRealPen = false; // 用來確認是不是真正帶有動態壓感的硬體設備
+  let isRealPen = false;
 
   if(!released){
     if(e.pointerType==='pen') {
@@ -1753,10 +1753,10 @@ function updatePressureHUD(e, released){
     }
     else if(e.pointerType==='touch') {
       p = e.pressure > 0 ? e.pressure : (isDrawing ? 0.4 : 0);
-      if (e.pressure > 0 && e.pressure !== 0.5) isRealPen = true; // 排除手指點觸的預設模擬值
+      if (e.pressure > 0 && e.pressure !== 0.5) isRealPen = true;
     }
     else {
-      p = isDrawing ? 0.2 : 0; // 滑鼠點擊模擬強制降到 20% 以防測試時卡死
+      p = isDrawing ? 0.2 : 0;
     }
   }
 
@@ -1764,24 +1764,21 @@ function updatePressureHUD(e, released){
   const fill = document.getElementById('pressure-fill');
   if(fill) fill.style.width = pressurePercent + '%';
 
-  // 核心改動：只有在具備「硬體真實壓感筆」且「筆壓大於等於 45」時，才啟動 4-7-8 呼引引導[cite: 1]
   if(isRealPen && pressurePercent >= 45 && !breathingGuideActive && !breathingTriggered && currentScreen === 'screen-write'){
     breathingTriggered = true;
     startBreathingGuide();
   }
 
-  // 筆壓安全降回閾值以下時，重設觸發旗標
   if(pressurePercent < 35){
     breathingTriggered = false;
   }
 }
 
-// ── 4-7-8 呼引執行模組 ──
 async function startBreathingGuide(){
   breathingGuideActive = true;
   isDrawing = false;
   canvasPointers.clear();
-  stopTimer(); // 呼引引導期間暫停原本的練字時計
+  stopTimer();
 
   const overlay = document.getElementById('breathing-overlay');
   const phaseEl = document.getElementById('breathing-phase');
@@ -1790,7 +1787,6 @@ async function startBreathingGuide(){
 
   overlay.classList.add('show');
 
-  // 切換各呼吸階段的內部 async 函式
   async function runPhase(label, seconds, className){
     phaseEl.textContent = label;
     circle.className = 'breathing-circle ' + className;
@@ -1800,18 +1796,17 @@ async function startBreathingGuide(){
     }
   }
 
-  // 嚴格執行 4-7-8 呼吸規律一輪
+  /* 4-7-8 呼吸執行流程 */
   await runPhase('吸氣', 4, 'expand');
   await runPhase('閉氣', 7, 'hold');
   await runPhase('吐氣', 8, 'release');
 
-  // 引導結束，回歸原本的練字畫面[cite: 1]
   overlay.classList.remove('show');
   circle.className = 'breathing-circle';
   breathingGuideActive = false;
   
   if(currentScreen === 'screen-write'){
-    startTimer(); // 恢復練字時鐘計時
+    startTimer();
   }
 }
 
@@ -1911,7 +1906,7 @@ function showFeedback(){
   const configs={
     calm:{icon:'🍃',title:'你寫得很從容',subtitle:'筆跡穩定，節奏舒緩\n這一刻的你，與自己同在',ecIcon:'🌊',cardClass:'calm',desc:'書寫過程中，你的筆觸穩定而有節奏感。這種狀態正是身心進入放鬆的訊號，繼續保持這份平靜。',suggestion:'試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',bars:[{label:'穩定度',value:0.8+Math.random()*0.15},{label:'節奏感',value:0.7+Math.random()*0.2},{label:'放鬆感',value:0.75+Math.random()*0.2}]},
     focused:{icon:'✨',title:'你很專注',subtitle:'筆畫有力，心念集中\n這份專注是給自己最好的禮物',ecIcon:'🌟',cardClass:'focused',desc:'書寫時你保持了高度的專注，停頓少而規律。這種「心手合一」的狀態，正是書寫靜心的核心體驗。',suggestion:'下次可以嘗試閉上眼睛深呼吸三次再開始，感受靜心前後的差異。',bars:[{label:'專注度',value:0.82+Math.random()*0.15},{label:'節奏感',value:0.65+Math.random()*0.2},{label:'穩定度',value:0.7+Math.random()*0.2}]},
-    tense:{icon:'🌱',title:'謝謝你今天的嘗試',subtitle:'偵測到一些緊繃的節奏\n沒關係，書寫本身就已是放鬆的開始',ecIcon:'🌬',cardClass:'tense',desc:'今天的書寫節節稍不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',suggestion:'下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',bars:[{label:'穩定度',value:0.35+Math.random()*0.25},{label:'節奏感',value:0.4+Math.random()*0.2},{label:'放鬆感',value:0.45+Math.random()*0.2}]}
+    tense:{icon:'🌱',title:'謝謝你今天的嘗試',subtitle:'偵測到一些緊繃的節奏\n沒關係，書寫本身就已是放鬆的開始',ecIcon:'🌬',cardClass:'tense',desc:'今天的書寫節奏稍不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',suggestion:'下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',bars:[{label:'穩定度',value:0.35+Math.random()*0.25},{label:'節奏感',value:0.4+Math.random()*0.2},{label:'放鬆感',value:0.45+Math.random()*0.2}]}
   };
   const cfg=configs[result.dominant];
   document.getElementById('fb-icon').textContent=cfg.icon;
