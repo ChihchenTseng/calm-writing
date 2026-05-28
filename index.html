@@ -168,7 +168,6 @@ html, body {
   transition:transform 1s ease;
   background:rgba(255,255,255,0.05);
 }
-/* 核心修改：吸氣時球從小變大（1.18），吐氣時球從大變小（0.9） */
 .breathing-circle.expand{
   transform:scale(1.18);
 }
@@ -616,7 +615,8 @@ html, body {
       <span id="breathing-phase">吸氣</span>
     </div>
     <div class="breathing-count" id="breathing-count">4</div>
-    <div class="breathing-desc">偵測到緊繃筆壓，請隨導引放鬆呼吸</div>
+    <!-- 修改此處文字內容 -->
+    <div class="breathing-desc">偵測到情緒緊繃，請隨導引放鬆呼吸</div>
   </div>
 </div>
 
@@ -870,7 +870,7 @@ let brOpen = false;
 const BR_PALETTE = [
   { bg:'rgba(175,145,255,0.16)', bdr:'rgba(200,178,255,0.45)', txt:'rgba(225,215,255,0.92)', glow:'rgba(175,145,255,0.38)' },
   { bg:'rgba(120,205,200,0.14)', bdr:'rgba(155,230,225,0.42)', txt:'rgba(195,245,242,0.92)', glow:'rgba(120,205,200,0.35)' },
-  { bg:'rgba(255,175,145,0.14)', bdr:'rgba(255,200,175,0.42)', txt:'rgba(255,228,215,0.92)', glow:'rgba(255,175,145,0.35)' },
+  { bg:'rgba(255,175,145,0.14)', bdr:'rgba(255,200,175,0.42)', txt:'rgba(255,228,215,0.92)', glow:'rgba(175,145,255,0.38)' },
   { bg:'rgba(140,185,255,0.14)', bdr:'rgba(170,205,255,0.42)', txt:'rgba(210,225,255,0.92)', glow:'rgba(140,185,255,0.35)' },
   { bg:'rgba(255,150,185,0.14)', bdr:'rgba(255,180,205,0.42)', txt:'rgba(255,215,228,0.92)', glow:'rgba(255,150,185,0.35)' },
   { bg:'rgba(150,230,160,0.14)', bdr:'rgba(180,245,188,0.42)', txt:'rgba(215,250,220,0.92)', glow:'rgba(150,230,160,0.35)' },
@@ -881,7 +881,8 @@ function showBubbleRoom() {
   brOpen = true;
   const room = document.getElementById('bubble-room');
   room.classList.remove('hidden');
-  requestAnimationFrame(() => requestAnimationFrame(() => room.classList.add('open')));
+  document.body.clientWidth; // reflow
+  room.classList.add('open');
   const cv = document.querySelector('.daily-count-val');
   const bc = document.getElementById('br-count');
   if (cv && bc) bc.textContent = cv.textContent;
@@ -1174,7 +1175,7 @@ function getEncouragement(emotion, streak, total) {
   const streakLabel = streak > 1 ? `✦ 連續第 ${streak} 天書寫靜心` : '';
   const pools = {
     calm: [
-      '今天的力很平靜，這份寧靜是真實的力量 🍃\n繼續讓書寫成為你每日回家的方式。',
+      '今天的你很平靜，這份寧靜是真實的力量 🍃\n繼續讓書寫成為你每日回家的方式。',
       '書寫帶你回到了當下，這很難得。\n平靜不是沒有風浪，而是風浪中那份穩定。',
       '你今天的筆跡告訴我，你正在好好照顧自己 🌊\n這份對自己的溫柔，請繼續保有。',
     ],
@@ -1710,7 +1711,7 @@ function recordPoint(e,pos){
 }
 function onPointerDown(e){
   e.preventDefault(); if(e.pointerType==='touch') return;
-  if(breathingGuideActive) return; 
+  if(breathingGuideActive) return;
   saveUndo(); isDrawing=true;
   const now=Date.now(); const pos=getPos(e);
   if(lastStrokeEnd!==null) sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
@@ -1796,7 +1797,6 @@ async function startBreathingGuide(){
     }
   }
 
-  /* 4-7-8 呼吸執行流程 */
   await runPhase('吸氣', 4, 'expand');
   await runPhase('閉氣', 7, 'hold');
   await runPhase('吐氣', 8, 'release');
@@ -1906,7 +1906,7 @@ function showFeedback(){
   const configs={
     calm:{icon:'🍃',title:'你寫得很從容',subtitle:'筆跡穩定，節奏舒緩\n這一刻的你，與自己同在',ecIcon:'🌊',cardClass:'calm',desc:'書寫過程中，你的筆觸穩定而有節奏感。這種狀態正是身心進入放鬆的訊號，繼續保持這份平靜。',suggestion:'試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',bars:[{label:'穩定度',value:0.8+Math.random()*0.15},{label:'節奏感',value:0.7+Math.random()*0.2},{label:'放鬆感',value:0.75+Math.random()*0.2}]},
     focused:{icon:'✨',title:'你很專注',subtitle:'筆畫有力，心念集中\n這份專注是給自己最好的禮物',ecIcon:'🌟',cardClass:'focused',desc:'書寫時你保持了高度的專注，停頓少而規律。這種「心手合一」的狀態，正是書寫靜心的核心體驗。',suggestion:'下次可以嘗試閉上眼睛深呼吸三次再開始，感受靜心前後的差異。',bars:[{label:'專注度',value:0.82+Math.random()*0.15},{label:'節奏感',value:0.65+Math.random()*0.2},{label:'穩定度',value:0.7+Math.random()*0.2}]},
-    tense:{icon:'🌱',title:'謝謝你今天的嘗試',subtitle:'偵測到一些緊繃的節奏\n沒關係，書寫本身就已是放鬆的開始',ecIcon:'🌬',cardClass:'tense',desc:'今天的書寫節奏稍不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',suggestion:'下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',bars:[{label:'穩定度',value:0.35+Math.random()*0.25},{label:'節奏感',value:0.4+Math.random()*0.2},{label:'放鬆感',value:0.45+Math.random()*0.2}]}
+    tense:{icon:'🌱',title:'謝謝你今天的嘗試',subtitle:'偵測到一些緊繃的節奏\n沒關係，書寫本身就已 es 放鬆的開始',ecIcon:'🌬',cardClass:'tense',desc:'今天的書寫節奏稍不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',suggestion:'下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',bars:[{label:'穩定度',value:0.35+Math.random()*0.25},{label:'節奏感',value:0.4+Math.random()*0.2},{label:'放鬆感',value:0.45+Math.random()*0.2}]}
   };
   const cfg=configs[result.dominant];
   document.getElementById('fb-icon').textContent=cfg.icon;
@@ -1933,6 +1933,10 @@ let toastTimer;
 function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2800); }
 
 window.addEventListener('resize',()=>{ if(currentScreen==='screen-write') resizeCanvases(); });
+
+document.getElementById('bubble-room').addEventListener('click', (e) => {
+  if (e.target.id === 'bubble-room') hideBubbleRoom();
+});
 
 document.addEventListener('pointerdown',(e)=>{
   const gp=document.getElementById('grid-picker'); const cp=document.getElementById('color-picker-panel');
