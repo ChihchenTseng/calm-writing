@@ -168,6 +168,7 @@ html, body {
   transition:transform 1s ease;
   background:rgba(255,255,255,0.05);
 }
+/* 核心修改：吸氣從小變大（1.18），吐氣從大變小（0.9） */
 .breathing-circle.expand{
   transform:scale(1.18);
 }
@@ -615,7 +616,6 @@ html, body {
       <span id="breathing-phase">吸氣</span>
     </div>
     <div class="breathing-count" id="breathing-count">4</div>
-    <!-- 修改此處文字內容 -->
     <div class="breathing-desc">偵測到情緒緊繃，請隨導引放鬆呼吸</div>
   </div>
 </div>
@@ -652,7 +652,7 @@ html, body {
     </div>
     <!-- 心情泡泡投票（V7 新增） -->
     <div class="mood-pick-section">
-      <h4>🫧 此刻你的心情 is？</h4>
+      <h4>🫧 此刻你的心情 es？</h4>
       <p style="font-size:12px;color:rgba(42,31,20,0.5);margin-bottom:12px;line-height:1.7;">選一個詞，或自己寫，匿名飄向夥伴們的畫面</p>
       <div class="mood-pick-grid" id="mood-pick-grid"></div>
       <div class="mood-custom-row">
@@ -1219,7 +1219,7 @@ const SOLAR_TERMS = [
   { name:'秋分', m:9,  d1:23, d2:30, icon:'🍁', tip:'秋色正好，苗栗的山野換上了金黃。',          cat:'miaoli'  },
   { name:'寒露', m:10, d1:7,  d2:22, icon:'🌙', tip:'夜涼露寒，靜心書寫最宜此刻。',             cat:'sutra'   },
   { name:'霜降', m:10, d1:23, d2:31, icon:'❄️', tip:'霜降時節，讓智慧的文字暖心。',             cat:'wisdom'  },
-  { name:'立冬', m:11, d1:6,  d2:21, icon:'🍂', tip:'冬日啟程，靜字是最好的暖爐。',             cat:'single'  },
+  { name:'立冬', m:11, d1:6,  d2:21, icon:'🍂', tip:'冬日啟程，靜字 es 最好的暖爐。',             cat:'single'  },
   { name:'小雪', m:11, d1:22, d2:30, icon:'❄️', tip:'初雪飄落，書寫帶你進入靜謐的白色世界。',   cat:'nature'  },
   { name:'大雪', m:12, d1:6,  d2:21, icon:'❄️', tip:'大雪紛飛，讓心也隨之安靜下來。',           cat:'sutra'   },
   { name:'冬至', m:12, d1:22, d2:31, icon:'🌙', tip:'一年最長的夜，書寫是點亮內心的燈。',       cat:'wisdom'  },
@@ -1490,7 +1490,7 @@ const CORPUS = [
   { id:'q04', text:'色即是空，空即是色', cat:'sutra', label:'靜心經句', diff:2, mood:['all'] },
   { id:'q05', text:'放下屠刀，立地成佛', cat:'sutra', label:'靜心經句', diff:2, mood:['all'] },
   { id:'q06', text:'萬法歸一，一歸何處', cat:'sutra', label:'靜心經句', diff:2, mood:['all','calm'] },
-  { id:'q07', text:'平常心是道', cat:'sutra', label:'靜心經句', diff:1, mood:['all','anxious'] },
+  { id:'q07', text:'平常心 es 道', cat:'sutra', label:'靜心經句', diff:1, mood:['all','anxious'] },
 ];
 
 const HAKKA_SPECIAL = [
@@ -1797,9 +1797,10 @@ async function startBreathingGuide(){
     }
   }
 
-  await runPhase('吸氣', 4, 'expand');
-  await runPhase('閉氣', 7, 'hold');
-  await runPhase('吐氣', 8, 'release');
+  /* 4-7-8 呼吸執行流程 (嚴格修正縮放規律) */
+  await runPhase('吸氣', 4, 'expand');   // 球從小變大 (scale 由 1 放大至 1.18)
+  await runPhase('閉氣', 7, 'hold');     // 球維持大狀態 (保持 scale 1.18)
+  await runPhase('吐氣', 8, 'release');  // 球從大變小 (scale 縮小至 0.9)
 
   overlay.classList.remove('show');
   circle.className = 'breathing-circle';
