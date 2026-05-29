@@ -1615,7 +1615,7 @@ function goTo(id){
   if(id==='screen-write') initWriting();
   if(id==='screen-feedback') showFeedback();
   if(id==='screen-journey') renderJourneyScreen();
-  if(id!=='screen-write') stopTimer();
+  if(id!=='screen-write'){ stopTimer(); stopMeditationMusic(); }
   document.getElementById('grid-picker').classList.remove('open');
   document.getElementById('color-picker-panel').classList.remove('open');
 }
@@ -1630,7 +1630,280 @@ function startWriting(){
   const custom=document.getElementById('custom-text').value.trim();
   if(custom){selectedTask=custom; selectedCorpusId=null;}
   if(!selectedTask){showToast('請先選擇或輸入書寫內容 ✦'); return;}
+  if(isIOSAudioDevice()) startMeditationFallbackAudio();
   goTo('screen-write');
+  startMeditationMusic();
+}
+
+
+
+
+// Procedural meditation music: soft Canon in D-inspired piano with nature ambience.
+let meditationAudio = null;
+let meditationFallbackAudio = null;
+
+function midiToFreq(note){ return 440 * Math.pow(2, (note - 69) / 12); }
+
+
+function isIOSAudioDevice(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function createMeditationFallbackAudio(){
+  if(meditationFallbackAudio) return meditationFallbackAudio;
+  const sampleRate = 22050;
+  const duration = 32;
+  const total = sampleRate * duration;
+  const samples = new Float32Array(total);
+  const chords = [
+    [146.83, 293.66, 369.99, 440.00],
+    [110.00, 277.18, 329.63, 440.00],
+    [123.47, 246.94, 293.66, 369.99],
+    [92.50, 220.00, 277.18, 369.99],
+    [98.00, 246.94, 293.66, 392.00],
+    [146.83, 293.66, 369.99, 440.00],
+    [98.00, 246.94, 293.66, 392.00],
+    [110.00, 277.18, 329.63, 440.00]
+  ];
+  const melody = [739.99,659.25,587.33,554.37,493.88,440.00,493.88,554.37,587.33,554.37,587.33,739.99,659.25,587.33,554.37,493.88];
+  function addTone(freq, start, len, gain){
+    const s0 = Math.floor(start * sampleRate);
+    const s1 = Math.min(total, Math.floor((start + len) * sampleRate));
+    for(let i = s0; i < s1; i++){
+      const t = (i - s0) / sampleRate;
+      const p = t / len;
+      const env = Math.min(1, t / 0.18) * Math.pow(Math.max(0, 1 - p), 1.35);
+      samples[i] += Math.sin(2 * Math.PI * freq * (i / sampleRate)) * gain * env;
+      samples[i] += Math.sin(2 * Math.PI * freq * 2 * (i / sampleRate)) * gain * 0.045 * env;
+    }
+  }
+  chords.forEach((ch, idx) => {
+    const base = idx * 4;
+    addTone(ch[0], base, 3.8, 0.18);
+    ch.slice(1).forEach((f, j) => addTone(f, base + 0.55 + j * 0.8, 2.2, 0.08));
+  });
+  melody.forEach((f, idx) => addTone(f, idx * 2, 1.7, 0.045));
+  let noise = 0;
+  for(let i = 0; i < total; i++){
+    noise = noise * 0.985 + (Math.random() * 2 - 1) * 0.015;
+    samples[i] += noise * 0.035;
+    samples[i] = Math.max(-0.92, Math.min(0.92, samples[i]));
+  }
+  const bytes = new ArrayBuffer(44 + total * 2);
+  const view = new DataView(bytes);
+  function writeStr(offset, value){ for(let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i)); }
+  writeStr(0, 'RIFF'); view.setUint32(4, 36 + total * 2, true); writeStr(8, 'WAVE');
+  writeStr(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  writeStr(36, 'data'); view.setUint32(40, total * 2, true);
+  for(let i = 0; i < total; i++) view.setInt16(44 + i * 2, samples[i] * 32767, true);
+  const audio = document.createElement('audio');
+  audio.src = URL.createObjectURL(new Blob([bytes], {type:'audio/wav'}));
+  audio.loop = true;
+  audio.volume = 1;
+  audio.muted = false;
+  audio.preload = 'auto';
+  audio.setAttribute('playsinline', '');
+  audio.setAttribute('webkit-playsinline', '');
+  audio.style.display = 'none';
+  if(!audio.parentNode) document.body.appendChild(audio);
+  try { audio.load(); } catch(e) {}
+  meditationFallbackAudio = audio;
+  return audio;
+}
+
+function startMeditationFallbackAudio(){
+  try {
+    const audio = createMeditationFallbackAudio();
+    audio.muted = false;
+    audio.volume = 1;
+    audio.play().catch(()=>{});
+  } catch(e) {}
+}
+
+function stopMeditationFallbackAudio(){
+  if(!meditationFallbackAudio) return;
+  try { meditationFallbackAudio.pause(); meditationFallbackAudio.currentTime = 0; } catch(e) {}
+}
+function createMeditationMusicGraph(){
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if(!AudioCtx) return null;
+  const ctx = new AudioCtx();
+  const master = ctx.createGain();
+  const musicGain = ctx.createGain();
+  const natureGain = ctx.createGain();
+  const warmth = ctx.createBiquadFilter();
+  const delay = ctx.createDelay(2.5);
+  const delayGain = ctx.createGain();
+  const compressor = ctx.createDynamicsCompressor();
+
+  master.gain.value = 0.0001;
+  musicGain.gain.value = 0.42;
+  natureGain.gain.value = 0.24;
+  warmth.type = 'lowpass';
+  warmth.frequency.value = 1500;
+  warmth.Q.value = 0.22;
+  delay.delayTime.value = 0.68;
+  delayGain.gain.value = 0.24;
+
+  compressor.threshold.value = -24;
+  compressor.knee.value = 24;
+  compressor.ratio.value = 3;
+  compressor.attack.value = 0.02;
+  compressor.release.value = 0.45;
+
+  musicGain.connect(warmth);
+  warmth.connect(master);
+  warmth.connect(delay);
+  delay.connect(delayGain);
+  delayGain.connect(master);
+  natureGain.connect(master);
+  master.connect(compressor);
+  compressor.connect(ctx.destination);
+
+  const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for(let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.42;
+
+  const wind = ctx.createBufferSource();
+  const windFilter = ctx.createBiquadFilter();
+  const windGain = ctx.createGain();
+  wind.buffer = noiseBuffer;
+  wind.loop = true;
+  windFilter.type = 'lowpass';
+  windFilter.frequency.value = 430;
+  windGain.gain.value = 0.22;
+  wind.connect(windFilter);
+  windFilter.connect(windGain);
+  windGain.connect(natureGain);
+
+  const stream = ctx.createBufferSource();
+  const streamFilter = ctx.createBiquadFilter();
+  const streamGain = ctx.createGain();
+  stream.buffer = noiseBuffer;
+  stream.loop = true;
+  streamFilter.type = 'bandpass';
+  streamFilter.frequency.value = 1350;
+  streamFilter.Q.value = 0.7;
+  streamGain.gain.value = 0.04;
+  stream.connect(streamFilter);
+  streamFilter.connect(streamGain);
+  streamGain.connect(natureGain);
+
+  const lfo = ctx.createOscillator();
+  const lfoGain = ctx.createGain();
+  lfo.type = 'sine';
+  lfo.frequency.value = 0.045;
+  lfoGain.gain.value = 0.045;
+  lfo.connect(lfoGain);
+  lfoGain.connect(natureGain.gain);
+
+  return {ctx, master, musicGain, wind, stream, lfo, sources:[wind, stream, lfo], scheduler:null, nextLoopStart:0, loopDur:0, started:false};
+}
+
+function playPianoTone(audio, note, time, duration, velocity){
+  if(!audio || note == null) return;
+  const ctx = audio.ctx;
+  const out = ctx.createGain();
+  const body = ctx.createBiquadFilter();
+  const freq = midiToFreq(note);
+  const level = Math.max(0.001, velocity || 0.08);
+
+  body.type = 'lowpass';
+  body.frequency.setValueAtTime(1750, time);
+  body.frequency.exponentialRampToValueAtTime(760, time + Math.min(duration, 2.8));
+  out.gain.setValueAtTime(0.0001, time);
+  out.gain.exponentialRampToValueAtTime(level, time + 0.16);
+  out.gain.exponentialRampToValueAtTime(level * 0.58, time + 0.9);
+  out.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+  out.connect(body);
+  body.connect(audio.musicGain);
+
+  [
+    {type:'sine', ratio:1, gain:1},
+    {type:'sine', ratio:2.002, gain:0.075}
+  ].forEach(partial => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = partial.type;
+    osc.frequency.setValueAtTime(freq * partial.ratio, time);
+    gain.gain.value = partial.gain;
+    osc.connect(gain);
+    gain.connect(out);
+    osc.start(time);
+    osc.stop(time + duration + 0.08);
+  });
+}
+
+function scheduleCanonCycle(audio, startTime){
+  const beat = 60 / 36;
+  audio.loopDur = beat * 64;
+  const bass = [50, 45, 47, 42, 43, 50, 43, 45];
+  const chords = [[50,54,57,62], [45,49,52,57], [47,50,54,59], [42,45,49,54], [43,47,50,55], [50,54,57,62], [43,47,50,55], [45,49,52,57]];
+  const melody = [66,64,62,61, 59,57,59,61, 62,61,62,66, 64,62,61,59, 57,54,57,59, 61,62,64,66, 69,66,64,62, 61,59,61,64];
+
+  bass.forEach((note, i) => {
+    const t = startTime + i * beat * 4;
+    playPianoTone(audio, note, t, beat * 4.15, 0.105);
+    chords[i].forEach((n, j) => playPianoTone(audio, n + 12, t + beat * (0.8 + j * 1.05), beat * 2.15, 0.052));
+    chords[i].forEach((n, j) => { if(j % 2 === 0) playPianoTone(audio, n + 24, t + beat * (2.5 + j * 0.7), beat * 1.8, 0.03); });
+  });
+
+  melody.forEach((note, i) => {
+    const t = startTime + i * beat * 2;
+    playPianoTone(audio, note + 12, t, beat * 2.25, 0.046 + (i % 4 === 0 ? 0.01 : 0));
+  });
+}
+
+function scheduleMeditationMusic(){
+  const audio = meditationAudio;
+  if(!audio || !audio.started) return;
+  const ctx = audio.ctx;
+  while(audio.nextLoopStart < ctx.currentTime + 3.5){
+    scheduleCanonCycle(audio, audio.nextLoopStart);
+    audio.nextLoopStart += audio.loopDur || (60 / 36) * 64;
+  }
+}
+
+function startMeditationMusic(){
+  if(currentScreen !== 'screen-write') return;
+  if(isIOSAudioDevice()){ startMeditationFallbackAudio(); return; }
+  if(!meditationAudio) meditationAudio = createMeditationMusicGraph();
+  const audio = meditationAudio;
+  if(!audio) return;
+  try {
+    if(!audio.started){
+      audio.started = true;
+      audio.nextLoopStart = audio.ctx.currentTime + 0.04;
+      audio.sources.forEach(src => { try { src.start(); } catch(e) {} });
+      scheduleMeditationMusic();
+      audio.scheduler = setInterval(scheduleMeditationMusic, 900);
+    }
+    if(audio.ctx.state === 'suspended') audio.ctx.resume().catch(()=>{});
+    audio.master.gain.cancelScheduledValues(audio.ctx.currentTime);
+    audio.master.gain.setTargetAtTime(0.52, audio.ctx.currentTime, 1.1);
+  } catch(e) {}
+}
+
+function unlockMeditationMusicFromGesture(){
+  if(currentScreen === 'screen-write') startMeditationMusic();
+}
+
+function stopMeditationMusic(){
+  stopMeditationFallbackAudio();
+  const audio = meditationAudio;
+  if(!audio) {
+    return;
+  }
+  meditationAudio = null;
+  if(audio.scheduler) clearInterval(audio.scheduler);
+  try {
+    const now = audio.ctx.currentTime;
+    audio.master.gain.cancelScheduledValues(now);
+    audio.master.gain.setTargetAtTime(0.0001, now, 0.75);
+    audio.sources.forEach(src => { try { src.stop(now + 1.4); } catch(e) {} });
+    setTimeout(() => { try { audio.ctx.close(); } catch(e) {} }, 1800);
+  } catch(e) {}
 }
 
 const gCanvas=()=>document.getElementById('grid-canvas');
@@ -1663,7 +1936,7 @@ function initWriting(){
   sessionData={strokes:[],pauseDurations:[],pressureValues:[],totalTime:0,strokeCount:0,rawPoints:[],charBounds:{},tiltXValues:[],tiltYValues:[],baselineAngles:[]};
   undoStack=[]; timerSeconds=0; strokeFirstPt=null; lastStrokeEnd=null;
   canvasPointers.clear(); updateTimer(); sessionStart=Date.now();
-  resizeCanvases(); startTimer();
+  resizeCanvases(); startTimer(); startMeditationMusic();
   const guide=document.getElementById('breath-guide');
   if(selectedMood==='anxious'){guide.classList.add('show'); setTimeout(()=>guide.classList.remove('show'),8000);}
   else guide.classList.remove('show');
@@ -1720,8 +1993,9 @@ function recordPoint(e,pos){
   sessionData.tiltXValues.push(tiltX); sessionData.tiltYValues.push(tiltY); sessionData.baselineAngles.push(angle);
 }
 function onPointerDown(e){
-  e.preventDefault(); if(e.pointerType==='touch') return;
+  e.preventDefault(); startMeditationMusic(); if(e.pointerType==='touch') return;
   if(breathingGuideActive) return;
+  startMeditationMusic();
   saveUndo(); isDrawing=true;
   const now=Date.now(); const pos=getPos(e);
   if(lastStrokeEnd!==null) sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
@@ -1966,6 +2240,10 @@ document.addEventListener('selectstart', e => {
   e.preventDefault();
 }, {passive:false});
 
+document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopMeditationMusic(); });
+document.addEventListener('touchstart', unlockMeditationMusicFromGesture, {passive:true});
+document.addEventListener('click', unlockMeditationMusicFromGesture, true);
+
 document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
 document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
 
@@ -1973,6 +2251,7 @@ const APP_VERSION = 'V7';
 initTodayPick();
 renderCorpus('all');
 initSeasonBanner();
+if(isIOSAudioDevice()) setTimeout(()=>{ try { createMeditationFallbackAudio(); } catch(e) {} }, 300);
 </script>
 </body>
 </html>
