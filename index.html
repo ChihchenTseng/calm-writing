@@ -1631,7 +1631,9 @@ function startWriting(){
   if(custom){selectedTask=custom; selectedCorpusId=null;}
   if(!selectedTask){showToast('請先選擇或輸入書寫內容 ✦'); return;}
   goTo('screen-write');
+  startMeditationMusic();
 }
+
 
 
 
@@ -1780,13 +1782,12 @@ function scheduleMeditationMusic(){
   }
 }
 
-async function startMeditationMusic(){
+function startMeditationMusic(){
   if(currentScreen !== 'screen-write') return;
   if(!meditationAudio) meditationAudio = createMeditationMusicGraph();
   const audio = meditationAudio;
   if(!audio) return;
   try {
-    if(audio.ctx.state === 'suspended') await audio.ctx.resume();
     if(!audio.started){
       audio.started = true;
       audio.nextLoopStart = audio.ctx.currentTime + 0.04;
@@ -1794,9 +1795,14 @@ async function startMeditationMusic(){
       scheduleMeditationMusic();
       audio.scheduler = setInterval(scheduleMeditationMusic, 900);
     }
+    if(audio.ctx.state === 'suspended') audio.ctx.resume().catch(()=>{});
     audio.master.gain.cancelScheduledValues(audio.ctx.currentTime);
-    audio.master.gain.setTargetAtTime(0.52, audio.ctx.currentTime, 2.4);
+    audio.master.gain.setTargetAtTime(0.52, audio.ctx.currentTime, 1.1);
   } catch(e) {}
+}
+
+function unlockMeditationMusicFromGesture(){
+  if(currentScreen === 'screen-write') startMeditationMusic();
 }
 
 function stopMeditationMusic(){
@@ -1902,7 +1908,7 @@ function recordPoint(e,pos){
   sessionData.tiltXValues.push(tiltX); sessionData.tiltYValues.push(tiltY); sessionData.baselineAngles.push(angle);
 }
 function onPointerDown(e){
-  e.preventDefault(); if(e.pointerType==='touch') return;
+  e.preventDefault(); startMeditationMusic(); if(e.pointerType==='touch') return;
   if(breathingGuideActive) return;
   startMeditationMusic();
   saveUndo(); isDrawing=true;
@@ -2150,6 +2156,8 @@ document.addEventListener('selectstart', e => {
 }, {passive:false});
 
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) stopMeditationMusic(); });
+document.addEventListener('touchstart', unlockMeditationMusicFromGesture, {passive:true});
+document.addEventListener('click', unlockMeditationMusicFromGesture, true);
 
 document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
 document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
