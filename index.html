@@ -232,6 +232,31 @@ html, body {
 .suggestion-card p { font-size:13px; color:rgba(42,31,20,0.6); line-height:1.9; }
 .feedback-actions { display:flex; flex-direction:column; gap:10px; margin-top:24px; }
 
+/* STRESS ENGINE CARD */
+.stress-card { background:white; border-radius:var(--r); padding:20px; margin-bottom:16px; box-shadow:0 2px 12px var(--shadow); position:relative; overflow:hidden; }
+.stress-card::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--stress-accent,var(--sage)); }
+.stress-card-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.stress-card-icon { font-size:28px; }
+.stress-card-meta { flex:1; }
+.stress-card-label { font-size:10px; letter-spacing:0.15em; color:rgba(42,31,20,0.4); margin-bottom:2px; }
+.stress-card-level { font-family:'Noto Serif TC',serif; font-size:17px; color:var(--stress-accent,var(--sage)); font-weight:700; letter-spacing:0.05em; }
+.stress-index-bar-wrap { margin-bottom:14px; }
+.stress-index-label { font-size:10px; color:rgba(42,31,20,0.4); letter-spacing:0.08em; margin-bottom:5px; display:flex; justify-content:space-between; }
+.stress-index-track { height:8px; background:rgba(42,31,20,0.06); border-radius:4px; overflow:hidden; }
+.stress-index-fill { height:100%; border-radius:4px; transition:width 1.2s cubic-bezier(.4,0,.2,1); background:linear-gradient(90deg,var(--sage),var(--gold2)); }
+.stress-index-fill.mid { background:linear-gradient(90deg,var(--gold2),#c4783a); }
+.stress-index-fill.high { background:linear-gradient(90deg,#c4783a,var(--red)); }
+.stress-desc { font-size:13px; color:rgba(42,31,20,0.65); line-height:1.9; margin-bottom:12px; }
+.stress-suggestion { background:rgba(107,124,94,0.07); border-radius:10px; padding:12px 14px; font-size:12px; color:rgba(42,31,20,0.6); line-height:1.8; }
+.stress-suggestion::before { content:'✦ '; color:var(--sage); }
+.stress-compare { margin-top:12px; padding-top:12px; border-top:1px solid rgba(42,31,20,0.06); font-size:12px; color:rgba(42,31,20,0.5); display:flex; align-items:flex-start; gap:6px; }
+.stress-compare-icon { font-size:15px; flex-shrink:0; margin-top:1px; }
+.stress-feature-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.stress-chip { font-size:10px; padding:3px 10px; border-radius:50px; letter-spacing:0.05em; }
+.stress-chip.high { background:rgba(139,44,44,0.1); color:var(--red); }
+.stress-chip.low  { background:rgba(107,124,94,0.12); color:var(--sage); }
+.stress-chip.mid  { background:rgba(155,122,58,0.1); color:var(--gold); }
+
 /* COLOR PICKER */
 #color-picker-panel { position:absolute; top:58px; left:20px; background:var(--ink2); border-radius:12px; padding:12px; display:none; flex-direction:column; gap:8px; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.4); }
 #color-picker-panel.open { display:flex; }
@@ -651,6 +676,27 @@ html, body {
       </div>
       <div class="ec-desc" id="ec-desc"></div>
     </div>
+    <!-- 壓力感知（V10 新增 StressEngine v2） -->
+    <div class="stress-card" id="stress-card">
+      <div class="stress-card-header">
+        <div class="stress-card-icon" id="stress-icon">🌿</div>
+        <div class="stress-card-meta">
+          <div class="stress-card-label">壓力感知判讀</div>
+          <div class="stress-card-level" id="stress-level-label">分析中…</div>
+        </div>
+      </div>
+      <div class="stress-index-bar-wrap">
+        <div class="stress-index-label"><span>壓力指數</span><span id="stress-index-val">—</span></div>
+        <div class="stress-index-track"><div class="stress-index-fill" id="stress-index-fill" style="width:0%"></div></div>
+      </div>
+      <div class="stress-desc" id="stress-desc"></div>
+      <div class="stress-suggestion" id="stress-suggestion"></div>
+      <div class="stress-feature-chips" id="stress-chips"></div>
+      <div class="stress-compare hidden" id="stress-compare">
+        <div class="stress-compare-icon" id="stress-compare-icon">→</div>
+        <div id="stress-compare-text"></div>
+      </div>
+    </div>
     <!-- 建議卡 -->
     <div class="suggestion-card" id="suggestion-card">
       <h4>✦ 給你的小提醒</h4>
@@ -765,7 +811,14 @@ const db   = firebase.database();
 const auth = firebase.auth();
 let fbUser = null, fbReady = false;
 let breathingGuideActive = false; // 追蹤呼吸引導是否啟動中
-let breathingTriggered = false;   // 避免高筆壓下在同一筆畫連續觸發
+let breathingTriggered = false;   // 避免書寫速度過快時連續觸發
+// 即時速度偵測（雙層確認：長窗口均速 + 持續超標時間）
+const SPEED_WINDOW_MS   = 3000;  // 均速計算窗口：過去 3 秒
+const SPEED_THRESHOLD   = 180;   // 均速門檻：180 採樣點/秒
+const SPEED_SUSTAIN_MS  = 2000;  // 需持續超標至少 2 秒才觸發
+const SPEED_COOLDOWN_MS = 20000; // 觸發後冷卻 20 秒
+let   lastBreathingAt   = 0;     // 上次觸發呼吸引導的時間戳
+let   speedExceedStart  = 0;     // 開始持續超標的時間戳（0 = 未超標）
 
 (async () => {
   try {
@@ -841,7 +894,7 @@ async function submitToSheets(record, result) {
   const payload = {
     timestamp:             new Date().toISOString(),
     participant_id:        getParticipantId(),
-    app_version:           'V7',
+    app_version:           'V10',
     text:                  record.text,
     pre_mood:              record.mood,
     session_duration_sec:  Math.round(record.totalTime || 0),
@@ -1548,6 +1601,7 @@ let guideOpacity     = 0.18;
 let hakkaFontLoaded  = false;
 let cellSize         = 220;
 let lastResult       = null;
+let lastStressResult = null;
 
 let sessionData = {
   strokes:[], pauseDurations:[], pressureValues:[], totalTime:0, strokeCount:0,
@@ -2003,6 +2057,35 @@ function onPointerDown(e){
   const ctx=dCtx(); ctx.beginPath(); ctx.arc(lastX,lastY,lastWidth/2,0,Math.PI*2); ctx.fillStyle=currentColor; ctx.fill();
   updatePressureHUD(e);
 }
+function checkWritingSpeed(){
+  const now = Date.now();
+  if(breathingGuideActive || breathingTriggered) return;
+  if(now - lastBreathingAt < SPEED_COOLDOWN_MS) return;
+
+  // 第一層：計算過去 SPEED_WINDOW_MS 的平均速度
+  const rp = sessionData.rawPoints;
+  const cutoff = now - SPEED_WINDOW_MS;
+  let count = 0;
+  for(let i = rp.length - 1; i >= 0; i--){
+    if(rp[i].ts < cutoff) break;
+    count++;
+  }
+  const avgSpeed = count / (SPEED_WINDOW_MS / 1000); // 點/秒
+
+  // 第二層：必須持續超標 SPEED_SUSTAIN_MS 才觸發
+  if(avgSpeed >= SPEED_THRESHOLD){
+    if(speedExceedStart === 0) speedExceedStart = now;
+    if(now - speedExceedStart >= SPEED_SUSTAIN_MS){
+      breathingTriggered = true;
+      lastBreathingAt = now;
+      speedExceedStart = 0;
+      startBreathingGuide();
+    }
+  } else {
+    speedExceedStart = 0; // 速度降回正常，重置計時
+  }
+}
+
 function onPointerMove(e){
   e.preventDefault(); updatePressureHUD(e); if(!isDrawing) return; if(e.pointerType==='touch') return;
   if(breathingGuideActive) { isDrawing = false; return; }
@@ -2011,6 +2094,10 @@ function onPointerMove(e){
     const pos=getPos(ev); const w=getPressureWidth(ev); const avg=(lastWidth+w)/2;
     ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(pos.x,pos.y); ctx.lineWidth=avg; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle=currentColor; ctx.stroke();
     recordPoint(ev,pos); lastX=pos.x; lastY=pos.y; lastWidth=w;
+  }
+  // 速度偵測（僅 pen/實體輸入）
+  if(e.pointerType==='pen' || (e.pointerType==='touch' && e.pressure>0 && e.pressure!==0.5)){
+    checkWritingSpeed();
   }
 }
 function onPointerUp(e){ if(e.pointerType==='touch') return; isDrawing=false; lastStrokeEnd=Date.now(); updatePressureHUD(e,true); }
@@ -2049,12 +2136,8 @@ function updatePressureHUD(e, released){
   const fill = document.getElementById('pressure-fill');
   if(fill) fill.style.width = pressurePercent + '%';
 
-  if(isRealPen && pressurePercent >= 45 && !breathingGuideActive && !breathingTriggered && currentScreen === 'screen-write'){
-    breathingTriggered = true;
-    startBreathingGuide();
-  }
-
-  if(pressurePercent < 35){
+  // 冷卻結束後重置 breathingTriggered，允許下次再觸發
+  if(breathingTriggered && (Date.now() - lastBreathingAt) >= SPEED_COOLDOWN_MS){
     breathingTriggered = false;
   }
 }
@@ -2175,6 +2258,18 @@ function finishWriting(){
     pointCount:sessionData.rawPoints.length,
     rawPoints:sessionData.rawPoints.length>500?sessionData.rawPoints.filter((_,i)=>i%Math.ceil(sessionData.rawPoints.length/500)===0):sessionData.rawPoints,
   };
+
+  // ── StressEngine v2 判讀 ──
+  const pv=record.pressureValues||[];
+  const avgPressureForEngine=pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0;
+  const stressFeatureValues={
+    avg_pressure:          avgPressureForEngine,
+    avg_pause_duration_ms: record.avgPause!=null?Math.round(record.avgPause*1000):0,
+    session_duration_sec:  Math.round(sessionData.totalTime||0),
+    pause_count:           (record.pauseDurations||[]).length,
+  };
+  lastStressResult=StressEngine.evaluate(stressFeatureValues);
+
   try {
     const key='writing-mindfulness-sessions'; const existing=JSON.parse(localStorage.getItem(key)||'[]');
     existing.push(record); if(existing.length>200) existing.splice(0,existing.length-200);
@@ -2188,28 +2283,73 @@ function finishWriting(){
 
 function showFeedback(){
   const result = lastResult || analyzeWriting();
-  const configs={
-    calm:{icon:'🍃',title:'你寫得很從容',subtitle:'筆跡穩定，節奏舒緩\n這一刻的你，與自己同在',ecIcon:'🌊',cardClass:'calm',desc:'書寫過程中，你的筆觸穩定而有節奏感。這種狀態正是身心進入放鬆的訊號，繼續保持這份平靜。',suggestion:'試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',bars:[{label:'穩定度',value:0.8+Math.random()*0.15},{label:'節奏感',value:0.7+Math.random()*0.2},{label:'放鬆感',value:0.75+Math.random()*0.2}]},
-    focused:{icon:'✨',title:'你很專注',subtitle:'筆畫有力，心念集中\n這份專注是給自己最好的禮物',ecIcon:'🌟',cardClass:'focused',desc:'書寫時你保持了高度的專注，停頓少而規律。這種「心手合一」的狀態，正是書寫靜心的核心體驗。',suggestion:'下次可以嘗試閉上眼睛深呼吸三次再開始，感受靜心前後的差異。',bars:[{label:'專注度',value:0.82+Math.random()*0.15},{label:'節奏感',value:0.65+Math.random()*0.2},{label:'穩定度',value:0.7+Math.random()*0.2}]},
-    tense:{icon:'🌱',title:'謝謝你今天的嘗試',subtitle:'偵測到一些緊繃的節奏\n沒關係，書寫本身就已 es 放鬆的開始',ecIcon:'🌬',cardClass:'tense',desc:'今天的書寫節奏稍不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',suggestion:'下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',bars:[{label:'穩定度',value:0.35+Math.random()*0.25},{label:'節奏感',value:0.4+Math.random()*0.2},{label:'放鬆感',value:0.45+Math.random()*0.2}]}
+
+  // ── 從真實特徵值計算三條 bar（0–1，夾緊） ──
+  // 穩定度：筆壓變異越小越穩定（pressureVariance 0→穩，0.3+→不穩）
+  const stabilityVal = Math.min(1, Math.max(0, 1 - result.pressureVariance / 0.3));
+  // 節奏感：平均停頓越短越流暢（avgPause 秒，0→流暢，3+→遲滯）
+  const rhythmVal    = Math.min(1, Math.max(0, 1 - result.avgPause / 3));
+  // 放鬆感／專注度：直接用 analyzeWriting 的加權分數
+  const relaxVal     = Math.min(1, Math.max(0, result.calm));
+  const focusVal     = Math.min(1, Math.max(0, result.focused));
+
+  // ── 根據 dominant 決定標題、文案、bar 組合 ──
+  // 先建立動態描述片段
+  const stabilityText = stabilityVal >= 0.7 ? '筆壓穩定' : stabilityVal >= 0.4 ? '筆壓略有起伏' : '筆壓變化較大';
+  const rhythmText    = rhythmVal    >= 0.7 ? '節奏流暢' : rhythmVal    >= 0.4 ? '偶有停頓' : '停頓較頻繁';
+
+  const configs = {
+    calm: {
+      icon:'🍃', title:'你寫得很從容',
+      subtitle:`${stabilityText}，${rhythmText}\n這一刻的你，與自己同在`,
+      ecIcon:'🌊', cardClass:'calm',
+      desc: `書寫過程中你的筆觸${stabilityText}、${rhythmText}，` +
+            (stabilityVal >= 0.6 ? '這種穩定的節奏正是身心放鬆的訊號，繼續保持這份平靜。'
+                                 : '整體仍維持從容的書寫狀態，動筆本身就是一種安靜的力量。'),
+      suggestion:'試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',
+      bars:[{label:'穩定度',value:stabilityVal},{label:'節奏感',value:rhythmVal},{label:'放鬆感',value:relaxVal}],
+    },
+    focused: {
+      icon:'✨', title:'你很專注',
+      subtitle:`筆畫${stabilityVal>=0.6?'有力':'緊實'}，心念集中\n這份專注是給自己最好的禮物`,
+      ecIcon:'🌟', cardClass:'focused',
+      desc: `書寫時你保持了高度的專注，${rhythmText}。` +
+            (focusVal >= 0.6 ? '這種「心手合一」的狀態，正是書寫靜心的核心體驗。'
+                             : '雖然中途有些停頓，整體專注的意志仍然清晰可見。'),
+      suggestion:'下次可以嘗試閉上眼睛深呼吸三次再開始，感受靜心前後的差異。',
+      bars:[{label:'專注度',value:focusVal},{label:'節奏感',value:rhythmVal},{label:'穩定度',value:stabilityVal}],
+    },
+    tense: {
+      icon:'🌱', title:'謝謝你今天的嘗試',
+      subtitle:`偵測到一些緊繃的節奏\n沒關係，書寫本身就已是放鬆的開始`,
+      ecIcon:'🌬', cardClass:'tense',
+      desc: `今天的書寫${rhythmText}、${stabilityText}，這可能反映你目前的狀態。` +
+            '不需要評價好不好，只要動筆，心就在往安靜的方向走。',
+      suggestion:'下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',
+      bars:[{label:'穩定度',value:stabilityVal},{label:'節奏感',value:rhythmVal},{label:'放鬆感',value:relaxVal}],
+    },
   };
-  const cfg=configs[result.dominant];
-  document.getElementById('fb-icon').textContent=cfg.icon;
-  document.getElementById('fb-title').textContent=cfg.title;
-  document.getElementById('fb-subtitle').textContent=cfg.subtitle.replace('\\n','\n');
-  document.getElementById('ec-icon').textContent=cfg.ecIcon;
-  document.getElementById('suggestion-text').textContent=cfg.suggestion;
-  document.getElementById('ec-desc').textContent=cfg.desc;
-  const ec=document.getElementById('emotion-card'); ec.className='emotion-card '+cfg.cardClass;
-  const barsEl=document.getElementById('ec-bars'); barsEl.innerHTML='';
-  cfg.bars.forEach(bar=>{
-    const row=document.createElement('div'); row.className='ec-bar-wrap';
-    row.innerHTML=`<span style="width:44px;text-align:right">${bar.label}</span><div class="ec-bar-track"><div class="ec-bar-fill" style="width:0%"></div></div>`;
-    barsEl.appendChild(row); setTimeout(()=>{row.querySelector('.ec-bar-fill').style.width=(bar.value*100)+'%';},300);
+
+  const cfg = configs[result.dominant];
+  document.getElementById('fb-icon').textContent = cfg.icon;
+  document.getElementById('fb-title').textContent = cfg.title;
+  document.getElementById('fb-subtitle').textContent = cfg.subtitle.replace('\\n','\n');
+  document.getElementById('ec-icon').textContent = cfg.ecIcon;
+  document.getElementById('suggestion-text').textContent = cfg.suggestion;
+  document.getElementById('ec-desc').textContent = cfg.desc;
+  const ec = document.getElementById('emotion-card'); ec.className = 'emotion-card ' + cfg.cardClass;
+  const barsEl = document.getElementById('ec-bars'); barsEl.innerHTML = '';
+  cfg.bars.forEach(bar => {
+    const row = document.createElement('div'); row.className = 'ec-bar-wrap';
+    row.innerHTML = `<span style="width:44px;text-align:right">${bar.label}</span><div class="ec-bar-track"><div class="ec-bar-fill" style="width:0%"></div></div>`;
+    barsEl.appendChild(row);
+    setTimeout(() => { row.querySelector('.ec-bar-fill').style.width = (bar.value * 100) + '%'; }, 300);
   });
-  const enc=getEncouragement(result.dominant, userProfile.streak, userProfile.totalSessions);
-  document.getElementById('encourage-streak').textContent=enc.streak;
-  document.getElementById('encourage-text').textContent=enc.text;
+
+  const enc = getEncouragement(result.dominant, userProfile.streak, userProfile.totalSessions);
+  document.getElementById('encourage-streak').textContent = enc.streak;
+  document.getElementById('encourage-text').textContent = enc.text;
+  renderStressCard(lastStressResult);
   initMoodPicker();
   if(fbReady) listenMoodBubbles();
 }
@@ -2247,7 +2387,174 @@ document.addEventListener('click', unlockMeditationMusicFromGesture, true);
 document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
 document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
 
-const APP_VERSION = 'V9';
+// ══════════════════════════════════════════════════════════════
+// 寫字靜心｜壓力判讀引擎 v2（內嵌於 V10）
+// N=57 實際資料分布設計，規則式 Expert-based threshold
+// ══════════════════════════════════════════════════════════════
+const StressEngine = (() => {
+  const FEATURES = {
+    avg_pressure: {
+      label:'平均筆壓', direction:'positive', weight:2.0,
+      low_cut:0.132, high_cut:0.248,
+      high_desc:'握筆力道偏重，肌肉可能比較緊繃',
+      low_desc:'筆觸輕盈，手部放鬆',
+    },
+    avg_pause_duration_ms: {
+      label:'停頓時長', direction:'positive', weight:1.5,
+      low_cut:250, high_cut:470,
+      high_desc:'每次停筆的時間偏長，思緒可能比較分散',
+      low_desc:'停頓短而連貫，書寫很流暢',
+    },
+    session_duration_sec: {
+      label:'書寫時長', direction:'positive', weight:1.5,
+      low_cut:38, high_cut:80,
+      high_desc:'完成書寫花的時間偏長',
+      low_desc:'書寫節奏明快流暢',
+    },
+    pause_count: {
+      label:'停頓次數', direction:'positive', weight:1.0,
+      low_cut:58, high_cut:76,
+      high_desc:'停頓次數較多，書寫過程有些中斷',
+      low_desc:'書寫過程連貫，中斷很少',
+    },
+  };
+  const MESSAGES = {
+    low:{
+      labels:['書寫從容','狀態穩定','輕鬆自在'], color:'#6b7c5e', icon:'🌿',
+      intros:['你今天的書寫很從容，','筆跡裡有一份安靜的力量，','這次書寫感覺很穩定，'],
+      closings:['這種輕鬆的節奏，是給自己最好的禮物。','讓這份平靜陪著你度過今天。','保持這樣的狀態，你做得很好。'],
+    },
+    mid:{
+      labels:['帶點壓力','有些緊繃','狀態普通'], color:'#9b7a3a', icon:'🌤',
+      intros:['書寫裡有一點緊繃的痕跡，','今天的你帶著一些重量，','筆跡顯示心裡有些事情在轉，'],
+      closings:['沒關係，能坐下來寫字就已經是照顧自己了。','書寫本身就是一種溫柔的喘息。','一步一步來，不用著急。'],
+    },
+    high:{
+      labels:['壓力偏高','有些沉重','需要關注'], color:'#8b2c2c', icon:'🌧',
+      intros:['這次書寫感受到比較明顯的緊繃，','今天的你承受著不少，','筆跡裡藏著一些壓力，'],
+      closings:['先讓自己休息一下，一切可以慢慢來。','謝謝你還是願意坐下來寫字，這需要勇氣。','不用現在就解決所有事，先好好照顧自己。'],
+    },
+  };
+  const SUGGESTIONS = {
+    avg_pressure_high:['下次試著想像筆尖只是輕輕掃過紙面，讓手放鬆，字自然就出來了。','握筆可以再放鬆一點，不需要用力壓，讓手腕帶著筆走。'],
+    avg_pause_duration_ms_high:['停頓沒關係，但如果發現自己停很久，試著先深吸一口氣再繼續。','讓思緒先放空，不用想接下來要怎麼寫，跟著感覺走就好。'],
+    session_duration_sec_high:['花比較長時間也沒關係，慢慢寫本身就是一種享受。','下次可以不計時間，讓書寫在你覺得對的時候自然結束。'],
+    pause_count_high:['試著把停頓當作呼吸的節奏，讓每一次停頓都是有意識的休息。','不用一直往前寫，停下來看看剛寫的字，也是書寫的一部分。'],
+    default:['下次書寫前先做三次深呼吸，讓身體先進入放鬆的狀態。','找一個安靜的角落，讓書寫成為每天給自己的小小儀式。','試著在書寫時專注在筆尖的感覺，其他事情先放一放。'],
+  };
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function scoreFeature(feat,value){
+    const cfg=FEATURES[feat]; if(!cfg||value==null||isNaN(value)) return null;
+    if(value<=cfg.low_cut) return 0; if(value>=cfg.high_cut) return 2; return 1;
+  }
+  function analyze(fv){
+    let weightedSum=0,totalWeight=0; const featureScores={};
+    for(const[feat,cfg] of Object.entries(FEATURES)){
+      const val=fv[feat]; const score=scoreFeature(feat,val);
+      if(score!==null){ featureScores[feat]=score; weightedSum+=score*cfg.weight; totalWeight+=cfg.weight; }
+    }
+    if(totalWeight===0) return null;
+    const stressIndex=weightedSum/totalWeight;
+    const level=stressIndex<0.75?'low':stressIndex<1.35?'mid':'high';
+    let dominantFeat=null,dominantWeight=-1;
+    for(const[feat,score] of Object.entries(featureScores)){
+      if(score===2){ const w=FEATURES[feat].weight; if(w>dominantWeight){dominantWeight=w;dominantFeat=feat;} }
+    }
+    const msg=MESSAGES[level];
+    const intro=pick(msg.intros); const closing=pick(msg.closings);
+    const featDesc=dominantFeat?FEATURES[dominantFeat].high_desc:'';
+    const description=featDesc?`${intro}${featDesc}。${closing}`:`${intro}${closing}`;
+    const suggKey=dominantFeat?`${dominantFeat}_high`:'default';
+    const suggestion=pick(SUGGESTIONS[suggKey]||SUGGESTIONS.default);
+    return{ level, label:pick(msg.labels), color:msg.color, icon:msg.icon,
+      stressIndex:Math.round(stressIndex*100)/100, description, suggestion, featureScores, dominantFeat };
+  }
+  function compareWithLast(current,last){
+    if(!last) return null;
+    const order={low:0,mid:1,high:2};
+    const diff=order[current.level]-order[last.level];
+    const improved=Object.entries(current.featureScores)
+      .filter(([f,s])=>last.featureScores?.[f]!=null&&s<last.featureScores[f])
+      .sort(([fa,sa],[fb,sb])=>(last.featureScores[fb]-sb)*FEATURES[fb].weight-(last.featureScores[fa]-sa)*FEATURES[fa].weight)[0]?.[0];
+    const worsened=Object.entries(current.featureScores)
+      .filter(([f,s])=>last.featureScores?.[f]!=null&&s>last.featureScores[f])
+      .sort(([fa,sa],[fb,sb])=>(sb-last.featureScores[fb])*FEATURES[fb].weight-(sa-last.featureScores[fa])*FEATURES[fa].weight)[0]?.[0];
+    let compText,compColor,compIcon;
+    if(diff<0){ compIcon='↗'; compColor='#6b7c5e'; compText=improved?`比上次書寫輕鬆了一些，${FEATURES[improved].label}有明顯改善。`:'整體狀態比上次好一些，繼續保持。'; }
+    else if(diff>0){ compIcon='↘'; compColor='#8b2c2c'; compText=worsened?`比上次書寫緊繃了一點，特別是${FEATURES[worsened].label}的部分。`:'今天的狀態比上次稍微緊繃，沒關係，狀態本來就會起伏。'; }
+    else { compIcon='→'; compColor='#9b7a3a'; compText='和上次書寫的狀態差不多，穩定也是一種進步。'; }
+    return{compText,compColor,compIcon,diff};
+  }
+  const STORAGE_KEY='wm-stress-history-v2';
+  function saveResult(result,fv){
+    try{
+      const history=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+      history.push({ts:Date.now(),level:result.level,stressIndex:result.stressIndex,featureScores:result.featureScores,
+        rawValues:{avg_pressure:fv.avg_pressure,avg_pause_duration_ms:fv.avg_pause_duration_ms,session_duration_sec:fv.session_duration_sec,pause_count:fv.pause_count}});
+      if(history.length>30) history.splice(0,history.length-30);
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(history));
+    }catch(e){ console.warn('無法儲存書寫紀錄',e); }
+  }
+  function getLastResult(){
+    try{ const h=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); return h.length>=2?h[h.length-2]:null; }catch(e){return null;}
+  }
+  function evaluate(fv){
+    const result=analyze(fv); if(!result) return null;
+    const last=getLastResult(); const comparison=compareWithLast(result,last);
+    saveResult(result,fv); return{...result,comparison};
+  }
+  return{evaluate,FEATURES};
+})();
+
+// ══════════════════════════════
+// 渲染壓力判讀卡（V10）
+// ══════════════════════════════
+function renderStressCard(result){
+  if(!result) return;
+  const card=document.getElementById('stress-card');
+  const accentColors={low:'#6b7c5e',mid:'#9b7a3a',high:'#8b2c2c'};
+  const accent=accentColors[result.level]||'#6b7c5e';
+  card.style.setProperty('--stress-accent',accent);
+
+  document.getElementById('stress-icon').textContent=result.icon;
+  document.getElementById('stress-level-label').textContent=result.label;
+  document.getElementById('stress-desc').textContent=result.description;
+  document.getElementById('stress-suggestion').textContent=result.suggestion;
+
+  // 壓力指數進度條（0–2 → 0–100%）
+  const pct=Math.round(result.stressIndex/2*100);
+  document.getElementById('stress-index-val').textContent=`${result.stressIndex.toFixed(2)} / 2.00`;
+  const fill=document.getElementById('stress-index-fill');
+  fill.className='stress-index-fill'+(result.level==='mid'?' mid':result.level==='high'?' high':'');
+  setTimeout(()=>{ fill.style.width=pct+'%'; },200);
+
+  // 特徵值標籤
+  const chips=document.getElementById('stress-chips'); chips.innerHTML='';
+  const FEAT_LABELS=StressEngine.FEATURES;
+  for(const[feat,score] of Object.entries(result.featureScores)){
+    const chip=document.createElement('span');
+    chip.className='stress-chip '+(score===2?'high':score===0?'low':'mid');
+    const cfg=FEAT_LABELS[feat];
+    const arrow=score===2?'↑':score===0?'↓':'→';
+    chip.textContent=`${cfg.label} ${arrow}`;
+    chips.appendChild(chip);
+  }
+
+  // 與上次比較
+  const compEl=document.getElementById('stress-compare');
+  if(result.comparison){
+    const{compText,compColor,compIcon}=result.comparison;
+    document.getElementById('stress-compare-icon').textContent=compIcon;
+    document.getElementById('stress-compare-icon').style.color=compColor;
+    document.getElementById('stress-compare-text').textContent=compText;
+    document.getElementById('stress-compare-text').style.color=compColor;
+    compEl.classList.remove('hidden');
+  } else {
+    compEl.classList.add('hidden');
+  }
+}
+
+const APP_VERSION = 'V10';
 initTodayPick();
 renderCorpus('all');
 initSeasonBanner();
