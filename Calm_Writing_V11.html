@@ -217,8 +217,8 @@ html, body {
 .cp-swatch.active { border-color:white; transform:scale(1.15); }
 .cp-size-wrap,.guide-opacity-wrap { padding:4px 0; display:flex; align-items:center; gap:8px; }
 .cp-size-label { font-size:10px; color:rgba(248,243,235,0.4); white-space:nowrap; }
-.cp-slider { flex:1; -webkit-appearance:none; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; outline:none; }
-.cp-slider::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; background:white; border-radius:50%; cursor:pointer; }
+.cp-slider { flex:1; -webkit-earance:none; height:3px; background:rgba(255,255,255,0.2); border-radius:2px; outline:none; }
+.cp-slider::-webkit-slider-thumb { -webkit-earance:none; width:14px; height:14px; background:white; border-radius:50%; cursor:pointer; }
 
 /* MISC */
 #font-status { position:fixed; top:68px; left:50%; transform:translateX(-50%); background:rgba(107,124,94,0.92); color:white; font-size:12px; padding:7px 16px; border-radius:50px; z-index:200; display:none; letter-spacing:0.06em; pointer-events:none; }
@@ -773,7 +773,7 @@ async function submitToSheets(record, result) {
   const payload = {
     timestamp:             new Date().toISOString(),
     participant_id:        getParticipantId(),
-    app_version:           'V10',
+    app_version:           'V11',
     text:                  record.text,
     pre_mood:              record.mood,
     session_duration_sec:  Math.round(record.totalTime || 0),
