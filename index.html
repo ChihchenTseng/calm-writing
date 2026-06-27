@@ -773,7 +773,7 @@ async function submitToSheets(record, result) {
   const payload = {
     timestamp:             new Date().toISOString(),
     participant_id:        getParticipantId(),
-    app_version:           'V11',
+    app_version:           'V12',
     text:                  record.text,
     pre_mood:              record.mood,
     session_duration_sec:  Math.round(record.totalTime || 0),
@@ -797,7 +797,11 @@ async function submitToSheets(record, result) {
   };
 
   try {
-    const url = SHEETS_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+    const extraParams = new URLSearchParams({
+      long_pause_count: String(payload.long_pause_count),
+      avg_char_spacing: String(payload.avg_char_spacing)
+    });
+    const url = SHEETS_URL + '?data=' + encodeURIComponent(JSON.stringify(payload)) + '&' + extraParams.toString();
     await fetch(url, { method: 'GET', mode: 'no-cors' });
   } catch (err) {
     console.warn('Google Sheets 上傳失敗:', err);
@@ -2286,7 +2290,7 @@ document.addEventListener('click', unlockMeditationMusicFromGesture, true);
 document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
 document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
 
-const APP_VERSION = 'V11';
+const APP_VERSION = 'V12';
 initTodayPick();
 renderCorpus('all');
 initSeasonBanner();
