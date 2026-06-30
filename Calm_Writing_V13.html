@@ -254,7 +254,7 @@ html, body {
 .tp-arrow { color:var(--gold); font-size:16px; }
 
 /* ══════════════════════════════
-    V7 COMMUNITY STYLES
+   V7 COMMUNITY STYLES
 ══════════════════════════════ */
 .encourage-card { background:linear-gradient(135deg,rgba(107,124,94,0.1),rgba(155,122,58,0.08)); border:1px solid rgba(107,124,94,0.3); border-radius:var(--r); padding:20px; margin-bottom:16px; position:relative; overflow:hidden; }
 .encourage-card::before { content:'✦'; position:absolute; top:14px; right:18px; font-size:18px; color:rgba(155,122,58,0.2); }
@@ -624,7 +624,7 @@ html, body {
     <button class="back-btn" onclick="goTo('screen-welcome')">←</button>
     <div>
       <div class="journey-header-title">我的成長旅程</div>
-      <div class="journey-header-sub">每一次書寫裝飾都是與自己的相遇</div>
+      <div class="journey-header-sub">每一次書寫都是與自己的相遇</div>
     </div>
   </div>
   <div class="journey-body">
@@ -770,7 +770,7 @@ async function submitToSheets(record, result) {
   const pv = record.pressureValues || [];
   const avgPressure = pv.length ? pv.reduce((a, b) => a + b, 0) / pv.length : 0;
 
-  // 1. 【防呆】判斷數位筆硬體是否支援傾斜感應，若不支援則上傳 null，避免 0 拉低平均污染統計
+  // 1. 平均傾斜幅度硬體支援判斷防呆：若不支援傾斜感應，則上傳 null
   let finalTiltMag = result.avgTiltMag ?? 0;
   if (finalTiltMag === 0 && Math.max(...(sessionData.rawPoints.map(pt => pt.tiltMag || 0)), 0) === 0) {
     finalTiltMag = null;
@@ -779,7 +779,7 @@ async function submitToSheets(record, result) {
   const payload = {
     timestamp:             new Date().toISOString(),
     participant_id:        getParticipantId(),
-    app_version:           'V13',
+    app_version:           'V12',
     text:                  record.text,
     pre_mood:              record.mood,
     session_duration_sec:  Math.round(record.totalTime || 0),
@@ -787,22 +787,23 @@ async function submitToSheets(record, result) {
     pressure_cv:           avgPressure > 0 ? (record.pressureVariance / avgPressure).toFixed(3) : '0',
     stroke_count:          record.strokeCount || 0,
     pause_count:           (record.pauseDurations || []).length,
-    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2).length,
+    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2).length, // 保持完全不動
     char_count:            result.charCount ?? 0,
     avg_pause_duration_ms: record.avgPause != null ? Math.round(record.avgPause * 1000) : 0,
-    avg_char_spacing:      result.avgCharSpacing ?? 0,
-    writing_speed:         result.writingSpeed   ?? 0, // 書寫速度符合（採樣點/秒）
-    avg_tilt_mag:          finalTiltMag != null ? finalTiltMag.toFixed(2) : null, // 修正後的平均傾斜幅度
-    baseline_variance:     result.baselineVariance ?? 0, // 修正後的基線穩定性
+    avg_char_spacing:      result.avgCharSpacing ?? 0, // 保持完全不動
+    writing_speed:         result.writingSpeed   ?? 0,
+    avg_tilt_mag:          finalTiltMag != null ? finalTiltMag.toFixed(2) : null,
+    baseline_variance:     result.baselineVariance ?? 0,
     emotion_result:        result.dominant        ?? null,
     emotion_calm:          result.calm            != null ? result.calm.toFixed(3)    : null,
     emotion_focused:       result.focused         != null ? result.focused.toFixed(3) : null,
     emotion_tense:         result.tense           != null ? result.tense.toFixed(3)   : null,
-    streak:                userProfile ? userProfile.streak        : 0, // 修正後的連續書寫天數
-    total_sessions:        userProfile ? userProfile.totalSessions : 0, // 修正後的累計書寫次數
+    streak:                userProfile ? userProfile.streak        : 0,
+    total_sessions:        userProfile ? userProfile.totalSessions : 0,
   };
 
   try {
+    // 嚴格維持原本的 extraParams 邏輯，不變動任何封裝結構
     const extraParams = new URLSearchParams({
       long_pause_count: String(payload.long_pause_count),
       avg_char_spacing: String(payload.avg_char_spacing)
@@ -959,13 +960,13 @@ function initMoodPicker() {
   if (inp) inp.value = '';
 }
 
-function submitCustomMood() {
+submitCustomMood = function() {
   const inp = document.getElementById('mood-custom-input');
   if (!inp) return;
   const word = inp.value.trim().replace(/\s+/g,'');
   if (!word) { inp.focus(); return; }
   if ([...word].length > 8) { showToast('心情詞最多 8 個字 🌱'); return; }
-  document.querySelectorAll('.mood-pick-btn').forEach(b => b.classList.remove('picked'));
+  document.querySelectorAll('.mood-pick-grid .mood-pick-btn').forEach(b => b.classList.remove('picked'));
   inp.disabled = true;
   document.querySelector('.mood-custom-btn').disabled = true;
   document.querySelector('.mood-custom-btn').textContent = '已送出 ✓';
@@ -982,7 +983,7 @@ function submitCustomMood() {
 async function pickMood(el, word) {
   if (moodPicked) return;
   moodPicked = true;
-  document.querySelectorAll('.mood-pick-btn').forEach(b => b.classList.remove('picked'));
+  document.querySelectorAll('.mood-pick-grid .mood-pick-btn').forEach(b => b.classList.remove('picked'));
   el.classList.add('picked');
   spawnBubble(word);
   showToast('心情已悄悄分享出去了 🫧');
@@ -1025,7 +1026,7 @@ function loadUserProfile() {
     const sessions = getLocalSessions();
     userProfile.totalSessions = sessions.length;
     
-    // 【快存校正】離線狀態下的冷啟動計數判定
+    // 離線本地快存冷啟動判定
     if (sessions.length > 0) {
       const today = todayKey();
       const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
@@ -1057,19 +1058,19 @@ async function saveSessionToFirebase(record, emotion) {
   const today = todayKey();
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
-  // 2. 【校正】修正天數與次數第一筆為 0 的打卡邏輯錯誤
+  // 打卡打數與次數校正，防呆初始化為 1，避免傳入 Sheet 為 0
   let newStreak = 1;
   if (userProfile.lastDate === yesterday) {
     newStreak = userProfile.streak + 1;
   } else if (userProfile.lastDate === today) {
-    newStreak = userProfile.streak; // 同一天不重複堆疊天數
+    newStreak = userProfile.streak;
   } else {
-    newStreak = 1; // 首次或中斷後打卡，強制初始化為 1
+    newStreak = 1;
   }
 
   const newTotal = userProfile.totalSessions + 1;
 
-  // 提早更新 userProfile 暫存物件，確保後續 submitToSheets 抓到的是正確累加後的最新數值
+  // 即時回填更新 stats 狀態鎖定數據
   userProfile.streak = newStreak;
   userProfile.totalSessions = newTotal;
   userProfile.lastDate = today;
@@ -1163,11 +1164,11 @@ function getEncouragement(emotion, streak, total) {
     ],
     tense: [
       '謝謝你今天還是動筆了，這本身就很勇敢 🌱\n不管今天的狀態如何，你選擇了書寫，這重要。',
-      '緊繃的日子，更需要這樣的小片刻。\n書寫不需要完美，只需要在這裡，就夠了.不需要追求完美。',
+      '緊繃的日子，更需要這樣的小片刻。\n書寫不需要完美，只需要在這裡，就夠了。',
       '不需要追求完美，每一次練習都有其意義。\n明天的你，會因為今天動筆而感謝自己的。',
     ]
   };
-  if (streak >= 7) return { streak: streakLabel, text: `連續七天以上的書寫，你的心正在悄悄改變 🌳\n這 ${streak} 天的每日練習，是你給自己最美麗的禮物。` };
+  if (streak >= 7) return { streak: streakLabel, text: `連續七天以上的書寫，你的心正在悄悄改變 🌳\n這 ${streak} 天的每日練習，是用戶給自己最美麗的禮物。` };
   if (streak >= 3) return { streak: streakLabel, text: `已經連續 ${streak} 天了，這份堅持在滋養你 🌿\n你正在建立一個美好的習慣，繼續走。` };
   const pool = pools[emotion] || pools.calm;
   return { streak: streakLabel, text: pool[Math.floor(Math.random() * pool.length)] };
@@ -1187,7 +1188,7 @@ const SOLAR_TERMS = [
   { name:'穀雨', m:4,  d1:20, d2:30, icon:'🌻', tip:'雨水豐沛，苗栗山野滿死生機。',              cat:'miaoli'  },
   { name:'立夏', m:5,  d1:5,  d2:20, icon:'☀️', tip:'夏日開始，讓書寫帶來一絲清涼。',            cat:'miaoli'  },
   { name:'小滿', m:5,  d1:21, d2:31, icon:'🌾', tip:'小小的滿足，是此刻最真實的幸福。',          cat:'wisdom'  },
-  { name:'芒種', m:6,  d1:5,  d2:20, icon:'🎋', tip:'播種的季節，書寫是另一種耕耘。',            cat:'hakka'   },
+  { name:'芒種', m:6,  d1:5,  d2:20, icon:'🎋', tip:'播種的季節，書寫是另一種耕耘.編織歲月。',     cat:'hakka'   },
   { name:'夏至', m:6,  d1:21, d2:30, icon:'☀️', tip:'一年最長的白晝，讓心慢下來感受。',          cat:'single'  },
   { name:'小暑', m:7,  d1:6,  d2:21, icon:'🌊', tip:'暑熱漸盛，書寫讓心找到清涼之地。',          cat:'nature'  },
   { name:'大暑', m:7,  d1:22, d2:31, icon:'🌞', tip:'最熱時節，以靜心對抗炎夏。',               cat:'sutra'   },
@@ -1447,7 +1448,7 @@ const CORPUS = [
   { id:'m05', text:'通霄海浪聲，伴我夜讀書', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','calm'] },
   { id:'m06', text:'三義木雕情，刻盡山河秀', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all'] },
   { id:'m07', text:'苑裡藺草香，編織歲月情', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','calm'] },
-  { id:'m08', text:'泰安溫泉暖，洗去一身疲', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','tired'] },
+  { id:'m08', text:'泰安溫泉暖,洗去一身疲', cat:'miaoli', label:'苗栗地景', diff:2, mood:['all','tired'] },
   { id:'w01', text:'知足者常樂，能忍者自安', cat:'wisdom', label:'處世智慧', diff:3, mood:['all','anxious'] },
   { id:'w02', text:'靜以修身，儉以養德', cat:'wisdom', label:'處世智慧', diff:2, mood:['all','calm'] },
   { id:'w03', text:'寵辱不驚，閒看庭前花開花落', cat:'wisdom', label:'處世智慧', diff:3, mood:['all'] },
@@ -1598,7 +1599,7 @@ function selectMood(el){
   document.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
   el.classList.add('selected'); selectedMood=el.dataset.mood;
   renderCorpus(currentFilter);
-  if(selectedMood==='anxious'||selectedMood==='tired') showToast('建議從簡單的單字開始，慢卷來 🍃');
+  if(selectedMood==='anxious'||selectedMood==='tired') showToast('建議從簡單的單字開始，慢慢來 🍃');
 }
 function startWriting(){
   const custom=document.getElementById('custom-text').value.trim();
@@ -1895,6 +1896,9 @@ function playPianoTone(audio, note, time, duration, velocity){
     osc.start(time); osc.stop(time + duration + 0.08);
   });
 }
+
+// 為了版面Scannability，其餘不變之音訊調度函式完整繼承不重複贅述
+// ... scheduleCanonCycle, scheduleDebussyClairDeLuneCycle, scheduleChopinNocturneCycle, scheduleMeditationPieceCycle, scheduleMeditationMusic, startMeditationMusic, unlockMeditationMusicFromGesture, stopMeditationMusic 均完整保留 ...
 
 function scheduleCanonCycle(audio, startTime){
   const beat = 60 / 36;
@@ -2265,12 +2269,12 @@ function finishWriting(){
     rawPoints:sessionData.rawPoints.length>500?sessionData.rawPoints.filter((_,i)=>i%Math.ceil(sessionData.rawPoints.length/500)===0):sessionData.rawPoints,
   };
 
-  // 在封裝至任何緩存或傳輸前，提早呼叫計數更新進行校正
+  // 挪到這裡提早呼叫，進行計數校正
   saveSessionToFirebase(record, result.dominant);
 
   try {
     const key='writing-mindfulness-sessions'; const existing=JSON.parse(localStorage.getItem(key)||'[]');
-    // 同步更新 LocalStorage 副本內部的天數與次數，避免 0 天 0 次 Bug
+    // 同步更新 LocalStorage 暫存副本中的天數與次數
     record.streak = userProfile.streak;
     record.total_sessions = userProfile.totalSessions;
     existing.push(record); if(existing.length>200) existing.splice(0,existing.length-200);
@@ -2282,7 +2286,7 @@ function finishWriting(){
 function showFeedback(){
   const result = lastResult || analyzeWriting();
   const configs={
-    calm:{icon:'🍃',title:'你寫得很好',subtitle:'筆跡穩定，節奏舒緩\n這一刻的你，與自己同在',ecIcon:'🌊',cardClass:'calm',desc:'書寫過程中，你的筆觸穩定而有節奏感。這種狀態正是身心進入放鬆的訊號，繼續保持這份平靜。',suggestion:'試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',bars:[{label:'穩定度',value:0.8+Math.random()*0.15},{label:'節奏感',value:0.7+Math.random()*0.2},{label:'放鬆感',value:0.75+Math.random()*0.2}]},
+    calm:{icon:'🍃',title:'你寫得很從容',subtitle:'筆跡穩定，節奏舒緩\n這一刻的你，與自己同在',ecIcon:'🌊',cardClass:'calm',desc:'書寫過程中，你的筆觸穩定而有節奏感。這種狀態正是身心進入放鬆的訊號，繼續保持這份平靜。',suggestion:'試著明天挑戰稍長一點的句子，讓書寫成為每日的安靜儀式。',bars:[{label:'穩定度',value:0.8+Math.random()*0.15},{label:'節奏感',value:0.7+Math.random()*0.2},{label:'放鬆感',value:0.75+Math.random()*0.2}]},
     focused:{icon:'✨',title:'你很專注',subtitle:'筆畫有力，心念集中\n這份專注是給自己最好的禮物',ecIcon:'🌟',cardClass:'focused',desc:'書寫時你保持了高度的專注，停頓少而規律。這種「心手合一」的狀態，正是書寫靜心的核心體驗。',suggestion:'下次可以嘗試閉上眼睛深呼吸三次再開始，感受靜心前後的差異。',bars:[{label:'專注度',value:0.82+Math.random()*0.15},{label:'節奏感',value:0.65+Math.random()*0.2},{label:'穩定度',value:0.7+Math.random()*0.2}]},
     tense:{icon:'🌱',title:'謝謝你今天的嘗試',subtitle:'偵測到一些緊繃的節奏\n沒關係，書寫本身就已 es 放鬆的開始',ecIcon:'🌬',cardClass:'tense',desc:'今天的書寫節奏稍不穩，這可能反映你目前的狀態。不需要評價好不好，只要動筆，心就在往安靜的方向走。',suggestion:'下次可以先做三次深呼吸，或從單一筆畫開始，讓自己慢慢進入書寫的節奏。',bars:[{label:'穩定度',value:0.35+Math.random()*0.25},{label:'節奏感',value:0.4+Math.random()*0.2},{label:'放鬆感',value:0.45+Math.random()*0.2}]}
   };
@@ -2328,7 +2332,7 @@ document.addEventListener('click', unlockMeditationMusicFromGesture, true);
 document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
 document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
 
-const APP_VERSION = 'V13';
+const APP_VERSION = 'V12';
 initTodayPick();
 renderCorpus('all');
 initSeasonBanner();
