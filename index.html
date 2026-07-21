@@ -697,8 +697,10 @@ firebase.initializeApp(firebaseConfig);
 const db   = firebase.database();
 const auth = firebase.auth();
 let fbUser = null, fbReady = false;
-let breathingGuideActive = false; 
-let breathingTriggered = false;   
+let breathingGuideActive = false;
+let breathingTriggered = false;
+let breathingCooldownUntil = 0; // 呼吸引導結束後的冷卻截止時間戳（ms），冷卻期間不重新觸發
+const BREATHING_COOLDOWN_MS = 20000; // 冷卻時間 20 秒
 
 (async () => {
   try {
@@ -2155,7 +2157,7 @@ function updatePressureHUD(e, released){
   const fill = document.getElementById('pressure-fill');
   if(fill) fill.style.width = pressurePercent + '%';
 
-  if(isRealPen && pressurePercent >= 45 && !breathingGuideActive && !breathingTriggered && currentScreen === 'screen-write'){
+  if(isRealPen && pressurePercent >= 45 && !breathingGuideActive && !breathingTriggered && currentScreen === 'screen-write' && Date.now() >= breathingCooldownUntil){
     breathingTriggered = true; startBreathingGuide();
   }
   if(pressurePercent < 35){ breathingTriggered = false; }
@@ -2185,6 +2187,7 @@ async function startBreathingGuide(){
   overlay.classList.remove('show');
   circle.className = 'breathing-circle';
   breathingGuideActive = false;
+  breathingCooldownUntil = Date.now() + BREATHING_COOLDOWN_MS;
   if(currentScreen === 'screen-write'){ startTimer(); }
 }
 
