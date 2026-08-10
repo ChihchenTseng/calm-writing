@@ -1532,6 +1532,7 @@ let sessionData = {
   rawPoints:[], charBounds:{}, tiltXValues:[], tiltYValues:[], baselineAngles:[],
 };
 let isDrawing=false, lastX=0, lastY=0, lastWidth=2;
+let skipNextPause = false;
 let undoStack=[], timerInterval=null, timerSeconds=0;
 let lastStrokeEnd=null, sessionStart=null, strokeFirstPt=null;
 const canvasPointers = new Set();
@@ -2167,7 +2168,13 @@ function onPointerDown(e){
   if(breathingGuideActive) return;
   startMeditationMusic(); saveUndo(); isDrawing=true;
   const now=Date.now(); const pos=getPos(e);
-  if(lastStrokeEnd!==null) sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
+  if (lastStrokeEnd !== null) {
+    if (skipNextPause) {
+      skipNextPause = false; 
+    } else {
+      sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
+    }
+  }
   sessionData.strokeCount++; strokeFirstPt=pos; lastX=pos.x; lastY=pos.y; lastWidth=getPressureWidth(e); recordPoint(e,pos);
   const ctx=dCtx(); ctx.beginPath(); ctx.arc(lastX,lastY,lastWidth/2,0,Math.PI*2); ctx.fillStyle=currentColor; ctx.fill();
   updatePressureHUD(e);
@@ -2240,6 +2247,7 @@ async function startBreathingGuide(){
   circle.className = 'breathing-circle';
   breathingGuideActive = false;
   breathingCooldownUntil = Date.now() + BREATHING_COOLDOWN_MS;
+  skipNextPause = true;
   if(currentScreen === 'screen-write'){ startTimer(); }
 }
 
