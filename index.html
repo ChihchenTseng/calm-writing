@@ -700,7 +700,6 @@ let fbUser = null, fbReady = false;
 let breathingGuideActive = false;
 let breathingTriggered = false;
 let breathingCooldownUntil = 0; // 呼吸引導結束後的冷卻截止時間戳（ms），冷卻期間不重新觸發
-let resumingFromBreathing = false; // 呼吸引導打斷筆畫後，標記下一次落筆應視為同一筆畫的延續，避免污染 I~N 統計數值
 const BREATHING_COOLDOWN_MS = 20000; // 冷卻時間 20 秒
 
 (async () => {
@@ -789,18 +788,18 @@ async function submitToSheets(record, result) {
   const payload = {
     timestamp:             new Date().toISOString(),
     participant_id:        getParticipantId(),
-    app_version:           'V16',
+    app_version:           'V15',
     text:                  record.text,
     pre_mood:              record.mood,
     session_duration_sec:  Math.round(record.totalTime || 0),
     avg_pressure:          avgPressure.toFixed(3),
     pressure_cv:           avgPressure > 0 ? (record.pressureVariance / avgPressure).toFixed(3) : '0',
-    stroke_count:          result.strokeCount ?? record.strokeCount ?? 0,
-    pause_count:           result.pauseCount ?? (record.pauseDurations || []).length,
-    long_pause_count:      result.longPauseCount ?? (record.pauseDurations || []).filter(d => d > 2).length,
+    stroke_count:          record.strokeCount || 0,
+    pause_count:           (record.pauseDurations || []).length,
+    long_pause_count:      (record.pauseDurations || []).filter(d => d > 2).length, // 保持完全不動
     char_count:            result.charCount ?? 0,
-    avg_pause_duration_ms: result.avgPauseDurationMs ?? (record.avgPause != null ? Math.round(record.avgPause * 1000) : 0),
-    avg_char_spacing:      result.avgCharSpacing ?? 0,
+    avg_pause_duration_ms: record.avgPause != null ? Math.round(record.avgPause * 1000) : 0,
+    avg_char_spacing:      result.avgCharSpacing ?? 0, // 保持完全不動
     writing_speed:         result.writingSpeed   ?? 0,
     avg_tilt_mag:          finalTiltMag != null ? finalTiltMag.toFixed(2) : null,
     baseline_variance:     result.baselineVariance ?? 0,
@@ -1537,55 +1536,6 @@ let undoStack=[], timerInterval=null, timerSeconds=0;
 let lastStrokeEnd=null, sessionStart=null, strokeFirstPt=null;
 const canvasPointers = new Set();
 
-function cloneSessionDataForUndo(){
-  return {
-    strokes: sessionData.strokes ? sessionData.strokes.map(s => Array.isArray(s) ? s.map(p => ({...p})) : {...s}) : [],
-    pauseDurations: [...(sessionData.pauseDurations || [])],
-    pressureValues: [...(sessionData.pressureValues || [])],
-    totalTime: sessionData.totalTime || 0,
-    strokeCount: sessionData.strokeCount || 0,
-    rawPoints: (sessionData.rawPoints || []).map(p => ({...p})),
-    charBounds: JSON.parse(JSON.stringify(sessionData.charBounds || {})),
-    tiltXValues: [...(sessionData.tiltXValues || [])],
-    tiltYValues: [...(sessionData.tiltYValues || [])],
-    baselineAngles: [...(sessionData.baselineAngles || [])],
-  };
-}
-
-function restoreSessionDataFromUndo(snapshot){
-  if(!snapshot) return;
-  const currentTotalTime = sessionData.totalTime || timerSeconds || 0;
-  sessionData = {
-    strokes: snapshot.strokes ? snapshot.strokes.map(s => Array.isArray(s) ? s.map(p => ({...p})) : {...s}) : [],
-    pauseDurations: [...(snapshot.pauseDurations || [])],
-    pressureValues: [...(snapshot.pressureValues || [])],
-    totalTime: currentTotalTime,
-    strokeCount: snapshot.strokeCount || 0,
-    rawPoints: (snapshot.rawPoints || []).map(p => ({...p})),
-    charBounds: JSON.parse(JSON.stringify(snapshot.charBounds || {})),
-    tiltXValues: [...(snapshot.tiltXValues || [])],
-    tiltYValues: [...(snapshot.tiltYValues || [])],
-    baselineAngles: [...(snapshot.baselineAngles || [])],
-  };
-}
-
-function resetWritingMetrics(){
-  sessionData.strokes = [];
-  sessionData.pauseDurations = [];
-  sessionData.pressureValues = [];
-  sessionData.strokeCount = 0;
-  sessionData.rawPoints = [];
-  sessionData.charBounds = {};
-  sessionData.tiltXValues = [];
-  sessionData.tiltYValues = [];
-  sessionData.baselineAngles = [];
-  lastStrokeEnd = null;
-  strokeFirstPt = null;
-  isDrawing = false;
-  canvasPointers.clear();
-  resumingFromBreathing = false;
-}
-
 function diffDots(n) {
   let h=''; for(let i=1;i<=3;i++) h+=`<div class="d${i>n?' e':''}"></div>`; return h;
 }
@@ -2169,13 +2119,8 @@ function onPointerDown(e){
   if(breathingGuideActive) return;
   startMeditationMusic(); saveUndo(); isDrawing=true;
   const now=Date.now(); const pos=getPos(e);
-  if(resumingFromBreathing){
-    resumingFromBreathing=false; // 呼吸引導期間視為同一筆畫的延續：不計入停頓、不新增筆畫數
-  } else {
-    if(lastStrokeEnd!==null) sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
-    sessionData.strokeCount++;
-  }
-  strokeFirstPt=pos; lastX=pos.x; lastY=pos.y; lastWidth=getPressureWidth(e); recordPoint(e,pos);
+  if(lastStrokeEnd!==null) sessionData.pauseDurations.push(Math.round((now-lastStrokeEnd)/10)/100);
+  sessionData.strokeCount++; strokeFirstPt=pos; lastX=pos.x; lastY=pos.y; lastWidth=getPressureWidth(e); recordPoint(e,pos);
   const ctx=dCtx(); ctx.beginPath(); ctx.arc(lastX,lastY,lastWidth/2,0,Math.PI*2); ctx.fillStyle=currentColor; ctx.fill();
   updatePressureHUD(e);
 }
@@ -2224,7 +2169,6 @@ function updatePressureHUD(e, released){
 
 async function startBreathingGuide(){
   breathingGuideActive = true; isDrawing = false; canvasPointers.clear(); stopTimer();
-  resumingFromBreathing = true; // 標記筆畫被呼吸引導打斷，下次落筆視為延續，不列入 I~N 統計
   const overlay = document.getElementById('breathing-overlay');
   const phaseEl = document.getElementById('breathing-phase');
   const countEl = document.getElementById('breathing-count');
@@ -2251,25 +2195,9 @@ async function startBreathingGuide(){
   if(currentScreen === 'screen-write'){ startTimer(); }
 }
 
-function saveUndo(){
-  const dc=dCanvas(); if(!dc) return;
-  undoStack.push({
-    image: dCtx().getImageData(0,0,dc.width,dc.height),
-    session: cloneSessionDataForUndo(),
-    lastStrokeEnd,
-    strokeFirstPt: strokeFirstPt ? {...strokeFirstPt} : null,
-  });
-  if(undoStack.length>25) undoStack.shift();
-}
-function undo(){
-  if(!undoStack.length) return;
-  const snapshot = undoStack.pop();
-  dCtx().putImageData(snapshot.image,0,0);
-  restoreSessionDataFromUndo(snapshot.session);
-  lastStrokeEnd = snapshot.lastStrokeEnd;
-  strokeFirstPt = snapshot.strokeFirstPt ? {...snapshot.strokeFirstPt} : null;
-}
-function clearCanvas(){ saveUndo(); const dc=dCanvas(); dCtx().clearRect(0,0,dc.width,dc.height); resetWritingMetrics(); }
+function saveUndo(){ const dc=dCanvas(); if(!dc) return; undoStack.push(dCtx().getImageData(0,0,dc.width,dc.height)); if(undoStack.length>25) undoStack.shift(); }
+function undo(){ if(!undoStack.length) return; dCtx().putImageData(undoStack.pop(),0,0); }
+function clearCanvas(){ saveUndo(); const dc=dCanvas(); dCtx().clearRect(0,0,dc.width,dc.height); }
 
 function startTimer(){ stopTimer(); timerInterval=setInterval(()=>{timerSeconds++;updateTimer();sessionData.totalTime=timerSeconds;},1000); }
 function stopTimer(){ if(timerInterval){clearInterval(timerInterval);timerInterval=null;} }
@@ -2298,15 +2226,8 @@ function segmentChars(){
 
 function analyzeWriting(){
   const pv=sessionData.pressureValues; const pd=sessionData.pauseDurations; const rp=sessionData.rawPoints;
-  const activeStrokeIds=[...new Set(rp.map(p=>p.strokeId))].sort((a,b)=>a-b);
-  const activeStrokeCount=activeStrokeIds.length;
-  const expectedPauseCount=Math.max(0,activeStrokeCount-1);
-  const cleanPauses=pd.filter(d=>Number.isFinite(d)&&d>=0);
-  const measuredPauses=cleanPauses.length>expectedPauseCount?cleanPauses.slice(cleanPauses.length-expectedPauseCount):cleanPauses;
-  const pauseCount=measuredPauses.length;
-  const longPauseCount=measuredPauses.filter(d=>d>2).length;
   const avgPressure=pv.length?pv.reduce((a,b)=>a+b,0)/pv.length:0.5;
-  const avgPause=measuredPauses.length?measuredPauses.reduce((a,b)=>a+b,0)/measuredPauses.length:0;
+  const avgPause=pd.length?pd.reduce((a,b)=>a+b,0)/pd.length:0;
   const pressureVariance=pv.length>1?Math.sqrt(pv.reduce((acc,v)=>acc+Math.pow(v-avgPressure,2),0)/pv.length):0;
   const avgTiltX=sessionData.tiltXValues.length?sessionData.tiltXValues.reduce((a,b)=>a+b,0)/sessionData.tiltXValues.length:0;
   const avgTiltY=sessionData.tiltYValues.length?sessionData.tiltYValues.reduce((a,b)=>a+b,0)/sessionData.tiltYValues.length:0;
@@ -2339,20 +2260,8 @@ function analyzeWriting(){
   const charCount=Object.keys(sessionData.charBounds).length;
   const charIds=Object.keys(sessionData.charBounds).map(Number).sort((a,b)=>a-b);
   const spacings=[];
-  for(let i=1;i<charIds.length;i++){
-    const prev=sessionData.charBounds[charIds[i-1]];
-    const curr=sessionData.charBounds[charIds[i]];
-    const gap=curr.minX-prev.maxX;
-    if(Number.isFinite(gap)&&gap>-cellSize*0.75&&gap<cellSize*1.5) spacings.push(gap);
-  }
+  for(let i=1;i<charIds.length;i++){const prev=sessionData.charBounds[charIds[i-1]];const curr=sessionData.charBounds[charIds[i]];const gap=curr.minX-prev.maxX;if(gap>-50)spacings.push(gap);}
   const avgCharSpacing=spacings.length?spacings.reduce((a,b)=>a+b,0)/spacings.length:0;
-  const targetCharCount=[...(selectedTask||'')].length;
-  const charCoverage=targetCharCount?Math.min(1,charCount/targetCharCount):0;
-  const pauseRatio=activeStrokeCount>1?pauseCount/(activeStrokeCount-1):0;
-  const longPauseRatio=pauseCount?longPauseCount/pauseCount:0;
-  const spacingAbs=Math.abs(avgCharSpacing);
-  const spacingIsBalanced=spacings.length>0&&spacingAbs<=cellSize*0.35;
-  const spacingIsIrregular=spacings.length>0&&(avgCharSpacing<-cellSize*0.35||avgCharSpacing>cellSize*0.65);
 
   // 2. 書寫速度 (px/s)（修正：計算真實移動像素位移 / 實際動筆時間，排除提筆與發呆時間）
   let totalDistance = 0;
@@ -2385,13 +2294,7 @@ function analyzeWriting(){
   if(avgPressure>0.3&&avgPressure<0.65)calmScore+=0.2;
   if(avgTiltMag>45)tenseScore+=0.2; else if(avgTiltMag<20)calmScore+=0.15;
   if(baselineVariance>30)tenseScore+=0.2; else if(baselineVariance<10)focusScore+=0.2;
-  if(sessionData.totalTime<30&&activeStrokeCount<5)tenseScore+=0.2;
-  if(activeStrokeCount>=Math.max(3,targetCharCount)&&sessionData.totalTime>=15)focusScore+=0.12;
-  if(pauseRatio>1.2)tenseScore+=0.12; else if(pauseRatio>0.35&&pauseRatio<=1.05)calmScore+=0.08;
-  if(longPauseCount>=2||longPauseRatio>0.35)tenseScore+=0.18; else if(longPauseCount===0&&pauseCount>=2)focusScore+=0.08;
-  if(targetCharCount&&charCoverage<0.5)tenseScore+=0.18; else if(charCoverage>=0.85)focusScore+=0.1;
-  if(avgPause>=1&&avgPause<=3)calmScore+=0.1;
-  if(spacingIsBalanced)calmScore+=0.1; else if(spacingIsIrregular)tenseScore+=0.12;
+  if(sessionData.totalTime<30&&sessionData.strokeCount<5)tenseScore+=0.2;
   if(selectedMood==='calm')calmScore+=0.3; if(selectedMood==='anxious')tenseScore+=0.3;
   const total=calmScore+focusScore+tenseScore||1;
   return {
@@ -2399,9 +2302,7 @@ function analyzeWriting(){
     dominant:tenseScore>calmScore&&tenseScore>focusScore?'tense':focusScore>calmScore?'focused':'calm',
     avgPressure,pressureVariance,avgPause,
     avgTiltX:Math.round(avgTiltX*100)/100,avgTiltY:Math.round(avgTiltY*100)/100,avgTiltMag:Math.round(avgTiltMag*100)/100,
-    baselineVariance:Math.round(baselineVariance*100)/100,avgCharSize:Math.round(avgCharSize),
-    strokeCount:activeStrokeCount,pauseCount,longPauseCount,charCount,avgCharSpacing:Math.round(avgCharSpacing),writingSpeed,
-    avgPauseDurationMs:Math.round(avgPause*1000),charCoverage:Math.round(charCoverage*1000)/1000,
+    baselineVariance:Math.round(baselineVariance*100)/100,avgCharSize:Math.round(avgCharSize),charCount,avgCharSpacing:Math.round(avgCharSpacing),writingSpeed,
   };
 }
 
@@ -2416,7 +2317,7 @@ function finishWriting(){
     pressureValues:sessionData.pressureValues.map(p=>Math.round(p*100)/100),
     avgTiltX:result.avgTiltX, avgTiltY:result.avgTiltY, avgTiltMag:result.avgTiltMag,
     baselineVariance:result.baselineVariance, charCount:result.charCount, avgCharSize:result.avgCharSize,
-    charBounds:sessionData.charBounds, strokeCount:result.strokeCount, totalTime:sessionData.totalTime,
+    charBounds:sessionData.charBounds, strokeCount:sessionData.strokeCount, totalTime:sessionData.totalTime,
     pointCount:sessionData.rawPoints.length,
     rawPoints:sessionData.rawPoints.length>500?sessionData.rawPoints.filter((_,i)=>i%Math.ceil(sessionData.rawPoints.length/500)===0):sessionData.rawPoints,
   };
@@ -2484,7 +2385,7 @@ document.addEventListener('click', unlockMeditationMusicFromGesture, true);
 document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
 document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
 
-const APP_VERSION = 'V16';
+const APP_VERSION = 'V15';
 initTodayPick();
 renderCorpus('all');
 initSeasonBanner();
