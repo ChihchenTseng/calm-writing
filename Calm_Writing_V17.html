@@ -788,7 +788,7 @@ async function submitToSheets(record, result) {
   const payload = {
     timestamp:             new Date().toISOString(),
     participant_id:        getParticipantId(),
-    app_version:           'V16',
+    app_version:           'V17',
     text:                  record.text,
     pre_mood:              record.mood,
     session_duration_sec:  Math.round(record.totalTime || 0),
@@ -2541,7 +2541,7 @@ document.addEventListener('click', unlockMeditationMusicFromGesture, true);
 document.addEventListener('contextmenu',e=>e.preventDefault(),{passive:false});
 document.addEventListener('dragstart',e=>e.preventDefault(),{passive:false});
 
-const APP_VERSION = 'V16';
+const APP_VERSION = 'V17';
 initTodayPick();
 renderCorpus('all');
 initSeasonBanner();
