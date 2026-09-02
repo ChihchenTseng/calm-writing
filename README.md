@@ -1,5 +1,10 @@
 # calm-writing
-寫字靜心 Calm Writing[README.md](https://github.com/user-attachments/files/26719301/README.md)
+
+寫字靜心 Calm Writing
+
+- 產品穩定版：`Calm_Writing_V18.html`（入口：`index.html`）
+- 研究測試版：`t/Calm_Writing_T6.html`（入口：`t/index.html`）
+- 本機測試：`python -m unittest discover -s tests -v`
 
 # 寫字靜心 Calm Writing
 
