@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="description" content="寫一段字，留一點時間給自己。透過可解釋的書寫觀察，認識自己的節奏；不是心理診斷。">
+  <title>寫字靜心｜把心，慢慢寫回來</title>
+  <link rel="stylesheet" href="assets/heritage.css">
+  <link rel="stylesheet" href="assets/app.css">
+  <script src="assets/corpus.js" defer></script>
+  <script src="assets/engine.js" defer></script>
+  <script src="assets/storage.js" defer></script>
+  <script src="assets/firebase-adapter.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳至主要內容</a>
+  <div id="demo-banner" class="demo-banner" hidden><strong>示範資料／非研究成果</strong><span>合成範例只在記憶體，不影響真實歷程、不連雲端。</span><button id="exit-demo">退出示範</button></div>
+  <header class="site-header">
+    <button class="brand" data-nav="home" aria-label="寫字靜心首頁"><span class="brand-seal" aria-hidden="true">靜</span><span>寫字靜心<small>CALM WRITING</small></span></button>
+    <nav aria-label="主要導覽"><button data-nav="home">首頁</button><button data-nav="history">我的歷程</button><button id="open-tour">展示導覽</button></nav>
+  </header>
+  <div class="environment"><span id="mode-label">本機隔離候選 · 雲端未啟用</span><span>觀察書寫，不判定心理</span></div>
+  <main id="main" tabindex="-1">
+    <section id="view-home" class="view">
+      <div class="hero">
+        <div class="hero-copy"><p class="eyebrow">一筆一畫 · 與自己同在</p><h1 tabindex="-1">把心，<br>慢慢寫回來。</h1><p class="lead">從一句熟悉的話開始，<br>留一點安靜，給此刻的自己。</p><p>選一段客家諺語或自然詩句，隨自己的節奏書寫。完成後，看見速度、停頓與動筆時間的實際觀察。</p><div class="actions"><button class="primary" id="start-real">開始書寫 <span aria-hidden="true">↗</span></button><button class="secondary" id="start-demo">先看兩個示範</button></div><p class="micro">不必填量表，也不需要帳號。不是心理測驗或醫療工具。</p></div>
+        <div class="hero-paper" aria-label="書寫意象：吾心安處是吾鄉"><div class="paper-top"><span>客家諺語</span><span>01 / 留白</span></div><div class="vertical-poem">吾心安處<br>是吾鄉</div><span class="paper-seal">靜<br>心</span><div class="paper-bottom">不求寫得好，只求在這裡。</div></div>
+      </div>
+      <div class="ritual-strip"><div><span class="step-num">一</span><h2>選一句話</h2><p>讓文化與日常，成為落筆的起點。</p></div><div><span class="step-num">二</span><h2>照自己的節奏</h2><p>書寫、停頓，或隨時休息都可以。</p></div><div><span class="step-num">三</span><h2>看見這次的自己</h2><p>用可解釋的觀察，累積個人書寫基準。</p></div></div>
+      <div class="home-bottom"><div><p class="eyebrow">只與自己比較</p><h2>不是評分，是一段可回看的練習。</h2><p>相同任務、裝置環境與輸入方式下，累積至少 10 筆合格摘要，才開啟近期比較。這是工程門檻，不是臨床標準。</p></div><div class="history-teaser"><span id="home-count" class="big-number">0</span><span>筆本機摘要</span><button data-nav="history" class="text-btn">看看我的歷程 →</button></div></div>
+    </section>
+    <section id="view-write" class="view" hidden>
+      <div class="page-heading"><div><p class="eyebrow">落筆之前，不必準備好一切</p><h1 tabindex="-1">就從這一句開始。</h1></div><button class="secondary" id="manual-breathe">先呼吸一下</button></div>
+      <div class="writing-layout"><aside class="task-panel"><label for="category">語料分類</label><select id="category"><option value="hakka">客家諺語</option><option value="single">單字</option><option value="miaoli">苗栗地景</option><option value="wisdom">處世智慧</option><option value="nature">自然意象</option><option value="sutra">靜心經句</option></select><label for="task">選擇固定語料</label><select id="task"></select><p id="task-poem" class="task-poem"></p><p class="micro">固定語料才有可比性；換句話會建立不同基準。</p><label for="input-policy">輸入方式</label><select id="input-policy"><option value="auto">自動：首個指標</option><option value="pen">觸控筆：忽略手指與手掌</option><option value="touch">手指：忽略觸控筆與滑鼠</option><option value="mouse">滑鼠：忽略觸控與筆</option></select><p class="micro">使用觸控筆時請先選觸控筆模式，手掌不會先占住畫布。自動模式仍由首個指標開始。</p><label for="brush">筆刷粗細 <output id="brush-value">18</output> px</label><input id="brush" type="range" min="2" max="40" value="18"><label class="check"><input id="grid" type="checkbox" checked> 顯示字格</label><label class="check"><input id="guide" type="checkbox"> 顯示淡字引導</label><details><summary>裝置與操作提示</summary><p>一次只接受一個有效指標。滑鼠與手指可書寫，但筆壓與傾斜保持未確認。筆刷粗細由手動設定優先；畫布變形、失焦或輸入中斷會留下品質標記。</p><p>平板請以觸控筆直向或橫向穩定書寫，過程中避免旋轉。真 Apple Pencil 與手掌排除仍待實機驗證。</p></details></aside>
+        <div class="writing-main"><div class="canvas-toolbar"><span id="input-label">尚未落筆</span><div><button id="undo" class="small-btn">撤銷</button><button id="clear" class="small-btn">清除</button></div></div><div id="paper" class="writing-paper grid"><canvas id="canvas" aria-label="手寫畫布，請使用滑鼠、觸控或觸控筆書寫；可略過書寫查看空白資料處理"></canvas><div id="canvas-guide" aria-hidden="true" hidden></div></div><div class="canvas-meta"><span id="stroke-count">0 筆畫</span><span id="device-support">筆壓：未確認 · 傾斜：未確認</span></div><p class="micro">沒有寫出來的字也沒關係。畫布不會保存成圖片，原始軌跡僅暫存在這一頁。</p><div class="actions end"><button class="text-btn" data-nav="home">稍後再寫</button><button id="finish" class="primary">完成這次練習 →</button></div><p id="write-notice" class="notice" role="status" hidden></p></div></div>
+    </section>
+    <section id="view-result" class="view" hidden>
+      <div class="page-heading result-heading"><div><p class="eyebrow">這一刻，你為自己留了時間</p><h1 tabindex="-1" id="result-title">謝謝你，完成這次練習。</h1><p id="result-subtitle"></p></div><span class="completion-mark" aria-hidden="true">一<br>刻</span></div>
+      <div id="demo-controls" class="demo-controls" hidden><label for="demo-kind">同一規則，看不同書寫情境</label><select id="demo-kind"><option value="normal">一般範例</option><option value="pause">停頓增加範例</option><option value="short">資料不足範例</option><option value="invalid">時間異常範例</option></select><p>12 筆歷史也都是合成示範，並非研究成果或真實個人歷程。</p></div>
+      <div class="result-intro"><h2>看見你的書寫節奏</h2><p>量測來自這次的動筆事件。不以百分比判定平靜、專注或緊繃。</p></div>
+      <div id="quality" class="quality" role="status"></div>
+      <div id="metric-cards" class="metric-grid"></div>
+      <section class="replay-panel" aria-labelledby="replay-title"><h2 id="replay-title">本次筆跡回放</h2><p id="replay-note" class="micro">本次書寫才可回放；歷史摘要不保存原始筆跡。</p><canvas id="replay-canvas" aria-label="本次筆跡回放畫布"></canvas><div class="actions"><button id="replay-play" class="secondary">播放</button><button id="replay-pause" class="secondary">暫停</button><button id="replay-restart" class="secondary">重播</button></div><label for="replay-position">播放位置 <output id="replay-time">0 秒</output></label><input id="replay-position" type="range" min="0" max="1000" value="0" aria-label="本次回放位置"><p id="replay-status" role="status">尚未播放</p></section>
+      <section class="timeline-panel" aria-labelledby="timeline-title"><h2 id="timeline-title">本次節奏時間軸</h2><p id="timeline-note" class="micro">橫軸為第一筆接觸起算的實際秒數。深色為落筆，留白為筆畫間抬筆；缺值不補線。</p><div id="timeline-content"></div></section>
+      <div class="result-lower"><section class="panel"><p class="eyebrow">停頓的樣子</p><h2>筆畫之間，留了多久？</h2><div id="pause-chart" class="pause-chart"></div><p class="micro">只呈現有效筆畫間的間隔分布，不推論情緒，也不虛構時間曲線。</p></section><section class="panel guidance"><p class="eyebrow">你可以選擇下一步</p><h2>再留一點空白給自己。</h2><p id="guidance-reason">若想停下來，可以試著放慢呼吸。你也可以略過，繼續一天的步調。</p><div class="actions"><button class="secondary" id="result-breathe">跟著呼吸</button><button class="text-btn" id="skip-guidance">這次先略過</button></div><p id="guidance-state" role="status"></p></section></div>
+      <section class="save-panel"><div><h2>留下一筆摘要，而不是一張評分單。</h2><p id="save-status" role="status">尚未保存</p><p class="micro">只存特徵摘要、品質、任務與引導狀態，不存完整軌跡、圖片或自由文字。研究 Sheets 未啟用，不影響完成。</p></div><div class="actions"><button id="save" class="primary">保存在此瀏覽器</button><button id="retry-cloud" class="secondary">重試雲端確認</button></div></section>
+      <div class="actions end"><button id="write-again" class="text-btn">再寫一次</button><button data-nav="history" class="secondary">回看我的歷程 →</button></div>
+      <details class="technical"><summary>這些觀察怎麼產生？查看版本、品質與比較規則</summary><div id="technical-body"></div><p>速度採 CSS 像素／秒，不代表不同螢幕上的實際公分速度。書寫姿勢、裝置、取樣頻率與任務熟悉度都可能影響結果。這裡沒有已訓練的壓力預測模型，也不是診斷或療效證據。</p></details>
+    </section>
+    <section id="view-history" class="view" hidden>
+      <div class="page-heading"><div><p class="eyebrow">不求每次一樣，只記得回來</p><h1 tabindex="-1">我的書寫歷程</h1><p id="history-intro">只顯示這個瀏覽器真正保存的摘要。示範不計入真實次數。</p></div><button class="primary" id="history-start">再寫一段 →</button></div>
+      <div id="history-stats" class="history-stats"></div><div id="history-list"></div>
+      <details class="technical"><summary>舊版紀錄仍保留，為何沒有出現在比較中？</summary><p>舊版摘要未具備相同任務、裝置與品質 schema，不能直接當作新基準。本候選不改寫、遷移或補齊舊資料。</p><button id="read-legacy" class="secondary">在此瀏覽器唯讀查看舊版摘要</button><div id="legacy-list"></div></details>
+    </section>
+  </main>
+  <footer><span>寫字靜心 <span aria-hidden="true">·</span> 以文化為起點，以自己為節奏。</span><small>CW-COMP-001 · 隔離候選 · 非正式發布</small></footer>
+  <p id="toast" class="toast" role="status" hidden></p>
+  <dialog id="confirmation" aria-labelledby="confirm-title" aria-describedby="confirm-message"><div class="dialog-mode"></div><h2 id="confirm-title">再確認一下</h2><p id="confirm-message"></p><div class="actions"><button class="secondary" id="confirm-no">取消</button><button class="primary" id="confirm-yes">確定</button></div></dialog>
+  <dialog id="breathing" aria-labelledby="breath-title"><div class="dialog-mode"></div><button class="dialog-close" id="breath-close" aria-label="取消並關閉呼吸引導">×</button><p class="eyebrow">可以跟著，也可以隨時離開</p><h2 id="breath-title">給呼吸一點空間。</h2><div class="breath-orb" aria-hidden="true"></div><p id="breath-phase" class="breath-phase">慢慢吸氣</p><p id="breath-progress">3 輪，每輪 8 秒</p><p>自然呼吸即可，不必憋氣；若不舒服，請停止。</p><button id="breath-complete" class="primary" disabled>完成這一輪</button><button id="breath-cancel" class="text-btn">取消引導</button></dialog>
+  <dialog id="tour" aria-labelledby="tour-title"><div class="dialog-mode"></div><button class="dialog-close" id="tour-close" aria-label="關閉展示導覽">×</button><p class="eyebrow">看得見，也說得清楚</p><h2 id="tour-title">三分鐘，認識書寫觀察。</h2><ol><li><strong>看一般範例。</strong> 展開圖卡依據，查看本次與 12 筆合成歷史。</li><li><strong>換成停頓增加。</strong> 同一規則產生不同停頓與動筆占比，不做心理分類。</li><li><strong>試資料不足與時間異常。</strong> 觀察品質門檻如何停止不可靠比較。</li><li><strong>退出示範，親自寫一段。</strong> 本機保存、單筆回顧與刪除，示範不會混入。</li></ol><p>示範完全離線，持續標示「示範資料／非研究成果」。正式雲端權限與真 Apple Pencil 尚未驗證。</p><button id="tour-demo" class="primary">開始隔離示範 →</button></dialog>
+</body>
+</html>
