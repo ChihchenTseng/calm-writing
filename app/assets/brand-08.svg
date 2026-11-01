@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">墨筆時間軸・紙白湖藍配色</title>
+  <desc id="desc">以不同粗細的墨筆寫出字形，帶節點的末橫形成時間軸，右端保留毛筆造型；沿用原始 REFINEMENT 08 的輪廓。</desc>
+  <path d="M80 17c3 6 3 11 1 16M29 57c25-23 77-23 102 0M30 57l-5 17m106-17 5 17M51 84c18-3 41-3 59 0L80 106v23" fill="none" stroke="#20324E" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M25 130c35-4 69-4 107-1" fill="none" stroke="#20324E" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="48" cy="130" r="5" fill="#B9DDCB"/>
+  <circle cx="83" cy="129" r="5" fill="#4B8CC9"/>
+  <path d="m131 130 8-14 8 5-16 9Z" fill="#20324E"/>
+  <path d="m139 116 12-20" stroke="#20324E" stroke-width="7" stroke-linecap="round"/>
+  <path d="m146 102 9 6" stroke="#A3C8E4" stroke-width="4"/>
+</svg>

@@ -18,18 +18,18 @@
   <a class="skip" href="#main">跳至主要內容</a>
   <div id="demo-banner" class="demo-banner" hidden><strong>示範資料／非研究成果</strong><span>合成範例只在記憶體，不影響真實歷程、不連雲端。</span><button id="exit-demo">退出示範</button></div>
   <header class="site-header">
-    <button class="brand" data-nav="home" aria-label="寫字靜心首頁"><span class="brand-seal" aria-hidden="true">靜</span><span>寫字靜心<small>CALM WRITING</small></span></button>
+    <button class="brand" data-nav="home" aria-label="寫字靜心首頁"><img src="assets/brand-08.svg" alt="" width="42" height="42"><span>寫字靜心<small>CALM WRITING</small></span></button>
     <nav aria-label="主要導覽"><button data-nav="home">首頁</button><button data-nav="history">我的歷程</button><button id="open-tour">展示導覽</button></nav>
   </header>
-  <div class="environment"><span id="mode-label">本機隔離候選 · 雲端未啟用</span><span>觀察書寫，不判定心理</span></div>
+  <div class="environment"><span id="mode-label">本機儲存 · 雲端尚未啟用</span><span>觀察書寫，不判定心理</span></div>
   <main id="main" tabindex="-1">
     <section id="view-home" class="view">
       <div class="hero">
-        <div class="hero-copy"><p class="eyebrow">一筆一畫 · 與自己同在</p><h1 tabindex="-1">把心，<br>慢慢寫回來。</h1><p class="lead">從一句熟悉的話開始，<br>留一點安靜，給此刻的自己。</p><p>選一段客家諺語或自然詩句，隨自己的節奏書寫。完成後，看見速度、停頓與動筆時間的實際觀察。</p><div class="actions"><button class="primary" id="start-real">開始書寫 <span aria-hidden="true">↗</span></button><button class="secondary" id="start-demo">先看兩個示範</button></div><p class="micro">不必填量表，也不需要帳號。不是心理測驗或醫療工具。</p></div>
-        <div class="hero-paper" aria-label="書寫意象：吾心安處是吾鄉"><div class="paper-top"><span>客家諺語</span><span>01 / 留白</span></div><div class="vertical-poem">吾心安處<br>是吾鄉</div><span class="paper-seal">靜<br>心</span><div class="paper-bottom">不求寫得好，只求在這裡。</div></div>
+        <section class="hero-copy" aria-labelledby="home-title"><p class="eyebrow">CALM WRITING / ENTRY</p><h1 id="home-title" tabindex="-1">先安靜寫下此刻。</h1><div class="hero-symbol"><img src="assets/brand-08.svg" alt="" width="104" height="104"><p>一筆一息，慢慢寫。</p></div><p class="lead">選一句客家諺語或自然詩句，依自己的節奏落筆。</p><p>完成後，用實際量測回看速度、停頓與落筆時間。這些觀察不是心理診斷。</p><div class="actions"><button class="primary" id="start-real">開始書寫 <span aria-hidden="true">↗</span></button><button class="secondary" id="start-demo">先看兩個示範</button></div><p class="micro">不必填量表，也不需要帳號。示範資料與本機歷程隔離。</p></section>
+        <section class="home-dashboard" aria-labelledby="home-data-title"><div class="home-dashboard-head"><div><p class="eyebrow">PERSONAL WRITING OVERVIEW</p><h2 id="home-data-title">我的書寫觀察</h2><p>摘要來自這個瀏覽器；沒有資料時不畫趨勢。</p></div><span class="home-local-badge">本機摘要</span></div><p id="home-data-state" class="home-data-state" role="status">正在讀取本機摘要。</p><div class="home-overview"><article class="home-observation"><div class="card-heading"><span class="data-icon blue-icon" aria-hidden="true">↗</span><div><small>01 / RECENT RECORD</small><h3>最近一筆書寫</h3></div></div><div id="home-latest" class="home-latest"><p>尚無已保存摘要。</p></div></article><article class="home-baseline"><div class="card-heading"><span class="data-icon green-icon" aria-hidden="true">▦</span><div><small>02 / PERSONAL BASELINE</small><h3>同條件比較進度</h3></div></div><p class="home-big"><span id="home-baseline-count">0</span><small> / 10 筆先前摘要</small></p><div class="home-progress" aria-hidden="true"><span id="home-baseline-progress"></span></div><p class="micro">同人、同任務、同輸入與環境，且品質合格，才納入近期比較。</p></article></div><div class="home-summary"><article class="home-mini blue-top"><span>已保存摘要</span><strong id="home-summary-count">0</strong><small>筆 · 此瀏覽器</small></article><article class="home-mini purple-top"><span>書寫跨度合計</span><strong id="home-duration">0</strong><small>分鐘 · 已保存摘要</small></article><article class="home-mini green-top"><span>符合基本品質</span><strong id="home-eligible">0</strong><small>筆 · 仍須逐項比對條件</small></article></div><div class="home-review"><span class="data-icon yellow-icon" aria-hidden="true">◴</span><div><h3>沿著時間軸回看自己</h3><p id="home-review-note">完成頁可回放本次筆跡；歷史只保存摘要。尚無本機紀錄。</p></div><span id="home-current-node" class="review-node" aria-hidden="true" hidden></span></div><p class="micro home-boundary">只有真實保存的摘要才計入上方數字；資料不足時不產生假曲線或心理分類。</p></section>
       </div>
       <div class="ritual-strip"><div><span class="step-num">一</span><h2>選一句話</h2><p>讓文化與日常，成為落筆的起點。</p></div><div><span class="step-num">二</span><h2>照自己的節奏</h2><p>書寫、停頓，或隨時休息都可以。</p></div><div><span class="step-num">三</span><h2>看見這次的自己</h2><p>用可解釋的觀察，累積個人書寫基準。</p></div></div>
-      <div class="home-bottom"><div><p class="eyebrow">只與自己比較</p><h2>不是評分，是一段可回看的練習。</h2><p>相同任務、裝置環境與輸入方式下，累積至少 10 筆合格摘要，才開啟近期比較。這是工程門檻，不是臨床標準。</p></div><div class="history-teaser"><span id="home-count" class="big-number">0</span><span>筆本機摘要</span><button data-nav="history" class="text-btn">看看我的歷程 →</button></div></div>
+      <div class="home-bottom"><div><p class="eyebrow">只與自己比較</p><h2>不是評分，是一段可回看的練習。</h2><p>至少 10 筆同條件合格先前摘要，才開啟近期比較。這是工程門檻，不是臨床標準。</p></div><div class="history-teaser"><span id="home-count" class="big-number">0</span><span>筆本機摘要</span><button data-nav="history" class="text-btn">看看我的歷程 →</button></div></div>
     </section>
     <section id="view-write" class="view" hidden>
       <div class="page-heading"><div><p class="eyebrow">落筆之前，不必準備好一切</p><h1 tabindex="-1">就從這一句開始。</h1></div><button class="secondary" id="manual-breathe">先呼吸一下</button></div>
@@ -52,10 +52,10 @@
     <section id="view-history" class="view" hidden>
       <div class="page-heading"><div><p class="eyebrow">不求每次一樣，只記得回來</p><h1 tabindex="-1">我的書寫歷程</h1><p id="history-intro">只顯示這個瀏覽器真正保存的摘要。示範不計入真實次數。</p></div><button class="primary" id="history-start">再寫一段 →</button></div>
       <div id="history-stats" class="history-stats"></div><div id="history-list"></div>
-      <details class="technical"><summary>舊版紀錄仍保留，為何沒有出現在比較中？</summary><p>舊版摘要未具備相同任務、裝置與品質 schema，不能直接當作新基準。本候選不改寫、遷移或補齊舊資料。</p><button id="read-legacy" class="secondary">在此瀏覽器唯讀查看舊版摘要</button><div id="legacy-list"></div></details>
+      <details class="technical"><summary>舊版紀錄仍保留，為何沒有出現在比較中？</summary><p>舊版摘要未具備相同任務、裝置與品質 schema，不能直接當作新基準。本版不改寫、遷移或補齊舊資料。</p><button id="read-legacy" class="secondary">在此瀏覽器唯讀查看舊版摘要</button><div id="legacy-list"></div></details>
     </section>
   </main>
-  <footer><span>寫字靜心 <span aria-hidden="true">·</span> 以文化為起點，以自己為節奏。</span><small>CW-COMP-001 · 隔離候選 · 非正式發布</small></footer>
+  <footer><span>寫字靜心 <span aria-hidden="true">·</span> 以文化為起點，以自己為節奏。</span><small>CW-COMP-001 · 本機書寫觀察 · 非診斷</small></footer>
   <p id="toast" class="toast" role="status" hidden></p>
   <dialog id="confirmation" aria-labelledby="confirm-title" aria-describedby="confirm-message"><div class="dialog-mode"></div><h2 id="confirm-title">再確認一下</h2><p id="confirm-message"></p><div class="actions"><button class="secondary" id="confirm-no">取消</button><button class="primary" id="confirm-yes">確定</button></div></dialog>
   <dialog id="breathing" aria-labelledby="breath-title"><div class="dialog-mode"></div><button class="dialog-close" id="breath-close" aria-label="取消並關閉呼吸引導">×</button><p class="eyebrow">可以跟著，也可以隨時離開</p><h2 id="breath-title">給呼吸一點空間。</h2><div class="breath-orb" aria-hidden="true"></div><p id="breath-phase" class="breath-phase">慢慢吸氣</p><p id="breath-progress">3 輪，每輪 8 秒</p><p>自然呼吸即可，不必憋氣；若不舒服，請停止。</p><button id="breath-complete" class="primary" disabled>完成這一輪</button><button id="breath-cancel" class="text-btn">取消引導</button></dialog>
