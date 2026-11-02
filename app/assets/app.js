@@ -1,7 +1,7 @@
 /* Presentation and pointer capture only. Features and persistence live in separate testable modules. */
 (()=>{
   'use strict';
-  const $=id=>document.getElementById(id),C=window.CW,S=window.CWStore;
+  const $=id=>document.getElementById(id),C=window.CW,S=window.CWStore,L=window.CWLayout;
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt=(n,d=1)=>C.finite(n)?n.toLocaleString('zh-TW',{maximumFractionDigits:d}):'—';
   const uuid=()=>globalThis.crypto?.randomUUID?.()||('cw-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2));
@@ -12,19 +12,20 @@
   let person='temporary-'+uuid(),profilePersistent=false;
   try{person=storage.getItem(S.PROFILE)||person;storage.setItem(S.PROFILE,person);profilePersistent=true;}catch{}
   const browserEnvironment=[navigator.userAgent,navigator.language].join('|');
+  let spacePlan=null,layoutLocked=false,lockedTask='',lockedCategory='',lockedBrush='',lockedInput='',lockedGrid=false,lockedGuide=false;
   const store=()=>mode==='demo'?demoStore:realStore;
   let historyReadError=null;
   function rows(){try{historyReadError=null;return store().list();}catch(e){historyReadError=e.message;notify(e.message);return [];}}
   function notify(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,7000);}
   function task(){return CW_CORPUS.find(t=>t.id===$('task').value)||CW_CORPUS[0];}
-  function setTasks(){const items=CW_CORPUS.filter(t=>t.cat===$('category').value);$('task').innerHTML=items.map(t=>`<option value="${esc(t.id)}">${esc(t.text)}</option>`).join('');taskChanged();}
-  function taskChanged(){const t=task();$('task-poem').textContent=t.text;$('canvas-task-prompt').textContent=t.text;$('canvas-guide').textContent=t.text;if(capture&&capture.strokes.length){capture.flag('任務變更');$('write-notice').hidden=false;$('write-notice').textContent='這次已更換任務，不會加入個人基準。重新開始一段練習可建立新任務摘要。';}}
-  function needsDiscard(){return view==='write'&&!!capture?.strokes.length;}
+  function setTasks(){if(layoutLocked){$('category').value=lockedCategory;return;}const items=CW_CORPUS.filter(t=>t.cat===$('category').value);$('task').innerHTML=items.map(t=>`<option value="${esc(t.id)}">${esc(t.text)}</option>`).join('');taskChanged();}
+  function taskChanged(){if(layoutLocked){$('task').value=lockedTask;return;}const t=task();$('task-poem').textContent=t.text;$('canvas-task-prompt').textContent=t.text;$('canvas-guide').textContent=t.text;if(capture&&capture.strokes.length){capture.flag('任務變更');$('write-notice').hidden=false;$('write-notice').textContent='這次已更換任務，不會加入個人基準。重新開始一段練習可建立新任務摘要。';}updateSpacePlan();}
+  function needsDiscard(){return view==='write'&&!!(capture?.strokes.length||capture?.active);}
   function focusAvailable(target){if(!target||target.isConnected===false||target.closest?.('[hidden]'))return false;target.focus();return document.activeElement===target;}
   function restoreFocus(target){if(!focusAvailable(target))focusAvailable(document.querySelector('#view-'+view+' h1'));}
   // Native modal semantics plus explicit entry and boundary handling: Tab never exits to BODY.
   document.addEventListener('keydown',e=>{
-    if(e.key!=='Tab')return;const dialog=['confirmation','breathing','tour'].map($).find(d=>d.open);if(!dialog)return;
+    if(e.key!=='Tab')return;const dialog=['confirmation','breathing','tour','wellbeing-dialog'].map($).filter(Boolean).find(d=>d.open);if(!dialog)return;
     const controls=[...dialog.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])')].filter(el=>el.getClientRects().length&&!el.closest('[hidden]'));
     const index=controls.indexOf(document.activeElement);if(!controls.length){e.preventDefault();dialog.focus();return;}
     if(e.shiftKey&&index<=0){e.preventDefault();controls.at(-1).focus();}else if(!e.shiftKey&&(index<0||index===controls.length-1)){e.preventDefault();controls[0].focus();}
@@ -45,7 +46,7 @@
   function updateHome(){
     let data;try{data=realStore.list().sort((a,b)=>b.endedAt-a.endedAt);}catch(e){
       $('home-count').textContent='—';$('home-summary-count').textContent='—';$('home-duration').textContent='—';$('home-eligible').textContent='—';
-      $('home-baseline-count').textContent='—';$('home-baseline-progress').style.width='0%';
+      $('home-baseline-count').textContent='—';$('home-baseline-progress').style.width='0%';if($('home-baseline-context'))$('home-baseline-context').textContent='本機摘要暫不可讀取，無法確認同條件進度。';
       $('home-current-node').hidden=true;$('home-review-note').textContent='本機摘要暫不可用；原內容沒有被改寫。';
       $('home-data-state').dataset.state='error';
       $('home-data-state').textContent='本機摘要目前無法讀取，未覆寫原內容。';
@@ -53,12 +54,14 @@
     }
     const latest=data[0],eligible=data.filter(r=>r.features?.schema===C.FEATURE_SCHEMA&&r.features?.eligible).length;
     const duration=data.reduce((sum,r)=>sum+(C.finite(r.features?.durationMs)?r.features.durationMs:0),0);
-    const baseline=latest?C.compare(latest,data,'speed').n:0;
+    const latestLayout=data.find(r=>r.environment?.includes('|layout:cw-layout/1|'));
+    const seenBaseline=new Set(),baseline=latestLayout?data.filter(r=>{if(r.key!==latestLayout.key||!C.qualified(r,'speed')||seenBaseline.has(r.id))return false;seenBaseline.add(r.id);return true;}).slice(0,C.MAX_HISTORY).length:0;
     $('home-data-state').dataset.state=data.length?'populated':'empty';
     $('home-count').textContent=data.length;$('home-summary-count').textContent=data.length;
     $('home-duration').textContent=fmt(duration/60000,1);$('home-eligible').textContent=eligible;
     $('home-baseline-count').textContent=baseline;
     $('home-baseline-progress').style.width=Math.min(100,baseline/C.MIN_HISTORY*100)+'%';
+    if($('home-baseline-context'))$('home-baseline-context').textContent=latestLayout?`最近新版條件：${CW_CORPUS.find(t=>t.id===latestLayout.task)?.text||latestLayout.task}、${latestLayout.input}。已存 ${baseline} 筆同條件合格落筆速度摘要，${baseline>=C.MIN_HISTORY?'下一次比較就緒。':`再存 ${C.MIN_HISTORY-baseline} 筆才供下一次比較。`}舊布局與其他題目不混入。`:'新版紙面條件尚無已存摘要；舊紀錄可回顧，但不混入新版基準。';
     $('home-current-node').hidden=!latest;
     $('home-review-note').textContent=latest?'最近一筆已保存摘要可在歷程回看；原始筆跡只在當次完成頁暫留。':'完成頁可回放本次筆跡；歷史只保存摘要。尚無本機紀錄。';
     $('home-data-state').textContent=mode==='demo'?'以下仍是真實本機摘要；隔離示範不計入。':data.length?'以下來自這個瀏覽器已保存的真實摘要。':'尚無已保存摘要；完成並選擇本機保存後才會顯示數值。';
@@ -72,6 +75,7 @@
   }
   function enterDemo(kind='normal'){
     if(needsDiscard()){guardLeave(()=>enterDemo(kind));return;}
+    wellbeing.stopAll();
     releaseRaw();
     if(mode!=='demo'){realCurrent=current;realCapture=view==='write'?null:capture;capture=null;mode='demo';}
     const data=C.demo(kind);demoStore.memory=data.history.map(r=>({...S.clean(r),local:'demo-memory',cloud:'demo-memory',cloudMessage:'示範資料僅在記憶體'}));
@@ -80,18 +84,37 @@
   function exitDemo(){releaseRaw();mode='real';demoStore.memory=[];current=realCurrent;capture=realCapture;realCurrent=null;realCapture=null;updateMode();view='home';route('home');notify('已退出示範。真實本機歷程未被示範寫入。');}
   function newWriting(){
     if(needsDiscard()){guardLeave(newWriting);return;}if(mode==='demo')exitDemo();
-    releaseRaw();capture=new C.Capture();current=null;historyReview=false;$('write-notice').hidden=true;view='home';route('write');resizeCanvas(true);paint();updateCapture();
+    releaseRaw();capture=new C.Capture();current=null;historyReview=false;$('write-notice').hidden=true;
+    if(wellbeing.isInterventionActive()){capture.markGuidance('started');$('write-notice').hidden=false;$('write-notice').textContent='這次已使用正念或背景聲音，僅供回顧，不進自然書寫基準。';}
+    unlockSpace();view='home';route('write');updateSpacePlan();resizeCanvas(true);paint();updateCapture();
   }
-  const canvas=$('canvas'),ctx=canvas.getContext('2d');let canvasSize={w:0,h:0,dpr:0};
+  const canvas=$('canvas'),ctx=canvas.getContext('2d');let canvasSize={w:0,h:0,dpr:0},lastObservedDpr=0;
+  function unlockSpace(){layoutLocked=false;spacePlan=null;for(const id of ['category','task','input-policy','brush','grid','guide'])$(id).disabled=false;if($('paper'))$('paper').style.width='';if($('space-new'))$('space-new').hidden=true;}
+  function lockSpace(){if(layoutLocked||!L||!spacePlan?.valid)return;layoutLocked=true;lockedTask=$('task').value;lockedCategory=$('category').value;lockedBrush=$('brush').value;lockedInput=$('input-policy').value;lockedGrid=$('grid').checked;lockedGuide=$('guide').checked;
+    const paper=$('paper');paper.style.width=paper.getBoundingClientRect().width+'px';for(const id of ['category','task','input-policy','brush','grid','guide'])$(id).disabled=true;if($('space-new'))$('space-new').hidden=false;}
+  function updateSpacePlan(){if(!L||view!=='write'||!$('space-plan')||layoutLocked)return;const paper=$('paper'),width=Math.round(paper.getBoundingClientRect().width);if(!width)return;
+    spacePlan=L.plan({text:task().text,width,brush:Number($('brush').value),dpr:window.devicePixelRatio||1});paper.style.setProperty('--paper-height',spacePlan.height+'px');paper.style.setProperty('--cell-size',spacePlan.cell+'px');paper.style.setProperty('--space-pad',spacePlan.pad+'px');
+    $('space-plan').hidden=false;const hasNumbers=[spacePlan.count,spacePlan.cols,spacePlan.rows,spacePlan.brush].every(Number.isFinite),base=hasNumbers?`這次 ${spacePlan.count} 字（不含標點與空白）、${spacePlan.cols} 欄 ${spacePlan.rows} 行、筆寬 ${spacePlan.brush} px。`:'目前紙面條件無法規劃。';
+    const reason=typeof spacePlan.reason==='string'&&!/undefined|NaN|Infinity/.test(spacePlan.reason)&&spacePlan.reason?spacePlan.reason:'目前紙面條件無法量測。';
+    $('space-plan-text').textContent=spacePlan.valid?base+'落筆後紙面與設定固定；本次只與同條件的自己比較。':base+reason+(hasNumbers?' 請採建議筆寬或選短語，這個配置不開放落筆。':' 這個配置不開放落筆；請確認裝置顯示設定後再開始新一輪。');
+    $('space-plan').dataset.state=spacePlan.valid?'ready':'blocked';$('space-suggest').hidden=spacePlan.valid||Number($('brush').value)===L.SUGGESTED_BRUSH;$('space-shorter').hidden=spacePlan.valid||$('category').value==='single';
+  }
   function resizeCanvas(initial=false){
     if(view!=='write')return;
-    const rect=canvas.getBoundingClientRect(),w=Math.round(rect.width),h=Math.round(rect.height),dpr=window.devicePixelRatio||1;
+    const rect=canvas.getBoundingClientRect(),w=Math.round(rect.width),h=Math.round(rect.height),dpr=Number(window.devicePixelRatio);
+    lastObservedDpr=dpr;
     if(!w||!h||w===canvasSize.w&&h===canvasSize.h&&dpr===canvasSize.dpr)return;
-    if(!initial&&capture&&(capture.strokes.length||capture.active)){capture.interrupt();capture.flag('尺寸改變');$('write-notice').hidden=false;$('write-notice').textContent='畫布尺寸已改變。保留可見筆跡供回看，這次不納入個人基準。';}
-    canvasSize={w,h,dpr};canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);paint();
+    const backingW=Math.round(w*dpr),backingH=Math.round(h*dpr),safe=Number.isFinite(dpr)&&dpr>0&&dpr<=4&&Number.isSafeInteger(backingW)&&Number.isSafeInteger(backingH)&&backingW>0&&backingH>0&&backingW*backingH<=(L?.MAX_PIXELS||12000000);
+    if(!initial&&capture&&(layoutLocked||capture.strokes.length||capture.active)){capture.interrupt();capture.flag('尺寸改變');$('write-notice').hidden=false;$('write-notice').textContent=safe?'畫布尺寸改變。保留可見筆跡供回看，這次不納入個人基準。':'畫布尺寸改變；目前 DPR 不支援或畫布像素超出裝置預算。保留筆跡供回看，這次不納入個人基準；請開始新一輪。';}
+    if(!safe)return;
+    canvasSize={w,h,dpr};canvas.width=backingW;canvas.height=backingH;ctx.setTransform(dpr,0,0,dpr,0,0);paint();
   }
-  new ResizeObserver(()=>resizeCanvas()).observe($('paper'));
-  window.addEventListener('resize',()=>resizeCanvas());
+  // DPR-only changes need not fire resize or ResizeObserver. Keep CSS coordinates,
+  // redraw the backing at the observed DPR, and retain the session quality flag.
+  function checkCanvasEnvironment(){if(view!=='write')return;if(!layoutLocked)updateSpacePlan();resizeCanvas();}
+  setInterval(()=>{if(view==='write'&&Number(window.devicePixelRatio)!==lastObservedDpr)checkCanvasEnvironment();},100);
+  new ResizeObserver(()=>{updateSpacePlan();resizeCanvas();}).observe($('paper'));
+  window.addEventListener('resize',()=>{updateSpacePlan();resizeCanvas();});
   function point(e,phase,pointerType=e.pointerType){
     const r=canvas.getBoundingClientRect(),pen=pointerType==='pen';
     return {x:e.clientX-r.left,y:e.clientY-r.top,t:e.timeStamp,phase,pointerType,pressure:pen&&Number.isFinite(e.pressure)?e.pressure:null,pressureEvidence:'unknown',tiltX:pen&&Number.isFinite(e.tiltX)?e.tiltX:null,tiltY:pen&&Number.isFinite(e.tiltY)?e.tiltY:null,width:Math.max(1.5,Number($('brush').value))};
@@ -101,20 +124,28 @@
   function paint(){ctx.clearRect(0,0,canvasSize.w,canvasSize.h);capture?.strokes.forEach(drawStroke);if(capture?.active)drawStroke(capture.active);}
   const pressureLabel=f=>({'verified':'經實機確認','observed-variation':'觀察到接觸值變化','unknown':'未確認'})[f?.support?.pressureEvidence]||'未確認';
   function updateCapture(){const f=capture?C.extract(capture):null;$('stroke-count').textContent=`${capture?.strokes.length||0} 筆畫`;$('input-label').textContent=capture?.input?({mouse:'滑鼠',pen:'觸控筆',touch:'觸控'}[capture.input]||capture.input)+'書寫':'尚未落筆';$('device-support').textContent=`筆壓：${pressureLabel(f)} · 傾斜：${f?.support.tilt?'原始角度可用':'未確認'}`;}
-  canvas.addEventListener('pointerdown',e=>{const policy=$('input-policy').value;if(view!=='write'||!capture||e.button!==0||e.isPrimary===false||policy!=='auto'&&policy!==e.pointerType)return;const p=point(e,'down');if(outside(p))return;if(capture.begin(e.pointerId,e.pointerType,p)){canvas.setPointerCapture(e.pointerId);e.preventDefault();paint();updateCapture();}});
-  canvas.addEventListener('pointermove',e=>{if(capture?.pointer!==e.pointerId)return;const events=e.getCoalescedEvents?.()||[];for(const sample of events.length?events:[e]){const p=point(sample,'move',e.pointerType);if(outside(p)){capture.interrupt();break;}capture.move(e.pointerId,p);}e.preventDefault();paint();updateCapture();});
-  canvas.addEventListener('pointerup',e=>{if(capture?.pointer!==e.pointerId)return;const p=point(e,'up');if(outside(p))capture.interrupt();else capture.end(e.pointerId,p);if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);paint();updateCapture();});
+  canvas.addEventListener('pointerdown',e=>{const policy=$('input-policy').value;if(view!=='write'||!capture||e.button!==0||e.isPrimary===false||policy!=='auto'&&policy!==e.pointerType)return;checkCanvasEnvironment();if(L&&spacePlan&&!spacePlan.valid){notify('這個字數與筆寬超出紙面，請先採建議筆寬或選短語。');return;}const p=point(e,'down');if(outside(p))return;if(capture.begin(e.pointerId,e.pointerType,p)){lockSpace();canvas.setPointerCapture(e.pointerId);e.preventDefault();paint();updateCapture();}});
+  canvas.addEventListener('pointermove',e=>{checkCanvasEnvironment();if(capture?.pointer!==e.pointerId)return;const events=e.getCoalescedEvents?.()||[];for(const sample of events.length?events:[e]){const p=point(sample,'move',e.pointerType);if(outside(p)){capture.interrupt();break;}capture.move(e.pointerId,p);}e.preventDefault();paint();updateCapture();});
+  canvas.addEventListener('pointerup',e=>{checkCanvasEnvironment();if(capture?.pointer!==e.pointerId)return;const p=point(e,'up');if(outside(p))capture.interrupt();else capture.end(e.pointerId,p);if(canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);paint();updateCapture();});
   function interrupt(e){if(e?.pointerId!==undefined&&capture?.pointer!==e.pointerId)return;if(capture?.pointer!==null&&capture?.pointer!==undefined){capture.interrupt();paint();updateCapture();notify('輸入中斷已標記；這次不會加入個人基準。');}}
   function loseFocus(){if(view==='write'&&capture&&(capture.active||capture.strokes.length)){capture.flag('輸入中斷');interrupt();$('write-notice').hidden=false;$('write-notice').textContent='書寫過程曾失焦／切換頁面，這次保留回顧但不進個人基準。';}}
   canvas.addEventListener('pointercancel',interrupt);canvas.addEventListener('lostpointercapture',interrupt);window.addEventListener('blur',loseFocus);document.addEventListener('visibilitychange',()=>{if(document.hidden)loseFocus();});
   $('undo').addEventListener('click',()=>{capture?.undo();paint();updateCapture();});
   $('clear').addEventListener('click',async()=>{if(!capture)return;if(!capture.strokes.length||await askConfirm('清除這次畫布與所有暫存筆畫量測？')){capture.clear();paint();updateCapture();notify('畫面與筆畫量測已一起清除。');}});
-  $('brush').addEventListener('input',()=>$('brush-value').textContent=$('brush').value);
-  $('input-policy').addEventListener('change',()=>{if(capture?.active)capture.interrupt();if(capture?.strokes.length)capture.flag('輸入方式改變');paint();updateCapture();});
-  $('grid').addEventListener('change',()=>$('paper').classList.toggle('grid',$('grid').checked));$('guide').addEventListener('change',()=>$('canvas-guide').hidden=!$('guide').checked);
+  $('brush').addEventListener('input',()=>{if(layoutLocked){$('brush').value=lockedBrush;return;}$('brush-value').textContent=$('brush').value;updateSpacePlan();resizeCanvas();});
+  $('input-policy').addEventListener('change',()=>{if(layoutLocked){$('input-policy').value=lockedInput;return;}if(capture?.active)capture.interrupt();if(capture?.strokes.length)capture.flag('輸入方式改變');paint();updateCapture();});
+  $('grid').addEventListener('change',()=>{if(layoutLocked){$('grid').checked=lockedGrid;return;}$('paper').classList.toggle('grid',$('grid').checked);updateSpacePlan();});$('guide').addEventListener('change',()=>{if(layoutLocked){$('guide').checked=lockedGuide;return;}$('canvas-guide').hidden=!$('guide').checked;updateSpacePlan();});
   $('category').addEventListener('change',setTasks);$('task').addEventListener('change',taskChanged);
+  if(L&&$('space-new')){
+    $('space-suggest').addEventListener('click',()=>{$('brush').value=String(L.SUGGESTED_BRUSH);$('brush-value').textContent=$('brush').value;updateSpacePlan();resizeCanvas();});
+    $('space-shorter').addEventListener('click',()=>{$('category').value='single';setTasks();updateSpacePlan();resizeCanvas();});
+    $('space-new').addEventListener('click',()=>{if(!layoutLocked)return;askConfirm('調整題目、筆寬或字格需要開始新一輪，這次尚未完成的筆跡會捨棄。要開新一輪嗎？').then(ok=>{if(!ok)return;capture=null;newWriting();focusAvailable($('task'));});});
+    $('space-skip').addEventListener('click',()=>$('finish').scrollIntoView({block:'center'}));
+  }
   $('finish').addEventListener('click',()=>{
-    if(!capture)return;capture.interrupt();const meta={person,environment:browserEnvironment+'|canvas:'+canvasSize.w+'x'+canvasSize.h+'@'+canvasSize.dpr,input:capture.input||'none',task:task().id,schema:C.FEATURE_SCHEMA};
+    if(!capture)return;checkCanvasEnvironment();capture.interrupt();if(document.body?.dataset?.layoutVersion==='1'&&!spacePlan)capture.flag('尺寸改變');
+    const layoutKey=L&&spacePlan?L.condition(spacePlan,{grid:layoutLocked?lockedGrid:$('grid').checked,guide:layoutLocked?lockedGuide:$('guide').checked}):'cw-layout/1|unavailable';
+    const meta={person,environment:browserEnvironment+'|canvas:'+canvasSize.w+'x'+canvasSize.h+'@'+canvasSize.dpr+'|layout:'+layoutKey,input:capture.input||'none',task:task().id,schema:C.FEATURE_SCHEMA};
     if(!profilePersistent)capture.flag('個人識別未保存');
     current=C.summary(capture,meta,uuid(),Date.now());historyReview=false;resultRaw={session:{strokes:capture.strokes},width:canvasSize.w,height:canvasSize.h};view='result';route('result');renderResult();
     // Raw points remain only in memory for this result and are released on navigation.
@@ -189,12 +220,13 @@
   $('replay-position').addEventListener('input',()=>{stopReplay();const at=Number($('replay-position').value);if(fragmentIndex>=0&&(at<fragments[fragmentIndex].start||at>fragments[fragmentIndex].end))clearFragment(false);setReplay(at);$('replay-status').textContent='已手動移動播放位置';});
   const formula={speed:'有效筆畫路徑總長 ÷ 落筆總秒數，為落筆期間平均速度。單位 CSS px/s，不是實際公分。',pause:'相鄰有效筆畫的「下一筆起點時間 − 上一筆終點時間」取中位數；只指筆畫間抬筆，不代表筆畫內停住。',active:'有效筆畫時間總和 ÷ 第一筆開始至最後一筆結束的時間 × 100，稱落筆時間占比；不是情緒機率。',pressure:'至少 5 個觀察到變化或經實機確認的接觸筆壓樣本，取中位數；未確認為 null。合法 0.5 保留；固定 fallback 不作實測。'};
   const sourceCount=(f,k)=>k==='pause'?`${f.counts.pauses} 個間隔`:k==='pressure'?`${f.counts.pressure} 個可用接觸樣本`:`${f.counts.points} 個點 · ${f.counts.strokes} 筆畫`;
+  const relativePercent=c=>c.status==='ready'&&C.finite(c.base)&&c.base>0&&C.finite(c.value)?(c.value-c.base)/c.base*100:null;
   function card(k){
     const f=current.features,c=C.compare(current,rows(),k),m=C.METRICS[k],available=f.values[k]!==null;
     if(historyReadError)c.status='unavailable';
-    const status=c.status==='ready'||c.status==='zero-mad'?`近期中位數 ${fmt(c.base)} ${m.unit} · 差值 ${fmt(c.delta,2)} · 有效 ${c.n} 筆`:c.status==='building'?`個人基準建立中 · ${c.n}/${C.MIN_HISTORY} 筆`:'本次不進行比較';
+    const percent=relativePercent(c),status=c.status==='ready'||c.status==='zero-mad'?`本次之前同條件 ${c.n} 筆 · 近期中位數 ${fmt(c.base)} ${m.unit} · 差值 ${fmt(c.delta,2)}${percent===null?'':` · 相對 ${percent>0?'+':''}${fmt(percent,1)}%`}`:c.status==='building'?`本次之前同條件建立中 · ${c.n}/${C.MIN_HISTORY} 筆`:'本次不進行比較';
     let bars='';if(['ready','zero-mad'].includes(c.status)&&available){const max=Math.max(c.value,c.base,1);bars=`<div class="compare-bars" aria-label="本次與近期中位數對照"><div class="compare-line"><span>本次</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,c.value/max*100)}%"></div></div><span>${fmt(c.value)}</span></div><div class="compare-line baseline"><span>近期</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,c.base/max*100)}%"></div></div><span>${fmt(c.base)}</span></div></div>`;}
-    return `<article class="metric-card ${k}"><div><h3>${m.label}</h3><span class="metric-value">${fmt(f.values[k],k==='pressure'?2:1)}</span><span class="metric-unit">${m.unit}</span><p class="metric-source">${esc(sourceCount(f,k))} · ${mode==='demo'?'合成示範':'本次量測'}${!available?' · 缺值':''}</p></div><div class="comparison"><strong>${esc(status)}</strong>${bars}<p>${esc(C.observation(k,c))}</p></div><details><summary>查看計算與比較依據</summary><p>${formula[k]}</p><p>本次之前，取相同個人／瀏覽器環境、輸入方式、固定任務及 schema 最近最多 30 筆合格摘要；本次不算入基準。初始比較門檻 10 筆，可調工程設定，非臨床充分性聲明。</p><p>有效歷史 ${c.n} 筆；中位數 ${fmt(c.base)}；MAD ${fmt(c.mad,2)}${c.delta!==undefined?`；原始差值 ${fmt(c.delta,2)}`:''}。${esc(current.schema)}</p><p>可能干擾：畫布尺寸、取樣頻率、手部姿勢、裝置延遲、任務熟悉度。不同環境不混用，不解讀為診斷。</p></details></article>`;
+    return `<article class="metric-card ${k}"><div><h3>${m.label}</h3><span class="metric-value">${fmt(f.values[k],k==='pressure'?2:1)}</span><span class="metric-unit">${m.unit}</span><p class="metric-source">${esc(sourceCount(f,k))} · ${mode==='demo'?'合成示範':'本次量測'}${!available?' · 缺值':''}</p></div><div class="comparison"><strong>${esc(status)}</strong>${bars}<p>${esc(C.observation(k,c))}</p><p>相對差異只描述這次書寫行為，不代表好壞、壓力或心理狀態。</p></div><details><summary>查看計算與比較依據</summary><p>${formula[k]}</p><p>本次之前，取相同個人／瀏覽器環境、輸入方式、固定任務及 schema 最近最多 30 筆合格摘要；本次不算入基準。初始比較門檻 10 筆，可調工程設定，非臨床充分性聲明。</p><p>有效歷史 ${c.n} 筆；中位數 ${fmt(c.base)}；MAD ${fmt(c.mad,2)}${c.delta!==undefined?`；原始差值 ${fmt(c.delta,2)}`:''}。${percent===null?'百分比未顯示：資料不足、中位數為 0 或 MAD 為 0。':`相對百分比以本次與中位數差值除以中位數計。`}${esc(current.schema)}</p><p>可能干擾：畫布尺寸、取樣頻率、手部姿勢、裝置延遲、任務熟悉度。不同環境不混用，不解讀為診斷。</p></details></article>`;
   }
   function renderResult(){
     if(!current)return;const f=current.features,t=CW_CORPUS.find(t=>t.id===current.task);
@@ -206,6 +238,7 @@
     document.querySelector('.replay-heading>span').textContent=historyReview?'僅可回看摘要':'只在這次完成頁暫留';
     document.querySelector('#research-card p').textContent=historyReview?'你看到的：歷史只留量測摘要，沒有可重建的原始筆畫間隔。':mode==='demo'?'你看到的：固定合成筆畫的間隔；這不是裝置記錄或研究成果。真實書寫時才會由本次裝置事件產生。':'你看到的：本次裝置記錄的相鄰筆畫間隔，不包括所有筆畫內停住或完整空中動作。';
     $('demo-controls').hidden=mode!=='demo';$('quality').textContent=f.schema!==C.FEATURE_SCHEMA?'此歷史摘要使用舊版特徵規則，僅供回顧；不與新版個人基準混用，原紀錄未改寫。':f.eligible?'量測符合本版的基本品質門檻。缺少筆壓不影響其他有效特徵；每項仍須通過各自的樣本檢查。':`這次先留作回顧，不納入個人基準：${f.flags.join('、')||'資料不完整'}。可用值僅供本次參考。`;
+    if($('personal-baseline-note')){const prior=C.compare(current,rows(),'speed').n;$('personal-baseline-note').textContent=mode==='demo'?'合成示範不加入真實個人基準。':current.environment?.includes('|layout:cw-layout/1|')?`本次之前有 ${prior} 筆同條件合格落筆速度摘要；本次不算入自己的基準。這個瀏覽器的匿名識別無法分辨共用裝置的不同人。`:'這是舊版紙面條件摘要，仍可回顧；不改寫或混入新版布局基準。';}
     $('metric-cards').innerHTML=['speed','pause','active','pressure'].map(card).join('');
     renderReplay();
     if(historyReadError)$('quality').textContent+=' 本機歷史無法讀取，暫不比較；未覆寫原內容。';
@@ -252,11 +285,16 @@
   function closeBreathing(completed=false){clearInterval(breathTimer);markGuidance(completed?'completed':'cancelled');$('breathing').close();if(breathReturn==='result')renderResult();if(breathReturn==='write'){updateCapture();$('write-notice').hidden=false;$('write-notice').textContent=guidanceLabel(breathState)+'。可繼續練習，這次僅作回顧。';}restoreFocus(lastFocus);}
   $('manual-breathe').addEventListener('click',openBreathing);$('result-breathe').addEventListener('click',openBreathing);
   $('breath-close').addEventListener('click',()=>closeBreathing());$('breath-cancel').addEventListener('click',()=>closeBreathing());$('breath-complete').addEventListener('click',()=>closeBreathing(true));$('breathing').addEventListener('cancel',e=>{e.preventDefault();closeBreathing();});
+  const wellbeing=window.CWWellbeing?.mount?.({onIntervention(){
+    if(mode==='real'&&view==='write'&&capture){capture.markGuidance('started');paint();updateCapture();$('write-notice').hidden=false;$('write-notice').textContent='這次已使用正念或背景聲音，僅供回顧，不進自然書寫基準。';}
+  }})||{isInterventionActive:()=>false,stopAll(){}};
+  if(wellbeing.audio&&$('wellbeing-open'))$('wellbeing-open').disabled=false;
   $('skip-guidance').addEventListener('click',()=>{if(current.guidance==='not-started')current.guidance='skipped';$('guidance-state').textContent=guidanceLabel(current.guidance);notify('可以略過，依自己的步調就好。');});
   let tourFocus=null;function closeTour(){ $('tour').close();restoreFocus(tourFocus); }
   $('open-tour').addEventListener('click',()=>{tourFocus=document.activeElement;updateMode();$('tour').showModal();focusAvailable($('tour-close'));});$('tour-close').addEventListener('click',closeTour);$('tour').addEventListener('cancel',e=>{e.preventDefault();closeTour();});$('tour-demo').addEventListener('click',()=>{closeTour();enterDemo();});
   $('start-demo').addEventListener('click',()=>enterDemo());$('demo-kind').addEventListener('change',()=>enterDemo($('demo-kind').value));$('exit-demo').addEventListener('click',exitDemo);
   ['start-real','history-start','write-again'].forEach(id=>$(id).addEventListener('click',newWriting));
   document.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',()=>route(el.dataset.nav)));
+  if(L&&document.body?.dataset?.layoutVersion==='1'&&$('brush').dataset.suggestedDefault){$('brush').value=$('brush').dataset.suggestedDefault;$('brush-value').textContent=$('brush').value;}
   setTasks();updateMode();updateHome();
 })();
