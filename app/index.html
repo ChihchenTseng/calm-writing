@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="assets/heritage.css">
   <link rel="stylesheet" href="assets/app.css?v=CW-UXFINAL-TOURFIX2-20261102">
   <link rel="stylesheet" href="assets/wellbeing.css?v=CW-WELLBEING-001-20261102">
+  <link rel="stylesheet" href="assets/brand-final.css?v=CW-LOGO-FINAL-20261103">
   <script src="assets/corpus.js" defer></script>
   <script src="assets/engine.js" defer></script>
   <script src="assets/storage.js" defer></script>
@@ -21,7 +22,7 @@
   <a class="skip" href="#main">跳至主要內容</a>
   <div id="demo-banner" class="demo-banner" hidden><strong>示範資料／非研究成果</strong><span>合成範例只在記憶體，不影響真實歷程、不連雲端。</span><button id="exit-demo">退出示範</button></div>
   <header class="site-header">
-    <button class="brand" data-nav="home" aria-label="寫字靜心首頁"><img src="assets/brand-08.svg" alt="" width="42" height="42"><span>寫字靜心<small>CALM WRITING</small></span></button>
+    <button class="brand" data-nav="home" aria-label="寫字靜心首頁"><span class="brand-final-mark"><img src="assets/calm-writing-full.svg" alt="" width="190" height="57"></span><span class="brand-zh">寫字靜心</span></button>
     <nav aria-label="主要導覽"><button data-nav="home">首頁</button><button data-nav="history">我的歷程</button><button id="wellbeing-open" aria-haspopup="dialog" disabled>正念與聲音</button><button id="open-tour">展示導覽</button></nav>
   </header>
   <div class="environment"><span id="mode-label">本機儲存 · 雲端尚未啟用</span><span>觀察書寫，不判定心理</span></div>
@@ -29,7 +30,7 @@
   <main id="main" tabindex="-1">
     <section id="view-home" class="view">
       <div class="hero">
-        <section class="hero-copy" aria-labelledby="home-title"><p class="eyebrow">CALM WRITING / 一段留給自己的時間</p><h1 id="home-title" tabindex="-1">給自己一點時間，<br>寫下一段話。</h1><p class="lead">不用寫得漂亮，照自己的節奏就好。</p><p>從既有固定語句或自然詩句開始。寫完先看見整段字跡，再探索筆畫之間實際留下的時間。</p><div class="actions"><button class="primary" id="start-real">開始書寫 <span aria-hidden="true">↗</span></button></div><p class="micro">這裡觀察的是書寫行為，不判定心情或健康。<button class="text-btn" id="start-demo">先看隔離示範</button></p></section><div class="home-paper" aria-label="固定語料示意：吾心安處是吾鄉"><img src="assets/brand-08.svg" alt="" width="48" height="48"><span>從既有語料選一句</span><strong>吾心安處是吾鄉</strong><small>固定語料示意 · 落筆後才會顯示你的真實字跡</small></div>
+        <section class="hero-copy" aria-labelledby="home-title"><p class="eyebrow">CALM WRITING / 一段留給自己的時間</p><h1 id="home-title" tabindex="-1">給自己一點時間，<br>寫下一段話。</h1><p class="lead">不用寫得漂亮，照自己的節奏就好。</p><p>從既有固定語句或自然詩句開始。寫完先看見整段字跡，再探索筆畫之間實際留下的時間。</p><div class="actions"><button class="primary" id="start-real">開始書寫 <span aria-hidden="true">↗</span></button></div><p class="micro">這裡觀察的是書寫行為，不判定心情或健康。<button class="text-btn" id="start-demo">先看隔離示範</button></p></section><div class="home-paper" aria-label="固定語料示意：吾心安處是吾鄉"><img class="brand-final-icon" src="assets/calm-writing-icon.svg" alt="" width="64" height="64"><span>從既有語料選一句</span><strong>吾心安處是吾鄉</strong><small>固定語料示意 · 落筆後才會顯示你的真實字跡</small></div>
         <section class="home-dashboard" aria-labelledby="home-data-title"><div class="home-dashboard-head"><div><p class="eyebrow">PERSONAL WRITING OVERVIEW</p><h2 id="home-data-title">我的書寫觀察</h2><p>摘要來自這個瀏覽器；沒有資料時不畫趨勢。</p></div><span class="home-local-badge">本機摘要</span></div><p id="home-data-state" class="home-data-state" role="status">正在讀取本機摘要。</p><div class="home-overview"><article class="home-observation"><div class="card-heading"><span class="data-icon blue-icon" aria-hidden="true">↗</span><div><small>01 / RECENT RECORD</small><h3>最近一筆書寫</h3></div></div><div id="home-latest" class="home-latest"><p>尚無已保存摘要。</p></div></article><article class="home-baseline"><div class="card-heading"><span class="data-icon green-icon" aria-hidden="true">▦</span><div><small>02 / PERSONAL BASELINE</small><h3>同條件比較進度</h3></div></div><p class="home-big"><span id="home-baseline-count">0</span><small> / 10 筆同條件已存摘要，供下次比較</small></p><div class="home-progress" aria-hidden="true"><span id="home-baseline-progress"></span></div><p id="home-baseline-context" class="micro">新布局條件會重新累積；舊摘要仍可回顧。</p><p class="micro">只以此瀏覽器匿名識別、相同任務／輸入／環境及合格摘要比較；共用裝置無法辨認不同人。</p></article></div><div class="home-summary"><article class="home-mini blue-top"><span>已保存摘要</span><strong id="home-summary-count">0</strong><small>筆 · 此瀏覽器</small></article><article class="home-mini purple-top"><span>書寫跨度合計</span><strong id="home-duration">0</strong><small>分鐘 · 已保存摘要</small></article><article class="home-mini green-top"><span>符合基本品質</span><strong id="home-eligible">0</strong><small>筆 · 仍須逐項比對條件</small></article></div><div class="home-review"><span class="data-icon yellow-icon" aria-hidden="true">◴</span><div><h3>沿著時間軸回看自己</h3><p id="home-review-note">完成頁可回放本次筆跡；歷史只保存摘要。尚無本機紀錄。</p></div><span id="home-current-node" class="review-node" aria-hidden="true" hidden></span></div><p class="micro home-boundary">只有真實保存的摘要才計入上方數字；資料不足時不產生假曲線或心理分類。</p></section>
       </div>
       <div class="ritual-strip"><div><span class="step-num">一</span><h2>選一句話</h2><p>讓文化與日常，成為落筆的起點。</p></div><div><span class="step-num">二</span><h2>照自己的節奏</h2><p>書寫、停頓，或隨時休息都可以。</p></div><div><span class="step-num">三</span><h2>看見這次的自己</h2><p>用可解釋的觀察，累積個人書寫基準。</p></div></div>

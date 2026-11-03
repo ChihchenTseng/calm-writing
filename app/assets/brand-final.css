@@ -1,0 +1,9 @@
+/* Approved C13/W10 logo integration; loaded after the existing product styles. */
+.site-header .brand{display:inline-flex;align-items:center;flex:0 0 auto;gap:12px;max-width:100%;min-height:60px;padding:0;color:var(--white);font-size:18px;font-weight:800;letter-spacing:.02em;white-space:nowrap}
+.brand-final-mark{display:grid;place-items:center;flex:0 0 auto;padding:4px 7px;border-radius:10px;background:var(--white);box-shadow:0 1px 3px #10233c30}
+.site-header .brand img{display:block;width:190px;height:auto;aspect-ratio:570/170;filter:none}
+.site-header .brand .brand-zh{display:block;font-size:17px;line-height:1.3;font-weight:800}
+.site-header nav{min-width:0}
+.home-paper .brand-final-icon{display:block;width:64px;height:64px;object-fit:contain;flex:0 0 auto}
+@media(max-width:700px){.site-header{flex-direction:column;align-items:stretch;gap:9px;padding:12px 18px 14px}.site-header .brand{align-self:flex-start;min-height:52px;gap:10px}.site-header .brand img{width:164px}.site-header .brand .brand-zh{font-size:16px}.brand-final-mark{padding:3px 6px}.site-header nav{display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:4px 6px}.site-header nav button{min-height:44px;padding:7px 10px;font-size:14px}}
+@media(max-width:300px){.site-header .brand{flex-direction:column;align-items:flex-start;gap:4px}.site-header .brand img{width:140px}.site-header .brand .brand-zh{font-size:14px}.home-paper .brand-final-icon{width:56px;height:56px}}
