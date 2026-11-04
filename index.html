@@ -193,25 +193,18 @@ html, body {
 .emotion-card.tense::before { background:var(--red); }
 .emotion-card.focused::before { background:var(--gold); }
 .emotion-card.feature-observation::before { background:var(--sage); }
-.feature-observation .ec-label { font-size:13px; letter-spacing:0.06em; color:var(--ink); font-weight:600; }
-.feature-observation .ec-visual { display:block; }
-.feature-observation .ec-bars { gap:10px; }
-.feature-observation .ec-bar-wrap { display:flex; gap:8px; align-items:center; font-size:12px; color:var(--ink); }
-.feature-observation .ec-bar-name { width:94px; flex:none; line-height:1.35; }
-.feature-observation .ec-bar-track { min-width:0; height:8px; }
-.feature-observation .ec-bar-value { width:34px; flex:none; text-align:right; font-variant-numeric:tabular-nums; }
-.feature-observation .ec-desc { margin-top:14px; }
 .ec-label { font-size:10px; letter-spacing:0.15em; color:rgba(42,31,20,0.4); margin-bottom:10px; }
-.ec-visual { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
-.ec-icon { font-size:32px; }
-.ec-bars { flex:1; display:flex; flex-direction:column; gap:4px; }
-.ec-bar-wrap { display:flex; align-items:center; gap:8px; font-size:10px; color:rgba(42,31,20,0.4); }
-.ec-bar-track { flex:1; height:5px; background:rgba(42,31,20,0.06); border-radius:3px; overflow:hidden; }
-.ec-bar-fill { height:100%; border-radius:3px; transition:width 1s ease; }
-.calm .ec-bar-fill { background:var(--sage); }
-.tense .ec-bar-fill { background:var(--red); }
-.focused .ec-bar-fill { background:var(--gold2); }
-.ec-desc { font-size:13px; color:rgba(42,31,20,0.65); line-height:1.8; }
+.ec-heading { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px; }
+.ec-heading .ec-label { margin:0; font-size:14px; letter-spacing:0.05em; color:var(--ink); font-weight:600; }
+.ec-scale { flex:none; color:var(--mist); font-size:11px; font-variant-numeric:tabular-nums; }
+.ec-radar { display:block; width:min(100%,280px); height:auto; margin:0 auto 8px; overflow:visible; }
+.ec-legend { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px 12px; }
+.ec-legend-item { display:flex; align-items:center; gap:7px; min-width:0; font-size:12px; color:var(--ink); }
+.ec-legend-dot { width:8px; height:8px; border-radius:50%; flex:none; }
+.ec-legend-name { min-width:0; }
+.ec-legend-score { margin-left:auto; font-weight:700; font-variant-numeric:tabular-nums; }
+.ec-desc { font-size:12px; color:rgba(42,31,20,0.65); line-height:1.7; margin-top:10px; }
+@media (max-width:380px) { .ec-legend { grid-template-columns:1fr; } }
 .suggestion-card { background:rgba(107,124,94,0.08); border:1px solid rgba(107,124,94,0.25); border-radius:var(--r); padding:18px; margin-bottom:16px; }
 .suggestion-card h4 { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--sage); margin-bottom:8px; letter-spacing:0.08em; }
 .suggestion-card p { font-size:13px; color:rgba(42,31,20,0.6); line-height:1.9; }
@@ -389,7 +382,6 @@ html, body {
 .badge-icon { font-size:26px; }
 .badge-name { font-family:'Noto Serif TC',serif; font-size:14px; color:var(--ink); }
 .badge-desc { font-size:11px; color:rgba(42,31,20,0.5); line-height:1.5; }
-.feedback-disclaimer { font-size:12px; line-height:1.8; color:rgba(42,31,20,0.52); margin:-4px 2px 16px; }
 .corpus-card { position:relative; }
 .today-glow { position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:50%; background:var(--gold2); box-shadow:0 0 6px rgba(196,163,90,0.8); animation:glow-pulse 2s ease-in-out infinite; }
 @keyframes glow-pulse { 0%,100%{opacity:0.6;transform:scale(1);} 50%{opacity:1;transform:scale(1.4);} }
@@ -595,23 +587,20 @@ html, body {
   <div class="feedback-body">
     <div class="feedback-icon" id="fb-icon">🍃</div>
     <div class="feedback-title" id="fb-title">你今天寫得很好</div>
-    <div class="feedback-subtitle" id="fb-subtitle">書寫過程穩定而專注<br>這一刻，你給了自己一份禮物</div>
     <div class="encourage-card" id="encourage-card">
       <div class="encourage-streak" id="encourage-streak"></div>
       <div class="encourage-text" id="encourage-text">謝謝你今天選擇了書寫靜心 🌱</div>
     </div>
     <div class="emotion-card" id="emotion-card">
-      <div class="ec-label">書寫情緒推算｜自我觀察</div>
-      <div class="ec-visual">
-        <div class="ec-bars" id="ec-bars"></div>
-      </div>
+      <div class="ec-heading"><div class="ec-label">本次書寫特徵</div><div class="ec-scale">0–100 分</div></div>
+      <div id="ec-radar"></div>
+      <div class="ec-legend" id="ec-legend"></div>
       <div class="ec-desc" id="ec-desc"></div>
     </div>
     <div class="suggestion-card" id="suggestion-card">
       <h4>✦ 給你的小提醒</h4>
       <p id="suggestion-text"></p>
     </div>
-    <p class="feedback-disclaimer">結果依本次手寫特徵提供自我覺察參考，具有不確定性，不能取代醫療或心理專業評估。</p>
     <div class="daily-count-wrap" style="justify-content:center;" onclick="showBubbleRoom()">
       🌿 今天和你一起書寫的夥伴：<strong><span class="daily-count-val">0</span></strong> 位 &nbsp;›
     </div>
@@ -2692,31 +2681,72 @@ function analyzeEmotionFeatures(points){
   ].map(item=>({...item,score:Math.round(item.value*100)})),reasons:[]};
 }
 
+function renderEmotionRadar(scores,container){
+  const svgNS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox','0 0 280 260');
+  svg.setAttribute('class','ec-radar');
+  svg.setAttribute('role','img');
+  svg.setAttribute('aria-label','本次書寫特徵：'+scores.map(item=>item.name+' '+item.score+' 分').join('，'));
+  const point=(index,radius)=>{
+    const angle=-Math.PI/2+index*2*Math.PI/5;
+    return [140+Math.cos(angle)*radius,130+Math.sin(angle)*radius];
+  };
+  const polygon=radius=>scores.map((_,index)=>point(index,radius).map(n=>n.toFixed(2)).join(',')).join(' ');
+  const add=(tag,attributes)=>{
+    const element=document.createElementNS(svgNS,tag);
+    for(const [name,value] of Object.entries(attributes)) element.setAttribute(name,String(value));
+    svg.appendChild(element);
+    return element;
+  };
+  for(const level of [25,50,75,100]){
+    add('polygon',{points:polygon(95*level/100),fill:'none',stroke:'#cdd7d9','stroke-width':level===100?1.5:1});
+  }
+  scores.forEach((_,index)=>{
+    const [x,y]=point(index,95);
+    add('line',{x1:140,y1:130,x2:x.toFixed(2),y2:y.toFixed(2),stroke:'#d9e0df','stroke-width':1});
+  });
+  const shapePoints=scores.map((item,index)=>point(index,95*item.score/100).map(n=>n.toFixed(2)).join(',')).join(' ');
+  add('polygon',{points:shapePoints,fill:'#506b80','fill-opacity':0.22,stroke:'#405a70','stroke-width':2.5,'stroke-linejoin':'round'});
+  scores.forEach((item,index)=>{
+    const [x,y]=point(index,95*item.score/100);
+    add('circle',{cx:x.toFixed(2),cy:y.toFixed(2),r:4.5,fill:item.color,stroke:'#fff','stroke-width':1.5});
+  });
+  const axisNames=['緊張','平靜','激動','疲倦','輕鬆'];
+  axisNames.forEach((name,index)=>{
+    const [x,y]=point(index,117);
+    const label=add('text',{x:x.toFixed(2),y:y.toFixed(2),'text-anchor':'middle','dominant-baseline':'middle',fill:'#405a70','font-size':16,'font-weight':600});
+    label.textContent=name;
+  });
+  container.appendChild(svg);
+}
+
 function showFeedback(){
   const observation=analyzeEmotionFeatures(sessionData.rawPoints);
   document.getElementById('fb-icon').textContent='🍃';
   document.getElementById('fb-title').textContent='謝謝你完成這次書寫';
-  document.getElementById('fb-subtitle').textContent='以下只呈現本次筆跡的特徵觀察';
   document.getElementById('suggestion-text').textContent='留意書寫前後的感受，給自己一點休息的時間。';
   const card=document.getElementById('emotion-card');
   card.className='emotion-card feature-observation';
-  const bars=document.getElementById('ec-bars');
-  bars.replaceChildren();
+  const radar=document.getElementById('ec-radar');
+  const legend=document.getElementById('ec-legend');
+  radar.replaceChildren();
+  legend.replaceChildren();
   const description=document.getElementById('ec-desc');
   if(!observation.scores){
-    description.textContent='暫無五類分數：'+observation.reasons.join('；')+'。';
+    description.textContent='目前無法繪圖：'+observation.reasons.join('；')+'。';
   }else{
+    renderEmotionRadar(observation.scores,radar);
     for(const item of observation.scores){
-      const row=document.createElement('div'); row.className='ec-bar-wrap';
-      const label=document.createElement('span'); label.className='ec-bar-name'; label.textContent=item.name;
-      const track=document.createElement('div'); track.className='ec-bar-track';
-      const fill=document.createElement('div'); fill.className='ec-bar-fill'; fill.style.width=item.score+'%'; fill.style.background=item.color;
-      const value=document.createElement('span'); value.className='ec-bar-value'; value.textContent=String(item.score);
-      track.appendChild(fill); row.append(label,track,value); bars.appendChild(row);
+      const row=document.createElement('div'); row.className='ec-legend-item';
+      const dot=document.createElement('span'); dot.className='ec-legend-dot'; dot.style.background=item.color; dot.setAttribute('aria-hidden','true');
+      const label=document.createElement('span'); label.className='ec-legend-name'; label.textContent=item.name;
+      const value=document.createElement('span'); value.className='ec-legend-score'; value.textContent=String(item.score);
+      row.append(dot,label,value); legend.appendChild(row);
     }
     const highest=Math.max(...observation.scores.map(item=>item.score));
     const closest=observation.scores.filter(item=>item.score===highest).map(item=>item.name);
-    description.textContent=(closest.length>1?'本次特徵同樣接近：':'本次特徵較接近：')+closest.join('、')+'。分數為各類特徵的 0–100 尺度，彼此不需合計 100；不表示情緒機率或心理結論。';
+    description.textContent=(closest.length>1?'特徵同樣接近：':'特徵較接近：')+closest.join('、')+'。';
   }
   const legacy=lastResult || analyzeWriting();
   const enc=getEncouragement(legacy.dominant, userProfile.streak, userProfile.totalSessions);
