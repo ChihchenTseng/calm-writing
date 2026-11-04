@@ -69,13 +69,13 @@
     $('home-duration').textContent=fmt(duration/60000,1);$('home-eligible').textContent=eligible;
     $('home-baseline-count').textContent=baseline;
     $('home-baseline-progress').style.width=Math.min(100,baseline/C.MIN_HISTORY*100)+'%';
-    if($('home-baseline-context'))$('home-baseline-context').textContent=latestLayout?`最近新版條件：${CW_CORPUS.find(t=>t.id===latestLayout.task)?.text||latestLayout.task}、${latestLayout.input}。已存 ${baseline} 筆同條件合格落筆速度摘要，${baseline>=C.MIN_HISTORY?'下一次比較就緒。':`再存 ${C.MIN_HISTORY-baseline} 筆才供下一次比較。`}舊布局與其他題目不混入。`:'新版紙面條件尚無已存摘要；舊紀錄可回顧，但不混入新版基準。';
+    if($('home-baseline-context'))$('home-baseline-context').textContent=latestLayout?`最近新版條件：${CW_CORPUS.find(t=>t.id===latestLayout.task)?.text||latestLayout.task}、${latestLayout.input}。已存 ${baseline} 筆同條件合格落筆速度摘要，${baseline>=C.MIN_HISTORY?'下一次比較就緒。':`再存 ${C.MIN_HISTORY-baseline} 筆才供下一次比較。`}`:'新版紙面條件尚無已存摘要；舊紀錄可回顧，但不混入新版基準。';
     $('home-current-node').hidden=!latest;
     $('home-review-note').textContent=latest?'最近一筆已保存摘要可在歷程回看；原始筆跡只在當次完成頁暫留。':'完成頁可回放本次筆跡；歷史只保存摘要。尚無本機紀錄。';
     $('home-data-state').textContent=mode==='demo'?'以下仍是真實本機摘要；隔離示範不計入。':data.length?'以下來自這個瀏覽器已保存的真實摘要。':'尚無已保存摘要；完成並選擇本機保存後才會顯示數值。';
     if(!latest){$('home-latest').innerHTML='<p>尚無已保存摘要。現在不產生趨勢或比較。</p>';return;}
     const f=latest.features||{},v=f.values||{},label=CW_CORPUS.find(t=>t.id===latest.task)?.text||latest.task;
-    $('home-latest').innerHTML=`<small>${esc(new Date(latest.endedAt).toLocaleString('zh-TW'))} · ${esc(label)}</small><div class="home-latest-metrics"><span>落筆速度<b>${fmt(v.speed)} <small>CSS px/s</small></b></span><span>筆畫間隔<b>${fmt(v.pause)} <small>秒</small></b></span><span>落筆占比<b>${fmt(v.active)} <small>%</small></b></span></div><p>${f.eligible?'符合基本品質；仍須同條件比對。':'僅供回顧，不納入個人基準。'}</p>`;
+    $('home-latest').innerHTML=`<small>${esc(new Date(latest.endedAt).toLocaleString('zh-TW'))} · ${esc(label)}</small><div class="home-latest-metrics"><span>落筆速度<b>${fmt(v.speed)} <small>CSS px/s</small></b></span><span>筆畫間隔<b>${fmt(v.pause)} <small>秒</small></b></span><span>落筆占比<b>${fmt(v.active)} <small>%</small></b></span></div>${f.eligible?'':'<p>僅供回顧，不納入個人基準。</p>'}`;
   }
   function updateMode(){
     const sample=isRealSample(),demo=mode==='demo';$('demo-banner').hidden=!demo;
