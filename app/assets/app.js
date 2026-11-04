@@ -79,10 +79,10 @@
   }
   function updateMode(){
     const sample=isRealSample(),demo=mode==='demo';$('demo-banner').hidden=!demo;
-    $('demo-banner').querySelector('strong').textContent=sample?'原作者實寫範例／非研究成果':'合成示範／非研究成果';
-    $('demo-banner').querySelector('span').textContent=sample?`原作者提供的「${sampleTitle()}」實寫範例；不是訪客書寫，不保存或建立個人基準。`:'合成範例僅在記憶體，不影響真實歷程或個人基準。';
+    $('demo-banner').querySelector('strong').textContent=sample?'原作者實寫範例':'合成示範';
+    $('demo-banner').querySelector('span').textContent=sample?`原作者提供的「${sampleTitle()}」實寫範例；不保存到你的歷程或個人基準。`:'合成範例僅在記憶體，不影響真實歷程或個人基準。';
     $('mode-label').textContent=demo?(sample?'原作者實寫範例 · 不保存':'合成示範 · 記憶體隔離'):'本機儲存 · 雲端尚未啟用';
-    document.querySelectorAll('.dialog-mode').forEach(el=>el.textContent=demo?(sample?'原作者實寫範例 · 不保存':'合成示範／非研究成果 · 不連雲端'):'本機儲存 · 不連雲端');
+    document.querySelectorAll('.dialog-mode').forEach(el=>el.textContent=demo?(sample?'原作者實寫範例 · 不保存':'合成示範 · 記憶體隔離'):'本機儲存 · 不連雲端');
   }
   function realSampleData(kind){
     const spec=sampleSpec(kind),d=spec?.data();if(document.body?.dataset?.realDemoVersion!=='2'||d?.schema!=='cw-demo-replay/1'||d.title!==spec.title||d.paper?.width!==720||d.paper?.height!==480||!Array.isArray(d.strokes)||d.strokes.length!==spec.strokes)return null;
@@ -170,16 +170,32 @@
     // Raw points remain only in memory for this result and are released on navigation.
     capture=null;ctx.clearRect(0,0,canvasSize.w,canvasSize.h);
   });
-  let replayModel=null,replayFrame=0,replayPlaying=false,replayAt=0,replayClock=0,replayScope='full',fragments=[],fragmentIndex=-1,fragmentPlayState='idle';
+  let replayModel=null,replayFrame=0,replayPlaying=false,replayAt=0,replayVisualAt=0,replayClock=0,replayScope='full',replayTiming=[],replayVisualDuration=0,strokeVisualStarts=[],fragments=[],fragmentIndex=-1,fragmentPlayState='idle';
   const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true;
   function stopReplay(){replayPlaying=false;if(replayFrame&&window.cancelAnimationFrame)window.cancelAnimationFrame(replayFrame);replayFrame=0;}
-  function releaseRaw(){stopReplay();resultRaw=null;replayModel=null;replayAt=0;replayScope='full';fragments=[];fragmentIndex=-1;fragmentPlayState='idle';$('fragment-detail').hidden=true;$('fragment-call').hidden=true;$('fragment-call').disabled=true;$('fragment-band').innerHTML='';$('fragment-observation').textContent='';$('fragment-before-preview').innerHTML='';$('fragment-after-preview').innerHTML='';$('fragment-status').textContent='本次原始字跡已釋放。';const c=$('replay-canvas');c.width=1;c.height=1;$('timeline-content').innerHTML='';}
+  function buildReplayTiming(){
+    replayTiming=[];replayVisualDuration=0;strokeVisualStarts=[];if(!replayModel)return;
+    let source=0;
+    const add=(end,minDuration=0)=>{if(end<source||end===source&&!minDuration)return;const length=end-source,visualLength=Math.max(length,minDuration);replayTiming.push({sourceStart:source,sourceEnd:end,visualStart:replayVisualDuration,visualEnd:replayVisualDuration+visualLength});replayVisualDuration+=visualLength;source=end;};
+    replayModel.strokes.forEach((stroke,index)=>{add(stroke.start,index?300:0);strokeVisualStarts[index]=replayVisualDuration;add(stroke.end);});
+    add(replayModel.duration);
+  }
+  function replayTime(value,fromVisual=false){
+    const last=replayTiming.at(-1);if(!last)return 0;
+    const limit=fromVisual?replayVisualDuration:replayModel.duration;
+    const at=Math.max(0,Math.min(limit,Number(value)||0));
+    const span=replayTiming.find(part=>at<=(fromVisual?part.visualEnd:part.sourceEnd))||last;
+    const start=fromVisual?span.visualStart:span.sourceStart,end=fromVisual?span.visualEnd:span.sourceEnd;
+    const otherStart=fromVisual?span.sourceStart:span.visualStart,otherEnd=fromVisual?span.sourceEnd:span.visualEnd;
+    return otherStart+(end>start?(at-start)/(end-start):0)*(otherEnd-otherStart);
+  }
+  function releaseRaw(){stopReplay();resultRaw=null;replayModel=null;replayAt=0;replayVisualAt=0;replayScope='full';replayTiming=[];replayVisualDuration=0;strokeVisualStarts=[];fragments=[];fragmentIndex=-1;fragmentPlayState='idle';$('fragment-detail').hidden=true;$('fragment-call').hidden=true;$('fragment-call').disabled=true;$('fragment-band').innerHTML='';$('fragment-observation').textContent='';$('fragment-before-preview').innerHTML='';$('fragment-after-preview').innerHTML='';$('fragment-status').textContent='本次原始字跡已釋放。';const c=$('replay-canvas');c.width=1;c.height=1;$('timeline-content').innerHTML='';}
   function drawReplay(){
     const c=$('replay-canvas'),context=c.getContext('2d');if(!replayModel||!resultRaw)return;
     const dpr=window.devicePixelRatio||1,w=Math.max(1,resultRaw.width),h=Math.max(1,resultRaw.height);
     if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}context.setTransform(dpr,0,0,dpr,0,0);context.clearRect(0,0,w,h);
     const origin=replayModel.strokes[0]?.points[0]?.t??0;context.lineCap='round';context.lineJoin='round';context.strokeStyle='#20324E';context.fillStyle='#20324E';
-    for(const [index,stroke] of replayModel.strokes.entries()){const pts=stroke.points.filter(p=>p.t-origin<=replayAt);if(!pts.length)continue;const selected=fragments[fragmentIndex],color=!selected||index===selected.index?'#20324E':index===selected.index+1?'#317A69':'#72879B';context.strokeStyle=context.fillStyle=color;if(pts.length===1){context.beginPath();context.arc(pts[0].x,pts[0].y,(pts[0].width||3)/2,0,Math.PI*2);context.fill();}for(let i=1;i<pts.length;i++){context.lineWidth=((pts[i-1].width||3)+(pts[i].width||3))/2;context.beginPath();context.moveTo(pts[i-1].x,pts[i-1].y);context.lineTo(pts[i].x,pts[i].y);context.stroke();}}
+    for(const [index,stroke] of replayModel.strokes.entries()){if(replayScope==='full'&&replayVisualAt<strokeVisualStarts[index])continue;const pts=stroke.points.filter(p=>p.t-origin<=replayAt);if(!pts.length)continue;const selected=fragments[fragmentIndex],color=!selected||index===selected.index?'#20324E':index===selected.index+1?'#317A69':'#72879B';context.strokeStyle=context.fillStyle=color;if(pts.length===1){context.beginPath();context.arc(pts[0].x,pts[0].y,(pts[0].width||3)/2,0,Math.PI*2);context.fill();}for(let i=1;i<pts.length;i++){context.lineWidth=((pts[i-1].width||3)+(pts[i].width||3))/2;context.beginPath();context.moveTo(pts[i-1].x,pts[i-1].y);context.lineTo(pts[i].x,pts[i].y);context.stroke();}}
   }
   function drawStrokePreview(id,stroke,at){
     const svg=$(id),points=stroke?.points||[];if(!points.length){svg.innerHTML='';return;}
@@ -192,8 +208,8 @@
   }
   function drawFragmentPreview(){if(fragmentIndex<0||!replayModel)return;const i=fragments[fragmentIndex].index;drawStrokePreview('fragment-before-preview',replayModel.strokes[i],replayAt);drawStrokePreview('fragment-after-preview',replayModel.strokes[i+1],replayAt);}
   function syncFragmentPlay(){const button=$('fragment-play');button.textContent=fragmentPlayState==='playing'?'Ⅱ 暫停播放':fragmentPlayState==='paused'?'▶ 繼續播放':fragmentPlayState==='complete'?'↻ 再播放一次':'▶ 播放這兩筆';button.setAttribute('aria-label',button.textContent.slice(2));}
-  function setReplay(at){
-    replayAt=Math.max(0,Math.min(replayModel?.duration||0,Number(at)||0));$('replay-position').value=String(Math.round(replayAt));$('replay-time').textContent=`${fmt(replayAt/1000,2)} 秒`;
+  function setReplay(at,visualAt=null){
+    replayAt=Math.max(0,Math.min(replayModel?.duration||0,Number(at)||0));replayVisualAt=visualAt===null?(replayModel&&replayAt>=replayModel.duration?replayVisualDuration:replayTime(replayAt)):visualAt;$('replay-position').value=String(Math.round(replayAt));$('replay-time').textContent=`${fmt(replayAt/1000,2)} 秒`;
     document.querySelectorAll('.playhead').forEach(line=>{const x=replayModel?.duration?replayAt/replayModel.duration*1000:0;line.setAttribute('x1',x);line.setAttribute('x2',x);});document.querySelectorAll('.playhead-node').forEach(node=>node.setAttribute('cx',replayModel?.duration?replayAt/replayModel.duration*1000:0));drawReplay();drawFragmentPreview();
   }
   function fragmentCandidates(){
@@ -208,13 +224,13 @@
     document.querySelectorAll('.timeline-stroke').forEach(el=>{el.classList.toggle('fragment-before-stroke',fragmentIndex>=0&&Number(el.dataset.index)===fragments[fragmentIndex].index);el.classList.toggle('fragment-after-stroke',fragmentIndex>=0&&Number(el.dataset.index)===fragments[fragmentIndex].index+1);});
   }
   function clearFragment(showFull=false){
-    stopReplay();replayScope='full';fragmentIndex=-1;fragmentPlayState='idle';syncFragmentPlay();$('fragment-detail').hidden=true;$('fragment-call').hidden=!fragments.length;$('fragment-call').disabled=!fragments.length;$('fragment-status').textContent=(mode==='demo'?(isRealSample()?'原作者實寫範例／非研究成果 · ':'合成示範／非研究成果 · '):'')+(fragments.length?`${fragments.length} 段可靠的筆畫間隔可回看；目前顯示完整字跡。`:'這次沒有足夠可靠的筆畫間隔可選，仍可查看可用字跡與摘要。');markFragment();
+    stopReplay();replayScope='full';fragmentIndex=-1;fragmentPlayState='idle';syncFragmentPlay();$('fragment-detail').hidden=true;$('fragment-call').hidden=!fragments.length;$('fragment-call').disabled=!fragments.length;$('fragment-status').textContent=(mode==='demo'?(isRealSample()?'原作者實寫範例 · ':'合成示範 · '):'')+(fragments.length?`${fragments.length} 段可靠的筆畫間隔可回看；目前顯示完整字跡。`:'這次沒有足夠可靠的筆畫間隔可選，仍可查看可用字跡與摘要。');markFragment();
     if(showFull&&replayModel){setReplay(replayModel.duration);$('replay-status').textContent='完整本次筆跡；尚未播放';}
   }
   function selectFragment(index){
     if(index<0||index>=fragments.length)return;
     stopReplay();replayScope='full';fragmentIndex=index;fragmentPlayState='idle';syncFragmentPlay();const p=fragments[index],d=Math.max(1,replayModel.duration),pct=n=>(n/d*100).toFixed(2)+'%';
-    $('fragment-detail').hidden=false;$('fragment-call').hidden=true;$('fragment-demo-badge').hidden=mode!=='demo';$('fragment-demo-badge').textContent=isRealSample()?`原作者實寫「${sampleTitle()}」 · 不是訪客書寫或研究成果`:'合成示範 · 數值與筆跡不是個人紀錄或研究成果';$('fragment-pair-label').textContent=`第 ${index+1} 段 · 第 ${p.index+1} 與第 ${p.index+2} 筆`;
+    $('fragment-detail').hidden=false;$('fragment-call').hidden=true;$('fragment-demo-badge').hidden=mode!=='demo';$('fragment-demo-badge').textContent=isRealSample()?`原作者實寫範例 · ${sampleTitle()}`:'合成示範';$('fragment-pair-label').textContent=`第 ${index+1} 段 · 第 ${p.index+1} 與第 ${p.index+2} 筆`;
     $('fragment-count').textContent=`第 ${index+1} / ${fragments.length} 段 · 第 ${p.index+1} → 第 ${p.index+2} 筆`;
     $('fragment-before-label').textContent=`第 ${p.index+1} 筆`;$('fragment-after-label').textContent=`第 ${p.index+2} 筆`;$('fragment-gap-label').textContent=`間隔 ${fmt(p.gap/1000,2)} 秒`;
     const previewSource=isRealSample()?'原作者實寫範例':mode==='demo'?'合成示範':'本次';$('fragment-before-preview').setAttribute('aria-label',`第 ${p.index+1} 筆${previewSource}筆跡預覽`);$('fragment-after-preview').setAttribute('aria-label',`第 ${p.index+2} 筆${previewSource}筆跡預覽`);
@@ -222,19 +238,20 @@
     $('fragment-band').innerHTML=`<span class="fragment-band-before" style="left:${pct(p.start)};width:${pct(p.gapStart-p.start)}"></span><span class="fragment-band-gap" style="left:${pct(p.gapStart)};width:${pct(p.gap)}"></span><span class="fragment-band-after" style="left:${pct(p.gapEnd)};width:${pct(p.end-p.gapEnd)}"></span>`;
     $('fragment-band').ariaLabel=`第 ${p.index+1} 筆從 ${fmt(p.start/1000,2)} 秒開始，兩筆間隔從 ${fmt(p.gapStart/1000,2)} 至 ${fmt(p.gapEnd/1000,2)} 秒，第 ${p.index+2} 筆至 ${fmt(p.end/1000,2)} 秒`;
     $('fragment-observation').textContent=`兩筆相隔 ${fmt(p.gap/1000,2)} 秒`;
-    $('fragment-status').textContent=`已選第 ${index+1} 段。深墨藍是前一筆、柔黃是間隔、綠色是後一筆；按播放會從前一筆開始。${isRealSample()?'這是原作者提供的實寫範例，不是訪客書寫或研究成果。':mode==='demo'?'這是合成示範，不是真實個人紀錄。':''}`;
-    $('fragment-play-hint').textContent=reducedMotion()?'已啟用減少動態效果；可用下方播放位置手動查看這兩筆。':'播放由你手動開始；預覽會先畫出前一筆，間隔後再畫出後一筆。';$('fragment-play').disabled=reducedMotion();
+    $('research-observed').textContent=isRealSample()?`這段顯示「${sampleTitle()}」實寫中，從第 ${p.index+1} 筆抬起到第 ${p.index+2} 筆落下的時間：${fmt(p.gap/1000,2)} 秒。`:mode==='demo'?`這段合成示範的第 ${p.index+1} 與第 ${p.index+2} 筆相隔 ${fmt(p.gap/1000,2)} 秒。`:`這段顯示本次書寫中，從第 ${p.index+1} 筆抬起到第 ${p.index+2} 筆落下的時間：${fmt(p.gap/1000,2)} 秒。`;
+    $('fragment-status').textContent=`已選第 ${index+1} 段。深墨藍是前一筆、柔黃是間隔、綠色是後一筆；按播放會從前一筆開始。${isRealSample()?' 原作者實寫範例。':mode==='demo'?' 合成示範。':''}`;
+    $('fragment-play-hint').textContent=reducedMotion()?'已啟用減少動態效果；可用下方播放位置手動查看筆跡。':'播放由你手動開始；預覽會先畫出前一筆，間隔後再畫出後一筆。';$('fragment-play').disabled=reducedMotion();$('replay-all').disabled=reducedMotion();
     markFragment();setReplay(replayModel.duration);$('replay-status').textContent='完整本次筆跡已顯示；所選兩筆可手動播放。';
   }
   function sampleMarks(rows,max=120){if(rows.length<=max)return rows;const step=Math.ceil(rows.length/max),selected=rows.filter((_,i)=>i%step===0);if(selected.at(-1)!==rows.at(-1))selected.push(rows.at(-1));return selected;}
   function barsSvg(rows,duration,maxValue,label){const shown=sampleMarks(rows),height=78,color=label.includes('筆壓')?'#9275B3':'#4B8CC9',marks=shown.map(p=>{const x=duration?p.at/duration*1000:0,h=Math.max(1,Math.min(51,p.value/maxValue*51));return `<rect x="${x.toFixed(2)}" y="${(61-h).toFixed(2)}" width="2.5" height="${h.toFixed(2)}" fill="${color}"/>`;}).join('');return `<svg viewBox="0 0 1000 ${height}" role="img" aria-label="${label}，實際時間位置；缺值不補線"><line x1="0" y1="62" x2="1000" y2="62" stroke="#20324E"/>${marks}<line class="playhead" x1="0" y1="0" x2="0" y2="65" stroke="#20324E" stroke-width="3"/></svg>`;}
   function renderReplay(){
-    stopReplay();replayAt=0;replayScope='full';fragments=[];fragmentIndex=-1;fragmentPlayState='idle';syncFragmentPlay();$('fragment-detail').hidden=true;$('fragment-call').hidden=true;if($('fragment-fallback'))$('fragment-fallback').hidden=true;replayModel=resultRaw?C.timeline(resultRaw.session):null;
+    stopReplay();replayAt=0;replayVisualAt=0;replayScope='full';fragments=[];fragmentIndex=-1;fragmentPlayState='idle';syncFragmentPlay();$('fragment-detail').hidden=true;$('fragment-call').hidden=true;if($('fragment-fallback'))$('fragment-fallback').hidden=true;replayModel=resultRaw?C.timeline(resultRaw.session):null;buildReplayTiming();
     const available=!!replayModel?.strokes.length;$('replay-canvas').hidden=!available;
     for(const id of ['replay-play','replay-pause','replay-restart','replay-position'])$(id).disabled=!available;
     if(!available){$('replay-note').textContent='此摘要沒有本次可用的原始筆跡；歷史只保存摘要，不能回放。';$('fragment-call').hidden=true;$('fragment-call').disabled=true;$('fragment-status').textContent=historyReview?'歷史只保存摘要，沒有可重建的字跡或片段。':'這次沒有足夠可靠的筆跡與間隔可選。';if($('fragment-fallback'))$('fragment-fallback').hidden=false;if($('fragment-fallback-text'))$('fragment-fallback-text').textContent=historyReview?'歷史只保存摘要，無法重建完整筆跡或片段。你可以重新書寫，或先看「靜心」範例。':'這次還沒有足夠可靠的筆畫間隔可回看。你可以再寫一次，或先看「靜心」範例。';$('replay-position').value='0';$('replay-time').textContent='—';$('replay-status').textContent='無可回放筆跡';$('timeline-content').innerHTML='<p>沒有本次可用的時間軸。歷史摘要不含原始軌跡。</p>';return;}
     $('replay-position').max=String(Math.max(1,Math.round(replayModel.duration)));
-    $('replay-note').textContent=`${isRealSample()?`原作者實寫「${sampleTitle()}」／非研究成果 · `:mode==='demo'?'合成示範／非研究成果 · ':''}僅本次記憶體筆跡 · ${replayModel.strokes.length} 筆畫 · ${fmt(replayModel.duration/1000,2)} 秒。離開結果即釋放。${reducedMotion()?'已依減少動態效果停用動畫，可手動移動進度。':''}`;
+    $('replay-note').textContent=`${isRealSample()?`原作者實寫範例「${sampleTitle()}」 · `:mode==='demo'?'合成示範 · ':''}僅本次記憶體筆跡 · ${replayModel.strokes.length} 筆畫 · ${fmt(replayModel.duration/1000,2)} 秒。離開結果即釋放。${reducedMotion()?'已依減少動態效果停用動畫，可手動移動進度。':''}`;
     $('replay-play').disabled=reducedMotion();$('replay-restart').disabled=reducedMotion();$('replay-status').textContent='完整本次筆跡；尚未播放';
     const d=Math.max(replayModel.duration,1),blocks=replayModel.strokes.map((s,i)=>`<rect class="timeline-stroke" data-index="${i}" x="${(s.start/d*1000).toFixed(2)}" y="17" width="${Math.max(2,(s.end-s.start)/d*1000).toFixed(2)}" height="24" fill="#20324E"><title>第 ${i+1} 筆：${fmt(s.start/1000,2)} 至 ${fmt(s.end/1000,2)} 秒</title></rect>`).join('');
     const speedMax=Math.max(1,...replayModel.speed.map(s=>s.value));
@@ -244,7 +261,7 @@
     $('timeline-content').innerHTML=`<svg viewBox="0 0 1000 70" role="img" aria-label="落筆與筆畫間抬筆，橫軸 0 至 ${fmt(d/1000,2)} 秒"><line x1="0" y1="47" x2="1000" y2="47" stroke="#20324E"/>${blocks}<line class="playhead" x1="0" y1="5" x2="0" y2="55" stroke="#20324E" stroke-width="3"/><circle class="playhead-node" cx="0" cy="47" r="5" fill="#F3D77B" stroke="#20324E" stroke-width="2"/><text x="4" y="65">0 秒</text><text x="996" y="65" text-anchor="end">${fmt(d/1000,1)} 秒</text></svg><div class="timeline-legend"><span><i class="timeline-swatch"></i>落筆</span><span><i class="timeline-swatch gap"></i>抬筆／無採樣</span><span>深墨藍線與柔黃節點：本次播放位置</span></div><div class="timeline-detail"><p>${replayModel.strokes.length} 個落筆區段；${replayModel.pauses.length} 個筆畫間抬筆間隔。這些間隔不代表筆畫內停住或全部思考時間。</p><p>速度：由 ${replayModel.sampleCounts.computedSpeed} 個有移動的相鄰點間隔計算，單位 CSS px/s；圖上顯示 ${speedVisible?sampleMarks(replayModel.speed).length:0} 個，不改動原指標。</p>${speedChart}<p>筆壓：${replayModel.sampleCounts.computedPressure} 個接觸樣本（${pressureLabel(current.features)}），0–1 裝置相對值；圖上顯示 ${pressureVisible?sampleMarks(replayModel.pressure).length:0} 個。固定 0.5 fallback 保持未知。</p>${pressureChart}</div>`;
     fragments=fragmentCandidates();$('fragment-call').disabled=!fragments.length;if($('fragment-fallback'))$('fragment-fallback').hidden=!!fragments.length;if(fragments.length)selectFragment(0);else{clearFragment(false);setReplay(replayModel.duration);}
   }
-  function tick(now){if(!replayPlaying)return;const segment=replayScope==='fragment'&&fragmentIndex>=0,end=segment?fragments[fragmentIndex].end:replayModel.duration;setReplay(Math.min(end,now-replayClock));if(replayAt>=end){stopReplay();fragmentPlayState=segment?'complete':'idle';syncFragmentPlay();$('fragment-play-hint').textContent=segment?'這兩筆已播放完畢；可再播放一次，或切換片段。':'完整筆跡已播放完畢；仍可手動播放上方所選的兩筆。';$('replay-status').textContent=segment?'這段回看完成':'完整筆跡播放完成';return;}replayFrame=window.requestAnimationFrame(tick);}
+  function tick(now){if(!replayPlaying)return;const segment=replayScope==='fragment'&&fragmentIndex>=0,end=segment?fragments[fragmentIndex].end:replayModel.duration,elapsed=now-replayClock,visual=Math.min(replayVisualDuration,elapsed);if(segment)setReplay(Math.min(end,elapsed));else setReplay(replayTime(visual,true),visual);if((segment?replayAt>=end:elapsed>=replayVisualDuration)){stopReplay();fragmentPlayState=segment?'complete':'idle';syncFragmentPlay();$('fragment-play-hint').textContent=segment?'這兩筆已播放完畢；可再播放一次，或切換片段。':'完整筆跡已播放完畢；仍可手動播放上方所選的兩筆。';$('replay-status').textContent=segment?'這段回看完成':'完整筆跡播放完成';return;}replayFrame=window.requestAnimationFrame(tick);}
   function startReplay(scope){
     if(!replayModel||reducedMotion()||scope==='fragment'&&fragmentIndex<0)return;
     const resume=scope==='fragment'&&replayScope==='fragment'&&fragmentPlayState==='paused',sameScope=replayScope===scope;
@@ -253,18 +270,19 @@
       const p=fragments[fragmentIndex];if(!resume||replayAt<p.start||replayAt>=p.end)setReplay(p.start);
       fragmentPlayState='playing';$('fragment-play-hint').textContent='正在播放：前一筆、實際間隔、後一筆。按同一按鈕可暫停。';
     }else{
-      if(!sameScope||replayAt>=replayModel.duration)setReplay(0);
+      if(!sameScope||replayVisualAt>=replayVisualDuration)setReplay(0,0);
       fragmentPlayState='idle';$('fragment-play-hint').textContent='完整畫布正在播放；若要只看這兩筆，請按上方「播放這兩筆」。';
     }
-    syncFragmentPlay();replayPlaying=true;replayClock=performance.now()-replayAt;$('replay-status').textContent=scope==='fragment'?'片段播放中 · 1× 實際時間':'完整筆跡播放中 · 1× 實際時間';replayFrame=window.requestAnimationFrame(tick);
+    syncFragmentPlay();replayPlaying=true;replayClock=performance.now()-(scope==='fragment'?replayAt:replayVisualAt);$('replay-status').textContent=scope==='fragment'?'片段播放中 · 1× 實際時間':'完整筆跡播放中 · 短間隔至少停留 0.3 秒（秒數照實顯示）';replayFrame=window.requestAnimationFrame(tick);
   }
   $('fragment-call').addEventListener('click',()=>{if(fragments.length)selectFragment(0);});
   $('fragment-prev').addEventListener('click',()=>selectFragment(fragmentIndex-1));$('fragment-next').addEventListener('click',()=>selectFragment(fragmentIndex+1));
   $('show-full').addEventListener('click',()=>{clearFragment(true);$('replay-canvas').scrollIntoView({block:'center'});$('replay-canvas').focus({preventScroll:true});});
+  $('replay-all').addEventListener('click',()=>{if(!replayModel||reducedMotion())return;clearFragment(false);setReplay(0,0);$('replay-canvas').scrollIntoView({block:'center'});$('replay-canvas').focus({preventScroll:true});startReplay('full');});
   $('fragment-play').addEventListener('click',()=>{if(fragmentIndex<0||reducedMotion())return;if(replayPlaying&&replayScope==='fragment'){$('replay-pause').click();return;}startReplay('fragment');});
   $('replay-play').addEventListener('click',()=>startReplay('full'));
   $('replay-pause').addEventListener('click',()=>{const segment=replayPlaying&&replayScope==='fragment';stopReplay();fragmentPlayState=segment?'paused':'idle';syncFragmentPlay();$('fragment-play-hint').textContent=segment?'已暫停。按「繼續播放」接著看這兩筆。':'完整畫布已暫停；可用下方控制繼續完整播放，或手動播放上方兩筆。';$('replay-status').textContent='已暫停';});
-  $('replay-restart').addEventListener('click',()=>{if(!replayModel)return;stopReplay();replayScope='full';setReplay(0);if(!reducedMotion())startReplay('full');});
+  $('replay-restart').addEventListener('click',()=>{if(!replayModel)return;stopReplay();replayScope='full';setReplay(0,0);if(!reducedMotion())startReplay('full');});
   $('replay-position').addEventListener('input',()=>{stopReplay();replayScope='full';fragmentPlayState='idle';syncFragmentPlay();const at=Number($('replay-position').value);if(fragmentIndex>=0&&(at<fragments[fragmentIndex].start||at>fragments[fragmentIndex].end))clearFragment(false);setReplay(at);$('replay-status').textContent='已手動移動完整筆跡的播放位置';});
   const formula={speed:'有效筆畫路徑總長 ÷ 落筆總秒數，為落筆期間平均速度。單位 CSS px/s，不是實際公分。',pause:'相鄰有效筆畫的「下一筆起點時間 − 上一筆終點時間」取中位數；只指筆畫間抬筆，不代表筆畫內停住。',active:'有效筆畫時間總和 ÷ 第一筆開始至最後一筆結束的時間 × 100，稱落筆時間占比；不是情緒機率。',pressure:'至少 5 個觀察到變化或經實機確認的接觸筆壓樣本，取中位數；未確認為 null。合法 0.5 保留；固定 fallback 不作實測。'};
   const sourceCount=(f,k)=>k==='pause'?`${f.counts.pauses} 個間隔`:k==='pressure'?`${f.counts.pressure} 個可用接觸樣本`:`${f.counts.points} 個點 · ${f.counts.strokes} 筆畫`;
@@ -280,13 +298,13 @@
     if(!current)return;const f=current.features,t=CW_CORPUS.find(t=>t.id===current.task);
     const sample=isRealSample();
     $('result-title').textContent=historyReview?'回看這一筆摘要。':sample?`實寫範例：${sampleTitle()}。`:mode==='demo'?'合成示範：看看不同節奏。':'這是你剛剛寫下的節奏。';
-    $('result-subtitle').textContent=`${sample?'原作者實寫範例／非研究成果 · ':mode==='demo'?'合成示範／非研究成果 · ':''}${t?.text||current.task} · ${f.counts.strokes} 筆畫 · ${fmt(f.durationMs/1000)} 秒`;
+    $('result-subtitle').textContent=`${sample?'原作者實寫範例 · ':mode==='demo'?'合成示範 · ':''}${t?.text||current.task} · ${f.counts.strokes} 筆畫 · ${fmt(f.durationMs/1000)} 秒`;
     document.querySelector('.result-intro h2').textContent=historyReview?'這一筆留下的摘要':sample?`原作者寫下的「${sampleTitle()}」`:'整段字跡，先留在這一刻';
-    document.querySelector('.result-intro p').textContent=historyReview?'歷史只保存量測摘要。原始字跡在離開當次完成頁後已釋放，無法重建筆畫或片段；下方仍可回看當時保存的數值。':sample?`先看原作者提供的完整「${sampleTitle()}」，再探索旁邊或下方的前後兩筆與實際間隔。這不是訪客書寫；不保存到訪客歷程或個人基準。`:'先看本次完整筆跡，再探索旁邊或下方的前後兩筆與實際間隔。離開完成頁後，原始軌跡會釋放；保存時只留下摘要。這些觀察不是心理診斷。';
+    document.querySelector('.result-intro p').textContent=historyReview?'歷史保存了量測摘要；下方可回看當時保存的數值。原始字跡已在離開完成頁時釋放。':sample?`先看原作者實寫範例「${sampleTitle()}」的完整字跡，再選一段觀察兩筆間隔，或按「回看全部」看完整書寫過程。這份範例不保存到你的歷程或個人基準。`:'先看本次完整筆跡，再選一段觀察兩筆間隔，或按「回看全部」看完整書寫過程。離開完成頁後，原始軌跡會釋放；保存時只留下摘要。';
     $('replay-title').textContent=historyReview?'歷史摘要不含原始字跡':sample?`原作者實寫「${sampleTitle()}」完整筆跡`:'本次完整筆跡';
     document.querySelector('.replay-heading>span').textContent=historyReview?'僅可回看摘要':sample?'原作者提供 · 不保存':'只在這次完成頁暫留';
-    document.querySelector('#research-card p').textContent=historyReview?'這次量到什麼？歷史只留量測摘要，沒有可重建的原始筆畫間隔。':sample?`這次量到什麼？原作者提供的「${sampleTitle()}」實寫範例中，相鄰兩筆之間的實際時間；不是訪客書寫，也不是研究結果或心理判讀。`:mode==='demo'?'這次量到什麼？固定合成筆畫的間隔；這不是裝置記錄或研究成果。真實書寫時才會由本次裝置事件產生。':'這次量到什麼？本次裝置記錄的相鄰筆畫間隔，不包括所有筆畫內停住或完整空中動作。';
-    $('demo-controls').hidden=mode!=='demo';$('quality').textContent=sample?'原作者提供的實寫範例僅供觀看筆畫與時間；不判定訪客品質、心理或健康狀態。':f.schema!==C.FEATURE_SCHEMA?'此歷史摘要使用舊版特徵規則，僅供回顧；不與新版個人基準混用，原紀錄未改寫。':f.eligible?'量測符合本版的基本品質門檻。缺少筆壓不影響其他有效特徵；每項仍須通過各自的樣本檢查。':`這次先留作回顧，不納入個人基準：${f.flags.join('、')||'資料不完整'}。可用值僅供本次參考。`;
+    $('research-observed').textContent=historyReview?'歷史保存的是量測摘要，原始筆跡已釋放。':sample?`「${sampleTitle()}」實寫範例記錄了相鄰兩筆之間的時間；選一段可看實際秒數。`:mode==='demo'?'合成示範展示固定筆畫之間的間隔；選一段可看秒數。':'本次裝置記錄了相鄰兩筆之間的時間；選一段可看實際秒數。';
+    $('demo-controls').hidden=mode!=='demo';$('quality').textContent=sample?`原作者實寫範例包含 ${f.counts.strokes} 筆畫，書寫跨度 ${fmt(f.durationMs/1000,2)} 秒；可回看筆畫與相鄰間隔。這份資料與訪客歷程及個人基準分開。`:f.schema!==C.FEATURE_SCHEMA?'此歷史摘要使用舊版特徵規則，僅供回顧；不與新版個人基準混用，原紀錄未改寫。':f.eligible?'量測符合本版的基本品質門檻。缺少筆壓不影響其他有效特徵；每項仍須通過各自的樣本檢查。':`這次先留作回顧，不納入個人基準：${f.flags.join('、')||'資料不完整'}。可用值僅供本次參考。`;
     if($('personal-baseline-note')){const prior=sample?0:C.compare(current,rows(),'speed').n;$('personal-baseline-note').textContent=sample?'這份實寫範例不與合成示範歷程混算，也不進入訪客的本機歷程或個人基準。':mode==='demo'?'合成示範不加入真實個人基準。':current.environment?.includes('|layout:cw-layout/1|')?`本次之前有 ${prior} 筆同條件合格落筆速度摘要；本次不算入自己的基準。這個瀏覽器的匿名識別無法分辨共用裝置的不同人。`:'這是舊版紙面條件摘要，仍可回顧；不改寫或混入新版布局基準。';}
     $('metric-cards').innerHTML=sample?'':['speed','pause','active','pressure'].map(card).join('');
     renderReplay();
@@ -295,7 +313,7 @@
     const bins=f.pauseBins||[],max=Math.max(...bins,1);$('pause-chart').innerHTML=bins.some(n=>n>0)?bins.map((n,i)=>`<div class="pause-bin"><span>${n} 次</span><div class="pause-bar" style="height:${n?Math.max(4,n/max*85):0}px"></div><span>${['少於 1 秒','1–3 秒','3–5 秒','5 秒以上'][i]}</span></div>`).join(''):'<p>目前沒有可用的筆畫間停頓資料。</p>';
     $('guidance-reason').textContent=f.values.pause>3?'本次筆畫間停頓中位數超過 3 秒。若你想休息，可選擇呼吸；這只是可略過的操作提示，不代表心理狀態。':'若想停下來，可以試著放慢呼吸。你也可以略過，繼續一天的步調。';
     $('guidance-state').textContent=guidanceLabel(current.guidance);
-    $('technical-body').innerHTML=sample?`<p>來源：原作者提供的「${esc(sampleTitle())}」實寫範例；僅供筆跡與時間回放，不含筆壓、傾斜或裝置資訊，也不建立訪客摘要。</p>`:`<p>來源：${mode==='demo'?'固定合成治具／非研究成果':'本次畫布指標事件摘要'}；摘要 schema：<code>${esc(current.schema)}</code>；特徵 schema：<code>${esc(f.schema)}</code>；輸入：${esc(current.input)}。</p><p>品質標記：${esc(f.flags.join('、')||'無阻擋標記')}。筆壓：${pressureLabel(f)}；傾斜：${f.support.tilt?'保留原始 tiltX/tiltY，未換算實體傾角':'未確認'}。</p><p>以此瀏覽器匿名識別作個人範圍；共用瀏覽器無法辨認不同人，請使用獨立瀏覽器設定檔。不承諾跨裝置恢復。舊版特徵 schema 不混入本次基準，原紀錄不改寫。</p><p>本版未載入雲端 SDK，網路連線受 CSP connect-src none 限制；研究 Sheets 不啟用。真服務權限及 Apple Pencil：尚未驗證。程式版本 CW-COMP-001；門檻 3 筆畫、12 點、跨度 3 秒，僅工程品質設定。</p>`;
+    $('technical-body').innerHTML=sample?`<p>來源：原作者提供的「${esc(sampleTitle())}」實寫範例；僅供筆跡與時間回放，不含筆壓、傾斜或裝置資訊，也不建立訪客摘要。</p>`:`<p>來源：${mode==='demo'?'固定合成示範':'本次畫布指標事件摘要'}；摘要 schema：<code>${esc(current.schema)}</code>；特徵 schema：<code>${esc(f.schema)}</code>；輸入：${esc(current.input)}。</p><p>品質標記：${esc(f.flags.join('、')||'無阻擋標記')}。筆壓：${pressureLabel(f)}；傾斜：${f.support.tilt?'保留原始 tiltX/tiltY，未換算實體傾角':'未確認'}。</p><p>以此瀏覽器匿名識別作個人範圍；共用瀏覽器無法辨認不同人，請使用獨立瀏覽器設定檔。不承諾跨裝置恢復。舊版特徵 schema 不混入本次基準，原紀錄不改寫。</p><p>本版未載入雲端 SDK，網路連線受 CSP connect-src none 限制；研究 Sheets 不啟用。真服務權限及 Apple Pencil：尚未驗證。程式版本 CW-COMP-001；門檻 3 筆畫、12 點、跨度 3 秒，僅工程品質設定。</p>`;
     updateSaveStatus();
   }
   function guidanceLabel(state){return ({'not-started':'尚未啟動引導',started:'引導已啟動（非已完成）',completed:'引導已完成；這筆不進自然書寫基準',cancelled:'引導已取消（非已完成）；這筆不進自然書寫基準',skipped:'已略過建議'})[state]||'尚未啟動引導';}
@@ -312,11 +330,11 @@
   $('save').addEventListener('click',()=>{if(historyReview||isRealSample())return;try{store().save(current);updateSaveStatus(mode==='demo'?'示範摘要僅存記憶體，真實歷程與雲端均未變更。':undefined);notify(mode==='demo'?'示範僅在記憶體。':'本機摘要已保存；雲端尚未啟用。');updateHome();}catch(e){updateSaveStatus('本機保存失敗：'+e.message+'。畫面結果仍可使用。');}});
   $('retry-cloud').addEventListener('click',async()=>{if(mode==='demo'||historyReview)return;$('retry-cloud').disabled=true;try{realStore.save(current);updateSaveStatus('本機已保存；正在檢查雲端確認能力，尚未雲端成功。');await realStore.sync(current.id);updateSaveStatus();}catch(e){updateSaveStatus('保存／雲端失敗：'+e.message);}finally{$('retry-cloud').disabled=false;}});
   function renderHistory(){
-    $('history-intro').textContent=isRealSample()?`實寫「${sampleTitle()}」範例沒有示範歷程，也不寫入你的本機歷程。退出範例後可回看自己的摘要。`:mode==='demo'?'這裡都是合成示範摘要，僅存在記憶體，不是個人歷程或研究成果；不能回放真實字跡。':'只顯示這個瀏覽器真正保存的摘要。原始字跡在離開當次完成頁後釋放，歷史不能重建回放；示範不計入真實次數。';
+    $('history-intro').textContent=isRealSample()?`實寫「${sampleTitle()}」範例沒有示範歷程，也不寫入你的本機歷程。退出範例後可回看自己的摘要。`:mode==='demo'?'這裡是合成示範摘要，僅存在記憶體；完整筆跡只在當次完成頁可回看。':'只顯示這個瀏覽器保存的摘要。原始字跡在離開當次完成頁後釋放，歷史不能重建回放；示範不計入真實次數。';
     const data=rows().sort((a,b)=>b.endedAt-a.endedAt),duration=data.reduce((n,r)=>n+(r.features?.durationMs||0),0),eligible=data.filter(r=>r.features?.eligible).length;
     if(historyReadError){$('history-stats').textContent='本機歷史目前無法讀取，筆數未知。';$('history-list').innerHTML='<p class="notice">'+esc(historyReadError)+'。原內容未覆寫，可稍後再試。</p>';return;}
     $('history-stats').innerHTML=`<div class="history-stat"><strong>${data.length}</strong>${isRealSample()?'範例歷程':mode==='demo'?'合成示範摘要':'真實本機摘要'}（筆）</div><div class="history-stat"><strong>${fmt(duration/60000,1)}</strong>書寫跨度合計（分鐘）</div><div class="history-stat"><strong>${eligible}</strong>符合基本品質（筆）</div>`;
-    $('history-list').innerHTML=data.length?data.map(r=>`<article class="history-row"><div><h2>${esc(CW_CORPUS.find(t=>t.id===r.task)?.text||r.task)}</h2><p>${mode==='demo'?'示範資料／非研究成果 · ':''}${new Date(r.endedAt).toLocaleString('zh-TW')} · ${fmt(r.features.durationMs/1000)} 秒 · ${r.features.counts.strokes} 筆畫</p><p>${r.features.eligible?'品質合格，依各特徵與相同 key 篩選':'僅供回顧，不進基準'} · ${esc(cloudLabel(r))}</p></div><div class="actions"><button class="secondary" data-review="${esc(r.id)}">回看摘要</button><button class="delete-btn" data-delete="${esc(r.id)}">刪除</button></div></article>`).join(''):isRealSample()?`<div class="empty"><h2>實寫範例不建立歷程</h2><p>這份「${esc(sampleTitle())}」範例不保存。退出範例後，可回看你自己選擇保存的摘要。</p></div>`:'<div class="empty"><h2>這裡，等著你的第一筆。</h2><p>完成書寫並選擇本機保存後，摘要才會出現在這裡。沒有歷史時，不產生假趨勢。</p></div>';
+    $('history-list').innerHTML=data.length?data.map(r=>`<article class="history-row"><div><h2>${esc(CW_CORPUS.find(t=>t.id===r.task)?.text||r.task)}</h2><p>${mode==='demo'?'合成示範 · ':''}${new Date(r.endedAt).toLocaleString('zh-TW')} · ${fmt(r.features.durationMs/1000)} 秒 · ${r.features.counts.strokes} 筆畫</p><p>${r.features.eligible?'品質合格，依各特徵與相同 key 篩選':'僅供回顧，不進基準'} · ${esc(cloudLabel(r))}</p></div><div class="actions"><button class="secondary" data-review="${esc(r.id)}">回看摘要</button><button class="delete-btn" data-delete="${esc(r.id)}">刪除</button></div></article>`).join(''):isRealSample()?`<div class="empty"><h2>實寫範例不建立歷程</h2><p>這份「${esc(sampleTitle())}」範例不保存。退出範例後，可回看你自己選擇保存的摘要。</p></div>`:'<div class="empty"><h2>這裡，等著你的第一筆。</h2><p>完成書寫並選擇本機保存後，摘要才會出現在這裡。沒有歷史時，不產生假趨勢。</p></div>';
     $('read-legacy').disabled=mode==='demo';$('legacy-list').innerHTML='';
   }
   $('history-list').addEventListener('click',async e=>{const review=e.target.closest('[data-review]'),del=e.target.closest('[data-delete]');if(review){current=rows().find(r=>r.id===review.dataset.review);historyReview=true;route('result');renderResult();}if(!del)return;
