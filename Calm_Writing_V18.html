@@ -67,6 +67,7 @@ html, body {
 .btn-primary:hover { background:var(--ink2); transform:translateY(-2px); box-shadow:0 8px 30px rgba(42,31,20,0.3); }
 .btn-secondary-relax { display:inline-flex; align-items:center; justify-content:center; gap:8px; background:transparent; color:var(--sage); border:2px solid var(--sage); border-radius:50px; padding:12px 36px; font-family:'Noto Serif TC',serif; font-size:15px; letter-spacing:0.15em; cursor:pointer; transition:all 0.2s; width:100%; font-weight: 500; }
 .btn-secondary-relax:hover { background:rgba(107,124,94,0.08); transform:translateY(-1px); }
+.btn-secondary-relax[hidden] { display:none; }
 .btn-ghost { background:transparent; border:1px solid rgba(42,31,20,0.2); color:var(--ink); border-radius:50px; padding:10px 24px; font-size:13px; cursor:pointer; transition:background 0.2s; }
 .btn-ghost:hover { background:rgba(42,31,20,0.06); }
 .welcome-secondary-btns { display:flex; gap:10px; margin-top: 4px; }
@@ -419,7 +420,7 @@ html, body {
     </p>
     <div class="welcome-btns">
       <button class="btn-primary" onclick="goTo('screen-task')">開始今日練習</button>
-      <button class="btn-secondary-relax" onclick="goTo('screen-relax')">🧘 呼吸放鬆練習</button>
+      <button class="btn-secondary-relax" onclick="goTo('screen-relax')" hidden>🧘 呼吸放鬆練習</button>
       <div class="welcome-secondary-btns">
         <button class="btn-ghost" onclick="goTo('screen-journey')">🌱 我的旅程</button>
       </div>
@@ -712,6 +713,9 @@ if (firebaseAvailable) {
 }
 let fbUser = null, fbReady = false;
 let breathingGuideActive = false;
+// GH-0035: pause the three legacy breathing routes in the root experience.
+const LEGACY_BREATHING_ENABLED = false;
+document.querySelector('.btn-secondary-relax').hidden = !LEGACY_BREATHING_ENABLED;
 let breathingTriggered = false;
 let breathingGuideRunId = 0;
 let breathingCooldownUntil = 0; // 呼吸引導結束後的冷卻截止時間戳（ms），冷卻期間不重新觸發
@@ -1716,6 +1720,7 @@ function pickToday(){
 function initTodayPick(){ document.getElementById('today-pick-text').textContent=getTodayPick().text; }
 
 function goTo(id){
+  if(id==='screen-relax'&&!LEGACY_BREATHING_ENABLED)return;
   if(currentScreen==='screen-write'&&id!=='screen-write') cancelBreathingGuide();
   document.getElementById(currentScreen).classList.add('hidden');
   document.getElementById(id).classList.remove('hidden');
@@ -1779,6 +1784,7 @@ function initRelaxScreen() {
 }
 
 function toggleRelaxBreathing() {
+  if(!LEGACY_BREATHING_ENABLED)return;
   if (relaxBreathingActive) {
     stopRelaxBreathingLoop();
     initRelaxScreen();
@@ -2199,7 +2205,7 @@ function initWriting(){
   updateTimer(); sessionStart=Date.now();
   resizeCanvases(false); startTimer(); startMeditationMusic();
   const guide=document.getElementById('breath-guide');
-  if(selectedMood==='anxious'){guide.classList.add('show'); setTimeout(()=>guide.classList.remove('show'),8000);}
+  if(LEGACY_BREATHING_ENABLED&&selectedMood==='anxious'){guide.classList.add('show'); setTimeout(()=>guide.classList.remove('show'),8000);}
   else guide.classList.remove('show');
   const hasSpecial=[...selectedTask].some(isHanaChar);
   if(hasSpecial&&!hakkaFontLoaded) loadHanaFonts();
@@ -2343,13 +2349,14 @@ function updatePressureHUD(e, released){
   const fill = document.getElementById('pressure-fill');
   if(fill) fill.style.width = pressurePercent + '%';
 
-  if(isRealPen && pressurePercent >= 45 && !breathingGuideActive && !breathingTriggered && currentScreen === 'screen-write' && Date.now() >= breathingCooldownUntil){
+  if(LEGACY_BREATHING_ENABLED && isRealPen && pressurePercent >= 45 && !breathingGuideActive && !breathingTriggered && currentScreen === 'screen-write' && Date.now() >= breathingCooldownUntil){
     breathingTriggered = true; startBreathingGuide();
   }
   if(pressurePercent < 35){ breathingTriggered = false; }
 }
 
 async function startBreathingGuide(){
+  if(!LEGACY_BREATHING_ENABLED)return;
   const runId=++breathingGuideRunId;
   breathingGuideActive = true; isDrawing = false; activePointerId=null; canvasPointers.clear(); stopTimer();
   const overlay = document.getElementById('breathing-overlay');
@@ -2744,9 +2751,8 @@ function showFeedback(){
       const value=document.createElement('span'); value.className='ec-legend-score'; value.textContent=String(item.score);
       row.append(dot,label,value); legend.appendChild(row);
     }
-    const highest=Math.max(...observation.scores.map(item=>item.score));
-    const closest=observation.scores.filter(item=>item.score===highest).map(item=>item.name);
-    description.textContent=(closest.length>1?'特徵同樣接近：':'特徵較接近：')+closest.join('、')+'。';
+    const closest=observation.scores.reduce((best,item)=>item.value>best.value?item:best,observation.scores[0]);
+    description.textContent='特徵較接近：'+closest.name+'。';
   }
   const legacy=lastResult || analyzeWriting();
   const enc=getEncouragement(legacy.dominant, userProfile.streak, userProfile.totalSessions);

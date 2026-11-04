@@ -90,8 +90,8 @@ button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visi
 .home-latest-metrics b{display:block;font-size:18px;color:var(--ink);white-space:nowrap}
 .home-big{font-weight:900;font-size:46px;line-height:1.2;margin:20px 0 8px}
 .home-big small{font-size:12px;font-weight:700}
-.home-progress{height:9px;background:var(--mint);border-radius:99px;overflow:hidden}
-.home-progress span{display:block;height:100%;width:0;background:var(--green)}
+.home-progress{height:10px;background:#e7ecee;border:1px solid #cbd6d9;border-radius:99px;overflow:hidden}
+.home-progress span{display:block;height:100%;width:0;background:#278267}
 .home-baseline .micro{margin-top:12px}
 .home-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:17px 0 12px}
 .home-mini{padding:12px 14px;border-top:5px solid var(--blue)}
@@ -256,3 +256,10 @@ dialog::backdrop{background:#20324E88}.dialog-mode:not(:empty){background:var(--
 #home-baseline-context{margin:10px 0 4px}
 #personal-baseline-note{margin:12px 0 20px;padding:10px 14px;border-left:3px solid #317A69;background:var(--white)}
 @media(max-width:600px){.space-actions button{flex:1 1 130px}.paper-scroll{scrollbar-gutter:auto}}
+.emotion-observation{margin:0 0 24px;padding:clamp(18px,3vw,28px);background:var(--white);border:1px solid var(--line);border-left:4px solid var(--green);border-radius:16px;box-shadow:0 10px 26px var(--shadow)}
+.emotion-observation .eyebrow{margin-bottom:4px}.emotion-observation h2{font-size:clamp(21px,2.5vw,26px);margin-bottom:8px}.emotion-observation>p:not(.eyebrow){font-size:14px;max-width:720px;color:var(--body)}
+.emotion-radar{display:flex;justify-content:center;max-width:100%;margin:10px auto}.emotion-radar svg{display:block;width:min(280px,100%);height:auto;overflow:visible}
+.emotion-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:8px 14px;margin:12px 0}
+.emotion-legend-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 11px;background:var(--paper);border-radius:8px;font-size:14px}.emotion-legend-item span{border-left:3px solid var(--axis-color);padding-left:8px}.emotion-legend-item strong{white-space:nowrap;font-variant-numeric:tabular-nums}
+.emotion-observation #emotion-note{margin:8px 0 0}
+.space-new-inactive{visibility:hidden}
