@@ -192,6 +192,15 @@ html, body {
 .emotion-card.calm::before { background:var(--sage); }
 .emotion-card.tense::before { background:var(--red); }
 .emotion-card.focused::before { background:var(--gold); }
+.emotion-card.feature-observation::before { background:var(--sage); }
+.feature-observation .ec-label { font-size:13px; letter-spacing:0.06em; color:var(--ink); font-weight:600; }
+.feature-observation .ec-visual { display:block; }
+.feature-observation .ec-bars { gap:10px; }
+.feature-observation .ec-bar-wrap { display:flex; gap:8px; align-items:center; font-size:12px; color:var(--ink); }
+.feature-observation .ec-bar-name { width:94px; flex:none; line-height:1.35; }
+.feature-observation .ec-bar-track { min-width:0; height:8px; }
+.feature-observation .ec-bar-value { width:34px; flex:none; text-align:right; font-variant-numeric:tabular-nums; }
+.feature-observation .ec-desc { margin-top:14px; }
 .ec-label { font-size:10px; letter-spacing:0.15em; color:rgba(42,31,20,0.4); margin-bottom:10px; }
 .ec-visual { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
 .ec-icon { font-size:32px; }
@@ -592,9 +601,8 @@ html, body {
       <div class="encourage-text" id="encourage-text">謝謝你今天選擇了書寫靜心 🌱</div>
     </div>
     <div class="emotion-card" id="emotion-card">
-      <div class="ec-label">書寫狀態提醒</div>
+      <div class="ec-label">書寫情緒推算｜自我觀察</div>
       <div class="ec-visual">
-        <div class="ec-icon" id="ec-icon">🌊</div>
         <div class="ec-bars" id="ec-bars"></div>
       </div>
       <div class="ec-desc" id="ec-desc"></div>
@@ -2194,6 +2202,7 @@ function guideFont(text,sizePx){ const hasSpecial=[...text].some(isHanaChar); re
 
 function initWriting(){
   document.getElementById('write-prompt-text').textContent=selectedTask;
+  lastResult=null;
   sessionData={strokes:[],pauseDurations:[],pressureValues:[],totalTime:0,strokeCount:0,rawPoints:[],charBounds:{},tiltXValues:[],tiltYValues:[],baselineAngles:[],pressureSupported:false};
   undoStack=[]; timerSeconds=0; strokeFirstPt=null; lastStrokeEnd=null;
   canvasPointers.clear(); activePointerId=null; finishInProgress=false;
@@ -2646,36 +2655,73 @@ async function finishWriting(){
   incrementDailyCount(); submitToSheets(record, result); goTo('screen-feedback');
 }
 
+function analyzeEmotionFeatures(points){
+  const raw=Array.isArray(points)?points:[];
+  const pressures=raw.filter(p=>p&&p.pressureSupported===true&&Number.isFinite(p.pressureNorm)&&p.pressureNorm>=0&&p.pressureNorm<=1).map(p=>p.pressureNorm);
+  const speeds=[];
+  let previous=null;
+  for(const point of raw){
+    if(point&&previous&&Number.isInteger(point.strokeId)&&point.strokeId>0&&point.strokeId===previous.strokeId&&
+       Number.isFinite(point.x)&&Number.isFinite(point.y)&&Number.isFinite(point.ts)&&
+       Number.isFinite(previous.x)&&Number.isFinite(previous.y)&&Number.isFinite(previous.ts)){
+      const elapsed=point.ts-previous.ts;
+      if(elapsed>0){
+        const distance=Math.hypot(point.x-previous.x,point.y-previous.y);
+        const speed=distance/elapsed*100;
+        if(Number.isFinite(speed)) speeds.push(speed);
+      }
+    }
+    previous=point;
+  }
+  const reasons=[];
+  if(pressures.length<3) reasons.push('有效筆壓樣本不足（需要至少 3 筆；滑鼠或未回報筆壓的觸控可能無法提供）');
+  if(speeds.length<2) reasons.push('有效同筆速度區間不足（需要至少 2 段座標與時間皆有效、且時間遞增的移動）');
+  if(reasons.length) return {scores:null,reasons};
+  const mean=values=>values.reduce((sum,value)=>sum+value,0)/values.length;
+  const deviation=(values,average)=>Math.sqrt(mean(values.map(value=>(value-average)**2)));
+  const clamp=value=>Math.max(0,Math.min(1,value));
+  const avgP=mean(pressures), maxP=pressures.reduce((highest,value)=>Math.max(highest,value),0), stdP=deviation(pressures,avgP);
+  const avgSpeed=mean(speeds), stdSpeed=deviation(speeds,avgSpeed);
+  const slowRatio=speeds.filter(speed=>speed<2).length/speeds.length;
+  return {scores:[
+    {name:'緊張／專注',color:'#a36a39',value:clamp(avgP*0.45+stdP*1.1+(avgSpeed/300)*0.35+(stdSpeed/300)*0.2)},
+    {name:'平靜／穩定',color:'#6b7c5e',value:clamp((1-stdP*1.8)*0.4+(1-stdSpeed/200)*0.35+slowRatio*0.25)},
+    {name:'激動／急迫',color:'#a6574b',value:clamp(maxP*0.4+(avgSpeed/300)*0.3+(stdSpeed/200)*0.3)},
+    {name:'疲倦／低落',color:'#767397',value:clamp((1-avgSpeed/300)*0.4+slowRatio*0.35+(1-avgP)*0.25)},
+    {name:'輕鬆／愉快',color:'#ad8c43',value:clamp((1-Math.abs(avgP-0.45)*2)*0.35+(1-stdSpeed/200)*0.35+(1-slowRatio)*0.3)}
+  ].map(item=>({...item,score:Math.round(item.value*100)})),reasons:[]};
+}
+
 function showFeedback(){
-  const result = lastResult || analyzeWriting();
-  const configs={
-    calm:{icon:'🍃',title:'這次寫得很從容',subtitle:'筆跡較穩定，節奏較舒緩\n請把它當作一次溫柔的自我觀察',ecIcon:'🌊',cardClass:'calm',desc:'本次可用的手寫特徵較偏向平穩。單次結果可能受裝置與書寫內容影響，不代表醫療或心理狀態。',suggestion:'可以休息片刻，感受呼吸與握筆是否依然舒適。'},
-    focused:{icon:'✨',title:'這次書寫很專注',subtitle:'筆畫與停頓呈現較集中的節奏\n請把它當作一次溫柔的自我觀察',ecIcon:'🌟',cardClass:'focused',desc:'本次可用的手寫特徵較偏向集中。單次結果可能受裝置與書寫內容影響，不代表醫療或心理狀態。',suggestion:'可以閉上眼睛深呼吸三次，感受書寫前後的差異。'},
-    tense:{icon:'🌱',title:'謝謝你完成這次書寫',subtitle:'本次筆跡呈現一些較急促的節奏\n不需要評價好壞，先讓自己慢一點',ecIcon:'🌬',cardClass:'tense',desc:'本次可用的手寫特徵有部分較不穩定。這只是自我覺察提醒，不等同壓力或健康診斷。',suggestion:'可以先休息或做三次深呼吸；若困擾持續，請考慮尋求合格專業人員協助。'},
-    insufficient:{icon:'🫧',title:'資料還不夠',subtitle:'這次有效筆跡太少\n再多寫幾筆，結果會更有參考性',ecIcon:'○',cardClass:'focused',desc:'目前沒有足夠的手寫事件可產生狀態提醒，因此不進行分類。',suggestion:'回到書寫頁多完成幾個筆畫，再查看結果。'}
-  };
-  const cfg=configs[result.dominant];
-  document.getElementById('fb-icon').textContent=cfg.icon;
-  document.getElementById('fb-title').textContent=cfg.title;
-  document.getElementById('fb-subtitle').textContent=cfg.subtitle.replace('\\n','\n');
-  document.getElementById('ec-icon').textContent=cfg.ecIcon;
-  document.getElementById('suggestion-text').textContent=cfg.suggestion;
-  document.getElementById('ec-desc').textContent=cfg.desc;
-  const ec=document.getElementById('emotion-card'); ec.className='emotion-card '+cfg.cardClass;
-  const barsEl=document.getElementById('ec-bars'); barsEl.innerHTML='';
-  const scoreBars=[
-    {label:'平穩',value:result.dataSufficient?result.calm:0},
-    {label:'專注',value:result.dataSufficient?result.focused:0},
-    {label:'緊繃',value:result.dataSufficient?result.tense:0},
-  ];
-  scoreBars.forEach(bar=>{
-    const row=document.createElement('div'); row.className='ec-bar-wrap';
-    row.innerHTML=`<span style="width:44px;text-align:right">${bar.label}</span><div class="ec-bar-track"><div class="ec-bar-fill" style="width:0%"></div></div>`;
-    barsEl.appendChild(row); setTimeout(()=>{row.querySelector('.ec-bar-fill').style.width=(bar.value*100)+'%';},300);
-  });
-  const enc=getEncouragement(result.dominant, userProfile.streak, userProfile.totalSessions);
+  const observation=analyzeEmotionFeatures(sessionData.rawPoints);
+  document.getElementById('fb-icon').textContent='🍃';
+  document.getElementById('fb-title').textContent='謝謝你完成這次書寫';
+  document.getElementById('fb-subtitle').textContent='以下只呈現本次筆跡的特徵觀察';
+  document.getElementById('suggestion-text').textContent='留意書寫前後的感受，給自己一點休息的時間。';
+  const card=document.getElementById('emotion-card');
+  card.className='emotion-card feature-observation';
+  const bars=document.getElementById('ec-bars');
+  bars.replaceChildren();
+  const description=document.getElementById('ec-desc');
+  if(!observation.scores){
+    description.textContent='暫無五類分數：'+observation.reasons.join('；')+'。';
+  }else{
+    for(const item of observation.scores){
+      const row=document.createElement('div'); row.className='ec-bar-wrap';
+      const label=document.createElement('span'); label.className='ec-bar-name'; label.textContent=item.name;
+      const track=document.createElement('div'); track.className='ec-bar-track';
+      const fill=document.createElement('div'); fill.className='ec-bar-fill'; fill.style.width=item.score+'%'; fill.style.background=item.color;
+      const value=document.createElement('span'); value.className='ec-bar-value'; value.textContent=String(item.score);
+      track.appendChild(fill); row.append(label,track,value); bars.appendChild(row);
+    }
+    const highest=Math.max(...observation.scores.map(item=>item.score));
+    const closest=observation.scores.filter(item=>item.score===highest).map(item=>item.name);
+    description.textContent=(closest.length>1?'本次特徵同樣接近：':'本次特徵較接近：')+closest.join('、')+'。分數為各類特徵的 0–100 尺度，彼此不需合計 100；不表示情緒機率或心理結論。';
+  }
+  const legacy=lastResult || analyzeWriting();
+  const enc=getEncouragement(legacy.dominant, userProfile.streak, userProfile.totalSessions);
   document.getElementById('encourage-streak').textContent=enc.streak;
-  document.getElementById('encourage-text').textContent=enc.text;
+  document.getElementById('encourage-text').textContent='謝謝你今天選擇了書寫靜心 🌱';
   initMoodPicker();
   listenMoodBubbles();
 }
