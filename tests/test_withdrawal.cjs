@@ -1,0 +1,7 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const C=require('../candidate/assets/engine.js'),R=require('../candidate/assets/research.js'),S=require('../candidate/assets/storage.js');
+function storage(){const map=new Map();return {getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v)}}
+function record(){const r=C.demo().current;r.id='real-session';r.research=R.pair(R.preflight({consent:true,confirmed:true,value:75,at:10}),{sessionId:r.id,startedAt:20,endedAt:r.endedAt});return r;}
+test('withdrawal survives stale save, new Store, delete and resave',async()=>{const mem=storage(),a=new S.Store(mem),b=new S.Store(mem),r=record();a.save(r);b.withdrawResearch(r.id);assert.equal(a.list()[0].research,null);a.save(r);assert.equal(a.list()[0].research,null);assert.equal(new S.Store(mem).isResearchWithdrawn(r.id),true);await b.remove(r.id);a.save(r);assert.equal(a.list()[0].research,null);});
+test('withdrawal before first save also prevents stale consent persistence',()=>{const mem=storage(),store=new S.Store(mem),r=record();store.withdrawResearch(r.id);store.save(r);assert.equal(store.list()[0].research,null);});
+test('corrupt withdrawal state fails closed instead of restoring consent',()=>{const mem=storage(),store=new S.Store(mem),r=record();store.save(r);mem.setItem(S.REVOKED,'broken');assert.throws(()=>store.list(),/撤回/);assert.throws(()=>store.save(r),/撤回/);});

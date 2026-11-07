@@ -1,0 +1,13 @@
+{
+  "name": "calm-writing-candidate-verification",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Verification for the isolated research B and personal baseline candidate",
+  "scripts": {
+    "test": "node --test tests/*.cjs",
+    "test:repository": "python -m unittest discover -s tests -v",
+    "preview": "python -m http.server 8000 --bind 127.0.0.1"
+  },
+  "devDependencies": {"jsdom": "26.1.0"},
+  "engines": {"node": ">=20"}
+}

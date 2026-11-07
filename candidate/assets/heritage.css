@@ -1,0 +1,8 @@
+/* R6 approved presentation tokens. System fonts and local assets only. */
+:root {
+  --paper:#F9F8F3; --white:#FFFFFF; --ink:#20324E; --body:#43536A;
+  --line:#DAE5E8; --chart:#F3F8FB; --blue:#4B8CC9; --sky:#A3C8E4;
+  --green:#4F9280; --mint:#B9DDCB; --purple:#9275B3; --lilac:#E8D8EF;
+  --yellow:#F3D77B; --danger:#8B3343; --shadow:rgba(32,50,78,.08);
+  --cream:var(--paper); --warm:var(--chart); --ink2:var(--body);
+}
