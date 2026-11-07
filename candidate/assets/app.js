@@ -28,8 +28,16 @@
   function rows(){try{historyReadError=null;const list=store().list();return mode==='demo'?list:ownedRows(list);}catch(e){historyReadError=e.message;notify(e.message);return [];}}
   function notify(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,7000);}
   function task(){return CW_CORPUS.find(t=>t.id===$('task').value)||CW_CORPUS[0];}
+  let productFilter='all';
+  function renderProductPicker(){
+    if(!$('product-task-cards'))return;
+    const categories=[...new Map(CW_CORPUS.map(t=>[t.cat,t.label])).entries()];
+    if($('product-category-tabs'))$('product-category-tabs').innerHTML=[['all','全部'],...categories].map(([id,label])=>`<button type="button" data-product-category="${esc(id)}" aria-pressed="${id===productFilter}">${esc(label)}</button>`).join('');
+    $('product-task-cards').innerHTML=CW_CORPUS.filter(t=>productFilter==='all'||t.cat===productFilter).map(t=>`<button type="button" class="product-task-card${t.id===$('task').value?' selected':''}" data-product-task="${esc(t.id)}" aria-pressed="${t.id===$('task').value}"><span>${esc(t.label)}</span><strong>${esc(t.text)}</strong><small>${t.id===$('task').value?'已選擇':'選擇這句'}</small></button>`).join('');
+    if($('product-selected-text'))$('product-selected-text').textContent=task().text;
+  }
   function setTasks(){if(layoutLocked){$('category').value=lockedCategory;return;}const items=CW_CORPUS.filter(t=>t.cat===$('category').value);$('task').innerHTML=items.map(t=>`<option value="${esc(t.id)}">${esc(t.text)}</option>`).join('');taskChanged();}
-  function taskChanged(){if(layoutLocked){$('task').value=lockedTask;return;}const t=task();$('task-poem').textContent=t.text;$('canvas-task-prompt').textContent=t.text;$('canvas-guide').textContent=t.text;if(capture&&capture.strokes.length){capture.interrupt();capture.flag('任務變更');$('write-notice').hidden=false;$('write-notice').textContent='這次已更換任務，不會加入個人基準。重新開始一段練習可建立新任務摘要。';}updateSpacePlan();}
+  function taskChanged(){if(layoutLocked){$('task').value=lockedTask;return;}const t=task();$('task-poem').textContent=t.text;$('canvas-task-prompt').textContent=t.text;$('canvas-guide').textContent=t.text;if(capture&&capture.strokes.length){capture.interrupt();capture.flag('任務變更');$('write-notice').hidden=false;$('write-notice').textContent='這次已更換任務，不會加入個人基準。重新開始一段練習可建立新任務摘要。';}updateSpacePlan();renderProductPicker();}
   function needsDiscard(){return view==='write'&&!!(capture?.strokes.length||capture?.active);}
   function focusAvailable(target){if(!target||target.isConnected===false||target.closest?.('[hidden]'))return false;target.focus();return document.activeElement===target;}
   function restoreFocus(target){if(!focusAvailable(target))focusAvailable(document.querySelector('#view-'+view+' h1'));}
@@ -49,7 +57,7 @@
     if(next!==view&&needsDiscard()){guardLeave(()=>route(next));return false;}
     if(view==='result'&&next!=='result')releaseRaw();
     if(view==='write'&&next!=='write'){capture=null;ctx.clearRect(0,0,canvasSize.w,canvasSize.h);}
-    view=next;document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+next);
+    view=next;document.body.dataset.productView=next;document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+next);
     document.querySelectorAll('.site-header nav [data-nav]').forEach(button=>{if(button.dataset.nav===next)button.setAttribute('aria-current','page');else button.removeAttribute('aria-current');});
     if(next==='history')renderHistory();if(next==='home')updateHome();
     window.scrollTo({top:0,behavior:'instant'});document.querySelector('#view-'+next+' h1')?.focus({preventScroll:true});return true;
@@ -121,8 +129,17 @@
     if(!authorized&&needsDiscard()){guardLeave(()=>newWriting());return;}if(mode==='demo')exitDemo();
     releaseRaw();resetResearch();capture=new C.Capture();current=null;historyReview=false;$('write-notice').hidden=true;
     if(wellbeing.isInterventionActive()){capture.markGuidance('started');$('write-notice').hidden=false;$('write-notice').textContent='這次已使用正念或背景聲音，僅供回顧，不進自然書寫基準。';}
-    unlockSpace();view='home';route('write');updateSpacePlan();resizeCanvas(true);paint();updateCapture();
+    unlockSpace();view='home';route($('view-task')?'task':'write');renderProductPicker();updateSpacePlan();resizeCanvas(true);paint();updateCapture();
   }
+  function beginProductWriting(){
+    if(view!=='task')return;
+    if($('research-opt-in').checked&&!researchPre){notify('請先確認書寫前的自評，或取消參與後直接書寫。');focusAvailable($('research-confirm'));return;}
+    if(!capture)capture=new C.Capture();
+    route('write');updateSpacePlan();resizeCanvas(true);paint();updateCapture();
+  }
+  if($('product-begin'))$('product-begin').addEventListener('click',beginProductWriting);
+  if($('product-category-tabs'))$('product-category-tabs').addEventListener('click',e=>{const button=e.target.closest('[data-product-category]');if(!button)return;productFilter=button.dataset.productCategory;if(productFilter!=='all'){$('category').value=productFilter;setTasks();}else renderProductPicker();});
+  if($('product-task-cards'))$('product-task-cards').addEventListener('click',e=>{const button=e.target.closest('[data-product-task]'),selected=CW_CORPUS.find(t=>t.id===button?.dataset.productTask);if(!selected)return;$('category').value=selected.cat;setTasks();$('task').value=selected.id;taskChanged();});
   const canvas=$('canvas'),ctx=canvas.getContext('2d');let canvasSize={w:0,h:0,dpr:0},lastObservedDpr=0;
   function unlockSpace(){layoutLocked=false;spacePlan=null;for(const id of ['category','task','input-policy','brush','grid','guide'])$(id).disabled=false;if($('paper'))$('paper').style.width='';if($('space-new')){$('space-new').disabled=true;$('space-new').classList.add('space-new-inactive');}}
   function lockSpace(){if(layoutLocked||!L||!spacePlan?.valid)return;layoutLocked=true;lockedTask=$('task').value;lockedCategory=$('category').value;lockedBrush=$('brush').value;lockedInput=$('input-policy').value;lockedGrid=$('grid').checked;lockedGuide=$('guide').checked;
@@ -132,7 +149,7 @@
     $('space-plan').hidden=false;const hasNumbers=[spacePlan.count,spacePlan.cols,spacePlan.rows,spacePlan.brush].every(Number.isFinite),base=hasNumbers?`這次 ${spacePlan.count} 字（不含標點與空白）、${spacePlan.cols} 欄 ${spacePlan.rows} 行、筆寬 ${spacePlan.brush} px。`:'目前紙面條件無法規劃。';
     const reason=typeof spacePlan.reason==='string'&&!/undefined|NaN|Infinity/.test(spacePlan.reason)&&spacePlan.reason?spacePlan.reason:'目前紙面條件無法量測。';
     $('space-plan-text').textContent=spacePlan.valid?base+'落筆後紙面與設定固定，供本次回看。':base+reason+(hasNumbers?' 請採建議筆寬或選短語，這個配置不開放落筆。':' 這個配置不開放落筆；請確認裝置顯示設定後再開始新一輪。');
-    $('space-plan').dataset.state=spacePlan.valid?'ready':'blocked';$('space-suggest').hidden=spacePlan.valid||Number($('brush').value)===L.SUGGESTED_BRUSH;$('space-shorter').hidden=spacePlan.valid||$('category').value==='single';
+    $('space-plan').dataset.state=spacePlan.valid?'ready':'blocked';if(!spacePlan.valid){const settings=$('space-plan').closest('details');if(settings)settings.open=true;}$('space-suggest').hidden=spacePlan.valid||Number($('brush').value)===L.SUGGESTED_BRUSH;$('space-shorter').hidden=spacePlan.valid||$('category').value==='single';
   }
   function resizeCanvas(initial=false){
     if(view!=='write')return;
@@ -155,7 +172,7 @@
     return {x:e.clientX-r.left,y:e.clientY-r.top,t:e.timeStamp,phase,pointerType,pressure:pen&&Number.isFinite(e.pressure)?e.pressure:null,pressureEvidence:'unknown',tiltX:pen&&Number.isFinite(e.tiltX)?e.tiltX:null,tiltY:pen&&Number.isFinite(e.tiltY)?e.tiltY:null,width:Math.max(1.5,Number($('brush').value))};
   }
   function outside(p){return p.x<0||p.y<0||p.x>canvasSize.w||p.y>canvasSize.h;}
-  function drawStroke(s){const a=s.points;if(!a.length)return;ctx.strokeStyle='#20324E';ctx.fillStyle='#20324E';ctx.lineCap='round';ctx.lineJoin='round';if(a.length===1){ctx.beginPath();ctx.arc(a[0].x,a[0].y,a[0].width/2,0,Math.PI*2);ctx.fill();}for(let i=1;i<a.length;i++){ctx.lineWidth=(a[i-1].width+a[i].width)/2;ctx.beginPath();ctx.moveTo(a[i-1].x,a[i-1].y);ctx.lineTo(a[i].x,a[i].y);ctx.stroke();}}
+  function drawStroke(s){const a=s.points;if(!a.length)return;ctx.strokeStyle='#2a1f14';ctx.fillStyle='#2a1f14';ctx.lineCap='round';ctx.lineJoin='round';if(a.length===1){ctx.beginPath();ctx.arc(a[0].x,a[0].y,a[0].width/2,0,Math.PI*2);ctx.fill();}for(let i=1;i<a.length;i++){ctx.lineWidth=(a[i-1].width+a[i].width)/2;ctx.beginPath();ctx.moveTo(a[i-1].x,a[i-1].y);ctx.lineTo(a[i].x,a[i].y);ctx.stroke();}}
   function paint(){ctx.clearRect(0,0,canvasSize.w,canvasSize.h);capture?.strokes.forEach(drawStroke);if(capture?.active)drawStroke(capture.active);}
   const pressureLabel=f=>({'verified':'經實機確認','observed-variation':'觀察到接觸值變化','unknown':'未確認'})[f?.support?.pressureEvidence]||'未確認';
   function updateCapture(){const f=capture?C.extract(capture):null;$('stroke-count').textContent=`${capture?.strokes.length||0} 筆畫`;$('input-label').textContent=capture?.input?({mouse:'滑鼠',pen:'觸控筆',touch:'觸控'}[capture.input]||capture.input)+'書寫':'尚未落筆';$('device-support').textContent=`筆壓：${pressureLabel(f)} · 傾斜：${f?.support.tilt?'原始角度可用':'未確認'}`;}
@@ -183,7 +200,7 @@
     }
     if(categoryChanged)setTasks();else taskChanged();
   }
-  $('category').addEventListener('change',()=>changeTopic(true));$('task').addEventListener('change',()=>changeTopic(false));
+  $('category').addEventListener('change',()=>{productFilter=$('category').value;changeTopic(true);});$('task').addEventListener('change',()=>changeTopic(false));
   if(L&&$('space-new')){
     $('space-suggest').addEventListener('click',()=>{$('brush').value=String(L.SUGGESTED_BRUSH);$('brush-value').textContent=$('brush').value;updateSpacePlan();resizeCanvas();});
     $('space-shorter').addEventListener('click',()=>{$('category').value='single';setTasks();updateSpacePlan();resizeCanvas();});
@@ -191,7 +208,7 @@
     $('space-skip').addEventListener('click',()=>$('finish').scrollIntoView({block:'center'}));
   }
   $('finish').addEventListener('click',()=>{
-    if(!capture)return;checkCanvasEnvironment();capture.interrupt();if(document.body?.dataset?.layoutVersion==='1'&&!spacePlan)capture.flag('尺寸改變');
+    if(view!=='write'||!capture)return;checkCanvasEnvironment();capture.interrupt();if(document.body?.dataset?.layoutVersion==='1'&&!spacePlan)capture.flag('尺寸改變');
     const layoutKey=L&&spacePlan?L.condition(spacePlan,{grid:layoutLocked?lockedGrid:$('grid').checked,guide:layoutLocked?lockedGuide:$('guide').checked}):'cw-layout/1|unavailable';
     const meta={person,environment:browserEnvironment+'|canvas:'+canvasSize.w+'x'+canvasSize.h+'@'+canvasSize.dpr+'|layout:'+layoutKey,input:capture.input||'none',task:task().id,schema:C.FEATURE_SCHEMA};
     if(!profilePersistent)capture.flag('本機儲存不可用');
@@ -444,8 +461,8 @@
   if($('fragment-demo'))$('fragment-demo').addEventListener('click',()=>protectedSwitch('demo'));
   $('start-demo').addEventListener('click',()=>enterDemo());$('demo-kind').addEventListener('change',()=>enterDemo($('demo-kind').value));$('exit-demo').addEventListener('click',exitDemo);
   ['start-real','history-start','write-again'].forEach(id=>$(id).addEventListener('click',()=>newWriting()));
-  document.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',()=>route(el.dataset.nav)));
+  document.querySelectorAll('[data-nav]').forEach(el=>el.addEventListener('click',()=>el.dataset.nav==='task'?newWriting():route(el.dataset.nav)));
   if(L&&document.body?.dataset?.layoutVersion==='1'&&$('brush').dataset.suggestedDefault){$('brush').value=$('brush').dataset.suggestedDefault;$('brush-value').textContent=$('brush').value;}
-  setTasks();updateMode();updateHome();
+  document.body.dataset.productView='home';setTasks();updateMode();updateHome();
   if($('tour-write')&&$('tour-demo')&&$('tour-ready-status')){$('tour-write').disabled=false;$('tour-demo').disabled=false;$('tour-ready-status').hidden=true;}
 })();
