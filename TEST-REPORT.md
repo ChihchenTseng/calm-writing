@@ -56,3 +56,13 @@
 - 保留目前候選 storage/profile/撤回鍵值及資料格式；engine、personalization、research、storage 模組未改動。
 - 增加三項整合測試：分步語料卡選擇、返回選題取消／確認、新版載入既有候選摘要不遷移。52 項自動測試全部通過。
 - 不引入舊產品 Firebase、群體人數或心情傳送；研究配對仍僅存本機。
+
+## 2026-11-07 五角圖與介面簡化（獨立分支，未部署）
+
+- 基準為最新 main `c3085a8`，分支 `simplify/candidate-radar-20261107`。原本已具備資料不足時整圖回原公式的邏輯，本次保留公式與資料門檻，只移除手動開關並簡化呈現。
+- 42 項 Node（含 21 項模擬 DOM 流程）、16 項 Python 全部通過；candidate JavaScript 語法及 `git diff --check` 通過。
+- 新增或強化：0／9 筆歷史使用原分數；10 筆同條件歷史自動切換；單軸不足、換題、零 MAD 整圖回退；滑鼠、手指及固定未確認筆壓不補分數；短篇但可量測的原公式顯示；空白／中斷無殘留五角圖；損壞歷史保留原公式並顯示無法讀取；量測收合、展開後呼吸取消、新結果重設收合。
+- 移除首頁重複 FAQ、逐軸歷史筆數與重複說明。五角圖保留簡短模式／資料不足狀態，以及「未驗證的書寫參考，非情緒機率或心理診斷」。量測及計算細節改為預設收合，保存與撤回流程保持可用。
+- `index.html`、`app/`、`t/`、原產品版本及 candidate 的 engine／personalization／research／storage 模組相對基準完全不變。
+- 本次新 UI 的真實瀏覽器驗收未完成：本機 Chromium 在啟動階段遇到 `socket() failed: Operation not permitted`；雲端瀏覽器無法連到執行環境的 localhost（`ERR_CONNECTION_REFUSED`）。未產生新畫面驗收截圖，不將 DOM 測試宣稱為瀏覽器或 Apple Pencil 實機通過。
+- 尚未更新 main、建立 PR 或部署。本分支沒有新的 GitHub Actions 執行，CI 工作流程目前只在 PR 或手動觸發。

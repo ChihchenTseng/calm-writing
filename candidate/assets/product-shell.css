@@ -35,3 +35,11 @@ body[data-product-view=home]>.site-header,body[data-product-view=home]>.environm
 .product-write-header .writing-prompt{background:transparent;border:0;padding:0;box-shadow:none;color:var(--cream)}.product-write-header .writing-prompt strong{color:inherit}
 .welcome-inner,.welcome-btns{width:100%}
 body[data-product-view=task]>.site-header,body[data-product-view=task]>.environment,body:has(#view-task:not([hidden]))>.site-header,body:has(#view-task:not([hidden]))>.environment{display:none}
+
+/* Keep the result focused on the chart; optional measurements stay collapsed. */
+.product-result-details{border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:20px 0;color:var(--ink)}
+.product-result-details>summary{padding:16px 0;min-height:56px;font:14px/1.6 var(--product-serif);color:var(--gold);cursor:pointer}
+.product-result-detail-body{padding:0 0 20px}.product-result-detail-body .technical{margin-top:16px;padding:16px 0 0}
+#view-result .emotion-radar:empty,#view-result .emotion-legend:empty{display:none}
+#view-result #emotion-note{margin:18px 0 0;font-size:12px}#view-result #radar-baseline-status{margin:6px 0 0}
+@media(max-width:480px){#view-result .emotion-legend{grid-template-columns:1fr}}

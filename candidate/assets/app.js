@@ -333,17 +333,22 @@
     if(historyReadError)c.status='unavailable';
     const percent=relativePercent(c),status=c.status==='ready'||c.status==='zero-mad'?`本次之前同條件合格 ${c.eligibleN} 筆 · 本項可用 ${c.n} 筆 · 近期中位數 ${fmt(c.base)} ${m.unit} · 差值 ${fmt(c.delta,2)}${percent===null?'':` · 相對 ${percent>0?'+':''}${fmt(percent,1)}%`}`:c.status==='building'?`本次之前同條件合格 ${c.eligibleN}/${C.MIN_HISTORY} 筆 · 本項可用 ${c.n} 筆`:c.status==='no-data'?`整體比較已開啟 · 本項可用 0 筆`:'本次不進行比較';
     let bars='';if(['ready','zero-mad'].includes(c.status)&&available){const max=Math.max(c.value,c.base,1);bars=`<div class="compare-bars" aria-label="本次與近期中位數對照"><div class="compare-line"><span>本次</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,c.value/max*100)}%"></div></div><span>${fmt(c.value)}</span></div><div class="compare-line baseline"><span>近期</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,c.base/max*100)}%"></div></div><span>${fmt(c.base)}</span></div></div>`;}
-    return `<article class="metric-card ${k}"><div><h3>${m.label}</h3><span class="metric-value">${fmt(f.values[k],k==='pressure'?2:1)}</span><span class="metric-unit">${m.unit}</span><p class="metric-source">${esc(sourceCount(f,k))} · ${mode==='demo'?'合成示範':'本次量測'}${!available?' · 缺值':''}</p></div><div class="comparison"><strong>${esc(status)}</strong>${bars}<p>${esc(P.observation(k,c))}</p><p>相對差異只描述這次書寫行為，不代表好壞、壓力或心理狀態。</p></div><details><summary>查看計算與比較依據</summary><p>${formula[k]}</p><p>本次之前，只取同題目、輸入與紙面環境最近最多 30 筆合格摘要；本次不算入基準。每一項至少 10 筆有效值，這是工程設定，非臨床充分性聲明。</p><p>同條件合格歷史 ${c.eligibleN} 筆；本項可用 ${c.n} 筆；中位數 ${fmt(c.base)}；MAD ${fmt(c.mad,2)}${c.delta!==undefined?`；原始差值 ${fmt(c.delta,2)}`:''}。${percent===null?'百分比未顯示：資料不足、中位數為 0 或 MAD 為 0。':`相對百分比以本次與中位數差值除以中位數計。`}${esc(current.schema)}</p><p>可能干擾：畫布尺寸、取樣頻率、手部姿勢、裝置延遲、任務熟悉度。跨環境數值仍可能不同，不解讀為診斷。</p></details></article>`;
+    return `<article class="metric-card ${k}"><div><h3>${m.label}</h3><span class="metric-value">${fmt(f.values[k],k==='pressure'?2:1)}</span><span class="metric-unit">${m.unit}</span><p class="metric-source">${esc(sourceCount(f,k))} · ${mode==='demo'?'合成示範':'本次量測'}${!available?' · 缺值':''}</p></div><div class="comparison"><strong>${esc(status)}</strong>${bars}<p>${esc(P.observation(k,c))}</p></div><details><summary>查看計算與比較依據</summary><p>${formula[k]}</p><p>本次之前，只取同題目、輸入與紙面環境最近最多 30 筆合格摘要；本次不算入基準。每一項至少 10 筆有效值，這是工程設定，非臨床充分性聲明。</p><p>同條件合格歷史 ${c.eligibleN} 筆；本項可用 ${c.n} 筆；中位數 ${fmt(c.base)}；MAD ${fmt(c.mad,2)}${c.delta!==undefined?`；原始差值 ${fmt(c.delta,2)}`:''}。${percent===null?'百分比未顯示：資料不足、中位數為 0 或 MAD 為 0。':`相對百分比以本次與中位數差值除以中位數計。`}${esc(current.schema)}</p><p>可能干擾：畫布尺寸、取樣頻率、手部姿勢、裝置延遲、任務熟悉度。跨環境數值仍可能不同，不解讀為診斷。</p></details></article>`;
   }
   function renderEmotionObservation(){
     const panel=$('emotion-observation'),radar=$('emotion-radar'),legend=$('emotion-legend'),note=$('emotion-note');
-    radar.replaceChildren();legend.replaceChildren();note.textContent='';
+    radar.replaceChildren();legend.replaceChildren();
+    note.textContent='未驗證的書寫參考，非情緒機率或心理診斷。';
     panel.hidden=mode!=='real';
     if(panel.hidden)return;
     const raw=current.radar?.schema===P.RADAR_SCHEMA?current.radar.scores:null;const names=['緊張／專注','平靜／穩定','激動／急迫','疲倦／低落','輕鬆／愉快'],colors=['#a36a39','#6b7c5e','#a6574b','#767397','#ad8c43'];const result=resultRaw?.session?C.emotionFeatures(resultRaw.session):{scores:raw?.length===5?raw.map((score,i)=>({name:names[i],color:colors[i],score,value:score/100})):null,reasons:['這筆沒有可用的五軸摘要']};
-    if(!result.scores){$('radar-baseline-status').textContent='未產生五角圖，不補假數值。';note.textContent=result.reasons.join('；')+'。其他可用量測仍會顯示。';return;}
-    const baseline=P.personalizeRadar(current,rows()),personalized=$('personalize-radar').checked&&baseline.status==='personalized';
-    $('radar-baseline-status').textContent=personalized?'個人相對顯示：50 代表同條件歷史中位數；不是情緒程度。':$('personalize-radar').checked?'目前顯示原公式（未個人化）：'+(baseline.axes.some(a=>a.reason==='current-unqualified')?'本次品質或筆壓不符合個人比較條件。':baseline.axes.some(a=>a.reason==='zero-mad')?'部分軸歷史變異為零，整圖回退，不混用刻度。':'同條件有效歷史不足，基準建立中。'):'目前顯示原公式（已關閉個人化）。';
+    if(!result.scores){
+      $('radar-baseline-status').textContent=result.reasons.some(reason=>reason.includes('筆壓'))?'筆壓資料不足，暫不顯示五角圖。':result.reasons.some(reason=>reason.includes('變更或中斷'))?'書寫曾中斷或條件改變，暫不顯示五角圖。':'資料不足，暫不顯示五角圖。';
+      panel.dataset.radarMode='unavailable';return;
+    }
+    const baseline=P.personalizeRadar(current,rows()),personalized=baseline.status==='personalized';
+    panel.dataset.radarMode=personalized?'personalized':'raw-fallback';
+    $('radar-baseline-status').textContent=personalized?'個人相對圖 · 50 為近期中位數':historyReadError?'原公式 · 個人基準暫時無法讀取':baseline.axes.some(a=>a.reason==='current-unqualified')?'原公式 · 本次不符合個人比較條件':baseline.axes.some(a=>a.reason==='zero-mad')?'原公式 · 個人基準變化不足':'原公式 · 個人基準資料不足';
     const scores=result.scores.map((item,i)=>({...item,score:personalized?Math.round(baseline.axes[i].value):item.score,value:personalized?baseline.axes[i].value/100:item.value})),ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
     svg.setAttribute('viewBox','0 0 280 260');svg.setAttribute('role','img');svg.setAttribute('aria-label','本次書寫特徵：'+scores.map(item=>item.name+' '+item.score+' 分').join('，'));
     const at=(index,radius)=>{const angle=-Math.PI/2+index*2*Math.PI/5;return [140+Math.cos(angle)*radius,130+Math.sin(angle)*radius];};
@@ -352,12 +357,13 @@
     for(const radius of [24,48,72,96])add('polygon',{points:shape(radius),fill:'none',stroke:'#DCE4E6','stroke-width':1});
     scores.forEach((item,i)=>{const [x,y]=at(i,96);add('line',{x1:140,y1:130,x2:x,y2:y,stroke:'#DCE4E6','stroke-width':1});});
     add('polygon',{points:scores.map((item,i)=>at(i,96*item.score/100).map(n=>n.toFixed(2)).join(',')).join(' '),fill:'rgba(75,140,201,.22)',stroke:'#4B8CC9','stroke-width':2});
-    scores.forEach((item,i)=>{const [x,y]=at(i,96*item.score/100);add('circle',{cx:x,cy:y,r:4,fill:item.color});const [lx,ly]=at(i,117);const label=add('text',{x:lx,y:ly,'text-anchor':'middle','dominant-baseline':'middle',fill:'#20324E','font-size':12});label.textContent=['緊張','平靜','激動','疲倦','輕鬆'][i];const row=document.createElement('div');row.className='emotion-legend-item';const name=document.createElement('span');name.textContent=item.name;name.style.setProperty('--axis-color',item.color);const value=document.createElement('strong');value.textContent=item.score+' / 100';const count=document.createElement('small');count.textContent='有效先前資料 '+baseline.axes[i].n+'/10'+(baseline.axes[i].reason==='zero-mad'?' · 變異為零':'');value.appendChild(count);row.append(name,value);legend.appendChild(row);});
-    radar.appendChild(svg);note.textContent='五軸是未驗證的啟發式參考，不是五種情緒的機率或壓力預測。個人化不代表更準確；不以最高分判定你的心理狀態。';
+    scores.forEach((item,i)=>{const [x,y]=at(i,96*item.score/100);add('circle',{cx:x,cy:y,r:4,fill:item.color});const [lx,ly]=at(i,117);const label=add('text',{x:lx,y:ly,'text-anchor':'middle','dominant-baseline':'middle',fill:'#20324E','font-size':12});label.textContent=['緊張','平靜','激動','疲倦','輕鬆'][i];const row=document.createElement('div');row.className='emotion-legend-item';const name=document.createElement('span');name.textContent=item.name;name.style.setProperty('--axis-color',item.color);const value=document.createElement('strong');value.textContent=item.score+' / 100';row.append(name,value);legend.appendChild(row);});
+    radar.appendChild(svg);
   }
   function renderResult(){
     if(!current)return;const f=current.features,t=CW_CORPUS.find(t=>t.id===current.task);
     const sample=isRealSample();
+    const details=$('result-measurements');if(details.dataset.resultId!==current.id){details.open=false;details.dataset.resultId=current.id;}
     $('result-title').textContent=historyReview?'回看這一筆摘要。':sample?`實寫範例：${sampleTitle()}。`:mode==='demo'?'合成示範：看看不同節奏。':'這是你剛剛寫下的節奏。';
     $('result-subtitle').textContent=`${sample?'原作者實寫範例 · ':mode==='demo'?'合成示範 · ':''}${t?.text||current.task} · ${f.counts.strokes} 筆畫 · ${fmt(f.durationMs/1000)} 秒`;
     document.querySelector('.result-intro h2').textContent=historyReview?'這一筆留下的摘要':sample?`原作者寫下的「${sampleTitle()}」`:'整段字跡，先留在這一刻';
@@ -370,7 +376,7 @@
     $('metric-cards').innerHTML=sample?'':['speed','pause','active','pressure'].map(card).join('');
     renderReplay();
     renderEmotionObservation();
-    for(const selector of ['.deep-dive-heading','#metric-cards','#timeline-panel','.result-lower','.save-panel','.technical'])document.querySelector(selector).hidden=sample;
+    for(const selector of ['#result-measurements','.save-panel'])document.querySelector(selector).hidden=sample;
     if(historyReadError)$('quality').textContent+=' 本機歷史無法讀取，暫不比較；未覆寫原內容。';
     const bins=f.pauseBins||[],max=Math.max(...bins,1);$('pause-chart').innerHTML=bins.some(n=>n>0)?bins.map((n,i)=>`<div class="pause-bin"><span>${n} 次</span><div class="pause-bar" style="height:${n?Math.max(4,n/max*85):0}px"></div><span>${['少於 1 秒','1–3 秒','3–5 秒','5 秒以上'][i]}</span></div>`).join(''):'<p>目前沒有可用的筆畫間停頓資料。</p>';
     $('guidance-reason').textContent=f.values.pause>3?'本次筆畫間停頓中位數超過 3 秒。若你想休息，可選擇呼吸；這只是可略過的操作提示，不代表心理狀態。':'若想停下來，可以試著放慢呼吸。你也可以略過，繼續一天的步調。';
@@ -378,7 +384,6 @@
     $('technical-body').innerHTML=sample?`<p>來源：原作者提供的「${esc(sampleTitle())}」實寫範例；僅供筆跡與時間回放，不含筆壓、傾斜或裝置資訊，也不建立訪客摘要。</p>`:`<p>來源：${mode==='demo'?'固定合成示範':'本次畫布指標事件摘要'}；摘要 schema：<code>${esc(current.schema)}</code>；特徵 schema：<code>${esc(f.schema)}</code>；輸入：${esc(current.input)}。</p><p>品質標記：${esc(f.flags.join('、')||'無阻擋標記')}。筆壓：${pressureLabel(f)}；傾斜：${f.support.tilt?'保留原始 tiltX/tiltY，未換算實體傾角':'未確認'}。</p><p>本版僅使用本機候選版摘要。舊版特徵 schema 不混入本次基準，原紀錄不改寫。個人相對圖公式：clip(50 + 15 × (本次原分數 − 歷史中位數) ÷ (1.4826 × MAD), 0, 100)，五軸全數通過才使用。這些係數為顯示設計，尚未經心理效度驗證。</p><p>Apple Pencil 實機輸入：尚未驗證。程式版本 CW-B-20261107；門檻 3 筆畫、12 點、跨度 3 秒，僅工程品質設定。</p>`;
     renderResearchResult();updateSaveStatus();
   }
-  $('personalize-radar').addEventListener('change',renderEmotionObservation);
   function renderResearchResult(){
     let valid=null;try{if(mode==='real'&&!realStore.isResearchWithdrawn(current?.id))valid=R.clean(current?.research,current);}catch(e){notify(e.message);}$('research-result').hidden=!valid;
     if(valid)$('research-result-status').textContent=`書寫前自評 ${valid.vasPre} / 100，已與本次書寫摘要配對。${historyReview?'此筆曾保存於本機。':'按「保存在此瀏覽器」才會留存。'}未上傳。`;
