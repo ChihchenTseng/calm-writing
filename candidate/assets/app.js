@@ -79,7 +79,7 @@
     $('home-duration').textContent=fmt(duration/60000,1);$('home-eligible').textContent=eligible;
     $('home-baseline-count').textContent=baseline;
     $('home-baseline-progress').style.width=Math.min(100,baseline/C.MIN_HISTORY*100)+'%';
-    if($('home-baseline-context'))$('home-baseline-context').textContent='這是全部題目的合格摘要數，不是已完成的基準。比較依題目、輸入與紙面分組，每項至少 10 筆有效先前資料。';
+    if($('home-baseline-context'))$('home-baseline-context').textContent='各題目分開比較；每項需 10 筆同條件有效先前資料。';
     $('home-current-node').hidden=!latest;
     $('home-review-note').textContent=latest?'最近一筆已保存摘要可在歷程回看；原始筆跡只在當次完成頁暫留。':'完成頁可回放本次筆跡；歷史只保存摘要。尚無本機紀錄。';
     $('home-data-state').textContent=mode==='demo'?'以下仍是已保存的本機摘要；隔離示範不計入。':data.length?'以下是已保存的本機摘要。':'尚無已保存摘要；完成並選擇本機保存後才會顯示數值。';
@@ -333,7 +333,7 @@
     if(historyReadError)c.status='unavailable';
     const percent=relativePercent(c),status=c.status==='ready'||c.status==='zero-mad'?`本次之前同條件合格 ${c.eligibleN} 筆 · 本項可用 ${c.n} 筆 · 近期中位數 ${fmt(c.base)} ${m.unit} · 差值 ${fmt(c.delta,2)}${percent===null?'':` · 相對 ${percent>0?'+':''}${fmt(percent,1)}%`}`:c.status==='building'?`本次之前同條件合格 ${c.eligibleN}/${C.MIN_HISTORY} 筆 · 本項可用 ${c.n} 筆`:c.status==='no-data'?`整體比較已開啟 · 本項可用 0 筆`:'本次不進行比較';
     let bars='';if(['ready','zero-mad'].includes(c.status)&&available){const max=Math.max(c.value,c.base,1);bars=`<div class="compare-bars" aria-label="本次與近期中位數對照"><div class="compare-line"><span>本次</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,c.value/max*100)}%"></div></div><span>${fmt(c.value)}</span></div><div class="compare-line baseline"><span>近期</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,c.base/max*100)}%"></div></div><span>${fmt(c.base)}</span></div></div>`;}
-    return `<article class="metric-card ${k}"><div><h3>${m.label}</h3><span class="metric-value">${fmt(f.values[k],k==='pressure'?2:1)}</span><span class="metric-unit">${m.unit}</span><p class="metric-source">${esc(sourceCount(f,k))} · ${mode==='demo'?'合成示範':'本次量測'}${!available?' · 缺值':''}</p></div><div class="comparison"><strong>${esc(status)}</strong>${bars}<p>${esc(P.observation(k,c))}</p><p>相對差異只描述這次書寫行為，不代表好壞、壓力或心理狀態。</p></div><details><summary>查看計算與比較依據</summary><p>${formula[k]}</p><p>本次之前，只取同題目、輸入與紙面環境最近最多 30 筆合格摘要；本次不算入基準。每一項至少 10 筆有效值，這是工程設定，非臨床充分性聲明。</p><p>同條件合格歷史 ${c.eligibleN} 筆；本項可用 ${c.n} 筆；中位數 ${fmt(c.base)}；MAD ${fmt(c.mad,2)}${c.delta!==undefined?`；原始差值 ${fmt(c.delta,2)}`:''}。${percent===null?'百分比未顯示：資料不足、中位數為 0 或 MAD 為 0。':`相對百分比以本次與中位數差值除以中位數計。`}${esc(current.schema)}</p><p>可能干擾：畫布尺寸、取樣頻率、手部姿勢、裝置延遲、任務熟悉度。跨環境數值仍可能不同，不解讀為診斷。</p></details></article>`;
+    return `<article class="metric-card ${k}"><div><h3>${m.label}</h3><span class="metric-value">${fmt(f.values[k],k==='pressure'?2:1)}</span><span class="metric-unit">${m.unit}</span><p class="metric-source">${esc(sourceCount(f,k))} · ${mode==='demo'?'合成示範':'本次量測'}${!available?' · 缺值':''}</p></div><div class="comparison"><strong>${esc(status)}</strong>${bars}<p>${esc(P.observation(k,c))}</p><p>差異僅描述書寫，非心理判斷。</p></div><details><summary>查看計算與比較依據</summary><p>${formula[k]}</p><p>取同條件最近最多 30 筆先前摘要，各項至少 10 筆有效值；本次不計入。此門檻非臨床標準。</p><p>同條件合格歷史 ${c.eligibleN} 筆；本項可用 ${c.n} 筆；中位數 ${fmt(c.base)}；MAD ${fmt(c.mad,2)}${c.delta!==undefined?`；原始差值 ${fmt(c.delta,2)}`:''}。${percent===null?'百分比未顯示：資料不足、中位數為 0 或 MAD 為 0。':`相對百分比以本次與中位數差值除以中位數計。`}${esc(current.schema)}</p><p>裝置、姿勢與任務熟悉度可能影響數值；非診斷。</p></details></article>`;
   }
   function renderEmotionObservation(){
     const panel=$('emotion-observation'),radar=$('emotion-radar'),legend=$('emotion-legend'),note=$('emotion-note');
@@ -341,9 +341,9 @@
     panel.hidden=mode!=='real';
     if(panel.hidden)return;
     const raw=current.radar?.schema===P.RADAR_SCHEMA?current.radar.scores:null;const names=['緊張／專注','平靜／穩定','激動／急迫','疲倦／低落','輕鬆／愉快'],colors=['#a36a39','#6b7c5e','#a6574b','#767397','#ad8c43'];const result=resultRaw?.session?C.emotionFeatures(resultRaw.session):{scores:raw?.length===5?raw.map((score,i)=>({name:names[i],color:colors[i],score,value:score/100})):null,reasons:['這筆沒有可用的五軸摘要']};
-    if(!result.scores){$('radar-baseline-status').textContent='未產生五角圖，不補假數值。';note.textContent=result.reasons.join('；')+'。其他可用量測仍會顯示。';return;}
+    if(!result.scores){$('radar-baseline-status').textContent='資料不足，暫無五角圖。';note.textContent=result.reasons.join('；')+'。其他量測仍可查看。';return;}
     const baseline=P.personalizeRadar(current,rows()),personalized=$('personalize-radar').checked&&baseline.status==='personalized';
-    $('radar-baseline-status').textContent=personalized?'個人相對顯示：50 代表同條件歷史中位數；不是情緒程度。':$('personalize-radar').checked?'目前顯示原公式（未個人化）：'+(baseline.axes.some(a=>a.reason==='current-unqualified')?'本次品質或筆壓不符合個人比較條件。':baseline.axes.some(a=>a.reason==='zero-mad')?'部分軸歷史變異為零，整圖回退，不混用刻度。':'同條件有效歷史不足，基準建立中。'):'目前顯示原公式（已關閉個人化）。';
+    $('radar-baseline-status').textContent=personalized?'個人相對顯示：50 為歷史中位數，非情緒程度。':$('personalize-radar').checked?'原公式（未個人化）：'+(baseline.axes.some(a=>a.reason==='current-unqualified')?'本次不符合個人比較條件。':baseline.axes.some(a=>a.reason==='zero-mad')?'歷史變異為零，整圖回退。':'個人基準資料不足。'):'原公式（已關閉個人化）。';
     const scores=result.scores.map((item,i)=>({...item,score:personalized?Math.round(baseline.axes[i].value):item.score,value:personalized?baseline.axes[i].value/100:item.value})),ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
     svg.setAttribute('viewBox','0 0 280 260');svg.setAttribute('role','img');svg.setAttribute('aria-label','本次書寫特徵：'+scores.map(item=>item.name+' '+item.score+' 分').join('，'));
     const at=(index,radius)=>{const angle=-Math.PI/2+index*2*Math.PI/5;return [140+Math.cos(angle)*radius,130+Math.sin(angle)*radius];};
@@ -352,8 +352,8 @@
     for(const radius of [24,48,72,96])add('polygon',{points:shape(radius),fill:'none',stroke:'#DCE4E6','stroke-width':1});
     scores.forEach((item,i)=>{const [x,y]=at(i,96);add('line',{x1:140,y1:130,x2:x,y2:y,stroke:'#DCE4E6','stroke-width':1});});
     add('polygon',{points:scores.map((item,i)=>at(i,96*item.score/100).map(n=>n.toFixed(2)).join(',')).join(' '),fill:'rgba(75,140,201,.22)',stroke:'#4B8CC9','stroke-width':2});
-    scores.forEach((item,i)=>{const [x,y]=at(i,96*item.score/100);add('circle',{cx:x,cy:y,r:4,fill:item.color});const [lx,ly]=at(i,117);const label=add('text',{x:lx,y:ly,'text-anchor':'middle','dominant-baseline':'middle',fill:'#20324E','font-size':12});label.textContent=['緊張','平靜','激動','疲倦','輕鬆'][i];const row=document.createElement('div');row.className='emotion-legend-item';const name=document.createElement('span');name.textContent=item.name;name.style.setProperty('--axis-color',item.color);const value=document.createElement('strong');value.textContent=item.score+' / 100';const count=document.createElement('small');count.textContent='有效先前資料 '+baseline.axes[i].n+'/10'+(baseline.axes[i].reason==='zero-mad'?' · 變異為零':'');value.appendChild(count);row.append(name,value);legend.appendChild(row);});
-    radar.appendChild(svg);note.textContent='五軸是未驗證的啟發式參考，不是五種情緒的機率或壓力預測。個人化不代表更準確；不以最高分判定你的心理狀態。';
+    scores.forEach((item,i)=>{const [x,y]=at(i,96*item.score/100);add('circle',{cx:x,cy:y,r:4,fill:item.color});const [lx,ly]=at(i,117);const label=add('text',{x:lx,y:ly,'text-anchor':'middle','dominant-baseline':'middle',fill:'#20324E','font-size':12});label.textContent=['緊張','平靜','激動','疲倦','輕鬆'][i];const row=document.createElement('div');row.className='emotion-legend-item';const name=document.createElement('span');name.textContent=item.name;name.style.setProperty('--axis-color',item.color);const value=document.createElement('strong');value.textContent=item.score+' / 100';const count=document.createElement('small');count.textContent='先前資料 '+baseline.axes[i].n+'/10'+(baseline.axes[i].reason==='zero-mad'?' · 變異為零':'');value.appendChild(count);row.append(name,value);legend.appendChild(row);});
+    radar.appendChild(svg);note.textContent='五軸未經心理效度驗證；非情緒機率、壓力預測或心理診斷。';
   }
   function renderResult(){
     if(!current)return;const f=current.features,t=CW_CORPUS.find(t=>t.id===current.task);
@@ -361,12 +361,12 @@
     $('result-title').textContent=historyReview?'回看這一筆摘要。':sample?`實寫範例：${sampleTitle()}。`:mode==='demo'?'合成示範：看看不同節奏。':'這是你剛剛寫下的節奏。';
     $('result-subtitle').textContent=`${sample?'原作者實寫範例 · ':mode==='demo'?'合成示範 · ':''}${t?.text||current.task} · ${f.counts.strokes} 筆畫 · ${fmt(f.durationMs/1000)} 秒`;
     document.querySelector('.result-intro h2').textContent=historyReview?'這一筆留下的摘要':sample?`原作者寫下的「${sampleTitle()}」`:'整段字跡，先留在這一刻';
-    document.querySelector('.result-intro p').textContent=historyReview?'歷史保存了量測摘要；下方可回看當時保存的數值。原始字跡已在離開完成頁時釋放。':sample?`先看原作者實寫範例「${sampleTitle()}」的完整字跡，再選一段觀察兩筆間隔，或按「回看全部」看完整書寫過程。這份範例不保存到你的歷程或個人基準。`:'先看本次完整筆跡，再選一段觀察兩筆間隔，或按「回看全部」看完整書寫過程。離開完成頁後，原始軌跡會釋放；保存時只留下摘要。';
+    document.querySelector('.result-intro p').textContent=historyReview?'回看當時的量測摘要；歷史不保存原始字跡。':sample?`先看原作者實寫範例「${sampleTitle()}」的完整字跡，再選一段觀察兩筆間隔，或按「回看全部」看完整書寫過程。這份範例不保存到你的歷程或個人基準。`:'可回看完整筆跡與兩筆間隔；離開本頁後，只保留已保存的摘要。';
     $('replay-title').textContent=historyReview?'歷史摘要不含原始字跡':sample?`原作者實寫「${sampleTitle()}」完整筆跡`:'本次完整筆跡';
     document.querySelector('.replay-heading>span').textContent=historyReview?'僅可回看摘要':sample?'原作者提供 · 不保存':'只在這次完成頁暫留';
     $('research-observed').textContent=historyReview?'歷史保存的是量測摘要，原始筆跡已釋放。':sample?`「${sampleTitle()}」實寫範例記錄了相鄰兩筆之間的時間；選一段可看實際秒數。`:mode==='demo'?'合成示範展示固定筆畫之間的間隔；選一段可看秒數。':'本次裝置記錄了相鄰兩筆之間的時間；選一段可看實際秒數。';
-    $('demo-controls').hidden=mode!=='demo';$('quality').textContent=sample?`原作者實寫範例包含 ${f.counts.strokes} 筆畫，書寫跨度 ${fmt(f.durationMs/1000,2)} 秒；可回看筆畫與相鄰間隔。這份資料與訪客歷程及個人基準分開。`:f.schema!==C.FEATURE_SCHEMA?'此歷史摘要使用舊版特徵規則，僅供回顧；不與新版個人基準混用，原紀錄未改寫。':f.eligible?'量測符合本版的基本品質門檻。缺少筆壓不影響其他有效特徵；每項仍須通過各自的樣本檢查。':`這次先留作回顧，不納入個人基準：${f.flags.join('、')||'資料不完整'}。可用值僅供本次參考。`;
-    if($('personal-baseline-note')){const prior=sample?0:P.eligibleHistory(current,rows()).length;$('personal-baseline-note').textContent=sample?'這份實寫範例不與合成示範歷程混算，也不進入訪客的本機歷程或個人基準。':mode==='demo'?'合成示範不加入真實個人基準。':`本次之前有 ${prior} 筆同題目、輸入與紙面環境的合格摘要；每一項都需 ${P.MIN_HISTORY} 筆有效先前資料。本次不算入基準，其他題目不混入。`;}
+    $('demo-controls').hidden=mode!=='demo';$('quality').textContent=sample?`原作者實寫範例包含 ${f.counts.strokes} 筆畫，書寫跨度 ${fmt(f.durationMs/1000,2)} 秒；可回看筆畫與相鄰間隔。這份資料與訪客歷程及個人基準分開。`:f.schema!==C.FEATURE_SCHEMA?'此歷史摘要使用舊版特徵規則，僅供回顧；不與新版個人基準混用，原紀錄未改寫。':f.eligible?'本次量測符合基本品質門檻；缺少筆壓不影響其他有效量測。':`這次先留作回顧，不納入個人基準：${f.flags.join('、')||'資料不完整'}。可用值僅供本次參考。`;
+    if($('personal-baseline-note')){const prior=sample?0:P.eligibleHistory(current,rows()).length;$('personal-baseline-note').textContent=sample?'這份實寫範例不與合成示範歷程混算，也不進入訪客的本機歷程或個人基準。':mode==='demo'?'合成示範不加入真實個人基準。':`同條件先前摘要 ${prior} 筆；各項需 ${P.MIN_HISTORY} 筆有效資料，本次不計入。`;}
     $('metric-cards').innerHTML=sample?'':['speed','pause','active','pressure'].map(card).join('');
     renderReplay();
     renderEmotionObservation();
